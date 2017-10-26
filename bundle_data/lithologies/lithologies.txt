@@ -1,0 +1,22 @@
+# Lithologies.
+#
+# Columns:
+# name                            density   porosity      decay
+#                                   kg/m3    (%/100)          m
+#
+Average_ocean_floor_sediment         2647       0.66       1333    # Kominz et al. [2011]
+Sand                                 2650       0.49       3704    # Sclater and Christie [1980]
+Shaley_sand                          2680       0.56       2564    # Sclater and Christie [1980]
+Silt                                 2661       0.76       1091    # Kominz et al. [2011]
+Clay                                 2735       0.76       1252    # Kominz et al. [2011]
+Mud                                  2438       0.36       2015    # Van Sickel et al. [2004]
+Carbonate_sand                       2710       0.48       3990    # Goldhammer [1997]
+Biogenic_sand                        2710       0.89       1338    # Kominz et al. [2011]
+Diatomite                            2457       0.84       436     # Kominz et al. [2011]
+Coccolith_ooze                       2710       0.59       1660    # Kominz et al. [2011]
+Micrite                              2710       0.69       1135    # Kominz et al. [2011]
+Shale                                2700       0.63       1960    # Sclater and Christie [1980]
+Chalk                                2710        0.7       1408    # Sclater and Christie [1980]
+Limestone                            2850       0.51       4545    # Turer and Maynard [2003]
+Dolomite                             2870       0.38       1986    # Schmoker and Halley [1982]
+Basalt                               2700        0.2       5000    # Turer and Maynard [2003]

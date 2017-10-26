@@ -1,0 +1,16 @@
+# RiftEndAge = 125.0000
+# SiteLatitude = -51.5420
+# SiteLongitude = -30.6770
+# SurfaceAge = 0.0000
+# WaterDepth = 3705.5000
+#
+## bottom_age bottom_depth lithology
+   18.700     85.700       Diatomite       0.70       Clay            0.30      
+   25.000     142.000      Coccolith_ooze  0.30       Diatomite       0.50       Mud             0.20      
+   31.300     233.600      Coccolith_ooze  0.30       Diatomite       0.70      
+   31.900     243.100      Sand            1.00      
+   36.700     335.400      Coccolith_ooze  0.80       Diatomite       0.20      
+   40.800     382.600      Chalk           1.00      
+   54.500     496.600      Chalk           1.00      
+   55.300     516.300      Chalk           0.50       Clay            0.50      
+   86.790     601.000      Shale           1.00      

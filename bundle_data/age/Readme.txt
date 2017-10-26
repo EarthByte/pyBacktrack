@@ -1,0 +1,1 @@
+Age grid obtained from GPlates 2.0 sample data and converted from NetCDF 3 to NetCDF 4 using "grdconvert".

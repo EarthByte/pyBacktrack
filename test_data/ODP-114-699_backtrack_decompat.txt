@@ -1,0 +1,16 @@
+# RiftEndAge = 125.0000
+# SiteLatitude = -51.5420
+# SiteLongitude = -30.6770
+# SurfaceAge = 0.0000
+# WaterDepth = 3705.5000
+#
+# age       compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
+  0.000     0.000           601.000             601.000               1726.994            3798.317    4134.284            Diatomite       0.70       Clay            0.30       
+  18.700    85.700          515.300             552.679               1733.298            3641.104    3908.610            Coccolith_ooze  0.30       Diatomite       0.50       Mud             0.20       
+  25.000    142.000         459.000             518.231               1715.612            3594.001    3821.240            Coccolith_ooze  0.30       Diatomite       0.70       
+  31.300    233.600         367.400             431.443               1727.755            3603.790    3718.678            Sand            1.00       
+  31.900    243.100         357.900             424.770               1719.132            3613.088    3707.712            Coccolith_ooze  0.80       Diatomite       0.20       
+  36.700    335.400         265.600             342.298               1675.058            3561.919    3614.384            Chalk           1.00       
+  40.800    382.600         218.400             291.817               1662.325            3543.325    3526.936            Chalk           1.00       
+  54.500    496.600         104.400             147.135               1649.440            3283.955    3180.056            Chalk           0.50       Clay            0.50       
+  55.300    516.300         84.700              114.840               1678.129            3309.299    3156.895            Shale           1.00       

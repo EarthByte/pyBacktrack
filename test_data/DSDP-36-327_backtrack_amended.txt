@@ -1,0 +1,17 @@
+# RiftEndAge = 120.0000
+# RiftStartAge = 160.0000
+# SiteLatitude = -50.8713
+# SiteLongitude = -46.7837
+# SurfaceAge = 0.0000
+# WaterDepth = 2400.0000
+#
+## bottom_age bottom_depth lithology
+   1.500      10.000       Shaley_sand     1.00      
+   55.800     30.000       Clay            1.00      
+   59.900     68.000       Diatomite       0.70       Clay            0.30      
+   62.200     90.000       Clay            1.00      
+   77.400     142.000      Coccolith_ooze  0.70       Biogenic_sand   0.30      
+   86.400     154.000      Clay            1.00      
+   113.100    324.000      Coccolith_ooze  0.30       Clay            0.70      
+   122.300    469.500      Clay            1.00      
+   160.000    3038.991     Shale           1.00      
