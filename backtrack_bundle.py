@@ -196,6 +196,6 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        traceback.print_exc()
+        #traceback.print_exc()
         
         sys.exit(1)
