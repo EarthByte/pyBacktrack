@@ -32,7 +32,8 @@ import sys
 import traceback
 
 
-BUNDLE_PATH = 'bundle_data'
+MODULE_DIR = os.path.dirname(__file__)
+BUNDLE_PATH = os.path.join(MODULE_DIR, 'bundle_data')
 
 BUNDLE_DEFAULT_LITHOLOGIES_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'lithologies.txt')
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
