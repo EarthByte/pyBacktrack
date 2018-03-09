@@ -58,15 +58,15 @@ def backtrack(
         topography_filename,
         total_sediment_thickness_filename,
         crustal_thickness_filename,
-        dynamic_topography_model_info = None,
-        sea_level_filename = None,
-        base_lithology_name = DEFAULT_BASE_LITHOLOGY_NAME,
-        ocean_age_to_depth_model = age_to_depth.DEFAULT_MODEL,
-        rifting_period = None,
-        well_location = None,
-        well_bottom_age_column = 0,
-        well_bottom_depth_column = 1,
-        well_lithology_column = 2):
+        dynamic_topography_model_info=None,
+        sea_level_filename=None,
+        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        rifting_period=None,
+        well_location=None,
+        well_bottom_age_column=0,
+        well_bottom_depth_column=1,
+        well_lithology_column=2):
     """
     Finds decompacted total sediment thickness and water depth for each age in 'well'.
     
@@ -161,8 +161,8 @@ def backtrack(
     if age is None:
         if well.rift_end_age is None:
             raise ValueError('Well is on continental passive margin but rift end age was '
-                            'not extracted from well file and was not specified by user. '
-                            'Either add RiftEndAge to the well file or specify rift end age on command-line.')
+                             'not extracted from well file and was not specified by user. '
+                             'Either add RiftEndAge to the well file or specify rift end age on command-line.')
     
     # Sample topography grid at well location.
     present_day_topography = sample_grid(well.longitude, well.latitude, topography_filename)
@@ -221,7 +221,7 @@ def backtrack(
     # is more accurate so we'll use that instead. It also means the decompacted water depth at age zero (ie, top of well)
     # will match the water depth we obtained from topography above.
     #
-    #present_day_total_sediment_isostatic_correction = calc_ocean_total_sediment_thickness_isostatic_correction(present_day_total_sediment_thickness)
+    # present_day_total_sediment_isostatic_correction = calc_ocean_total_sediment_thickness_isostatic_correction(present_day_total_sediment_thickness)
     present_day_total_sediment_isostatic_correction = decompacted_wells[0].get_sediment_isostatic_correction()
     
     # Unload the sediment to get unloaded water depth.
@@ -232,8 +232,8 @@ def backtrack(
     if dynamic_topography_model_info:
         dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model_info
         dynamic_topography = DynamicTopography(
-                dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
-                well.longitude, well.latitude, age)
+            dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
+            well.longitude, well.latitude, age)
     else:
         dynamic_topography = None
     
@@ -263,11 +263,11 @@ def backtrack(
 def load_well(
         well_filename,
         lithologies,
-        rifting_period = None,
-        well_location = None,
-        well_bottom_age_column = 0,
-        well_bottom_depth_column = 1,
-        well_lithology_column = 2):
+        rifting_period=None,
+        well_location=None,
+        well_bottom_age_column=0,
+        well_bottom_depth_column=1,
+        well_lithology_column=2):
     """
     Read the well file and its backtracking metadata.
     
@@ -327,18 +327,18 @@ def load_well(
     
     # Read the well from a text file.
     well = read_well_file(
-            well_filename,
-            lithologies,
-            well_bottom_age_column,
-            well_bottom_depth_column,
-            well_lithology_column,
-            # Attributes to read from file metadata into returned well object...
-            well_attributes = {
-                    'SiteLongitude' : ('longitude', read_longitude),
-                    'SiteLatitude' : ('latitude', read_latitude),
-                    'RiftStartAge' : ('rift_start_age', read_age),
-                    'RiftEndAge' : ('rift_end_age', read_age),
-                    'WaterDepth' : ('water_depth', read_depth)})
+        well_filename,
+        lithologies,
+        well_bottom_age_column,
+        well_bottom_depth_column,
+        well_lithology_column,
+        # Attributes to read from file metadata into returned well object...
+        well_attributes={
+            'SiteLongitude': ('longitude', read_longitude),
+            'SiteLatitude': ('latitude', read_latitude),
+            'RiftStartAge': ('rift_start_age', read_age),
+            'RiftEndAge': ('rift_end_age', read_age),
+            'WaterDepth': ('water_depth', read_depth)})
     
     # If the well location was specified then override the location read from the well file (if a location was read).
     if well_location is not None:
@@ -363,7 +363,7 @@ def add_stratigraphic_unit_to_basement(
         present_day_total_sediment_thickness,
         lithologies,
         base_lithology_name,
-        age = None):
+        age=None):
     """
     Add a base stratigraphic unit from the bottom of the well to basement if the stratigraphic units
     in the well do not record the total sediment thickness.
@@ -402,17 +402,17 @@ def add_stratigraphic_unit_to_basement(
         base_unit_lithogy_components = [(base_lithology_name, 1.0)]
         
         well.add_compacted_unit(
-                base_unit_top_age, base_unit_bottom_age,
-                base_unit_top_depth, base_unit_bottom_depth,
-                base_unit_lithogy_components, lithologies)
+            base_unit_top_age, base_unit_bottom_age,
+            base_unit_top_depth, base_unit_bottom_depth,
+            base_unit_lithogy_components, lithologies)
         
     elif well_sediment_thickness - present_day_total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
         print('WARNING: Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}). '
-            'Ignoring total sediment thickness grid. '.format(
-                well_sediment_thickness, present_day_total_sediment_thickness, well.longitude, well.latitude),
-            file=sys.stderr)
+              'Ignoring total sediment thickness grid. '.format(
+                  well_sediment_thickness, present_day_total_sediment_thickness, well.longitude, well.latitude),
+              file=sys.stderr)
 
 
 def add_sea_level(
@@ -428,8 +428,8 @@ def add_sea_level(
     
     for decompacted_well in decompacted_wells:
         decompacted_well.sea_level = sea_level.get_average_level(
-                decompacted_well.surface_unit.bottom_age,
-                decompacted_well.surface_unit.top_age)
+            decompacted_well.surface_unit.bottom_age,
+            decompacted_well.surface_unit.top_age)
 
 
 def add_oceanic_tectonic_subsidence(
@@ -438,7 +438,7 @@ def add_oceanic_tectonic_subsidence(
         present_day_tectonic_subsidence,
         ocean_age_to_depth_model,
         age,
-        dynamic_topography = None):
+        dynamic_topography=None):
     """
     Calculate tectonic subsidence for a well on oceanic crust (inside age grid).
     
@@ -481,9 +481,9 @@ def add_oceanic_tectonic_subsidence(
             # Warn the user if the dynamic topography model does not provide a value at present day.
             # This shouldn't happen since mantle-frame grids should provide global coverage.
             print(u'WARNING: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                'Ignoring dynamic topography.'.format(
-                    dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
-                file=sys.stderr)
+                  'Ignoring dynamic topography.'.format(
+                      dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
+                  file=sys.stderr)
             
             # Stop using dynamic topography.
             dynamic_topography = None
@@ -513,15 +513,15 @@ def add_oceanic_tectonic_subsidence(
                 if math.isnan(dynamic_topography_at_decompaction_time):
                     # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
                     raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                            dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
+                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the current decompaction time.
                 print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                    'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                        dynamic_topography.grids.grid_list_filename,
-                        well.longitude, well.latitude,
-                        decompaction_time, dynamic_topography_age),
-                    file=sys.stderr)
+                      'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
+                          dynamic_topography.grids.grid_list_filename,
+                          well.longitude, well.latitude,
+                          decompaction_time, dynamic_topography_age),
+                      file=sys.stderr)
             
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
@@ -532,7 +532,7 @@ def add_continental_tectonic_subsidence(
         decompacted_wells,
         present_day_tectonic_subsidence,
         present_day_crustal_thickness,
-        dynamic_topography = None):
+        dynamic_topography=None):
     """
     Calculate tectonic subsidence for a well on continental passive margin (outside age grid).
     
@@ -548,9 +548,9 @@ def add_continental_tectonic_subsidence(
             # Warn the user if the dynamic topography model does not provide a value at present day.
             # This shouldn't happen since mantle-frame grids should provide global coverage.
             print(u'WARNING: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                'Ignoring dynamic topography.'.format(
-                    dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
-                file=sys.stderr)
+                  'Ignoring dynamic topography.'.format(
+                      dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
+                  file=sys.stderr)
             
             # Stop using dynamic topography.
             dynamic_topography = None
@@ -568,15 +568,15 @@ def add_continental_tectonic_subsidence(
                 if math.isnan(dynamic_topography_at_rift_start):
                     # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
                     raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                            dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
+                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the rift start time.
                 print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                    'rift start time {3}. Using dynamic topography grid at {4}.'.format(
-                        dynamic_topography.grids.grid_list_filename,
-                        well.longitude, well.latitude,
-                        rift_start_age, rift_start_dynamic_topography_age),
-                    file=sys.stderr)
+                      'rift start time {3}. Using dynamic topography grid at {4}.'.format(
+                          dynamic_topography.grids.grid_list_filename,
+                          well.longitude, well.latitude,
+                          rift_start_age, rift_start_dynamic_topography_age),
+                      file=sys.stderr)
             
             # Estimate how much of present-day subsidence is due to dynamic topography.
             # We crudely remove the relative difference of dynamic topography between rift start and present day
@@ -586,9 +586,9 @@ def add_continental_tectonic_subsidence(
     
     # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
     beta, subsidence_residual = rifting.estimate_beta(
-            present_day_tectonic_subsidence,
-            present_day_crustal_thickness,
-            well.rift_end_age)
+        present_day_tectonic_subsidence,
+        present_day_crustal_thickness,
+        well.rift_end_age)
     
     # Initial (pre-rift) crustal thickness is beta times present day crustal thickness.
     pre_rift_crustal_thickness = beta * present_day_crustal_thickness
@@ -603,13 +603,13 @@ def add_continental_tectonic_subsidence(
     # is not as deep as the actual subsidence.
     if math.fabs(subsidence_residual) > MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
         print('WARNING: Unable to accurately estimate rifting stretching factor (beta) at well location ({0}, {1}) '
-            'where unloaded subsidence is {2}, crustal thickness is {3} and rift end time is {4}. '
-            'Tectonic subsidence estimates will be inaccurate on the order of {5} metres. '
-            '.'.format(
-                    well.longitude, well.latitude,
-                    present_day_tectonic_subsidence, present_day_crustal_thickness, well.rift_end_age, 
-                    math.fabs(subsidence_residual)),
-            file=sys.stderr)
+              'where unloaded subsidence is {2}, crustal thickness is {3} and rift end time is {4}. '
+              'Tectonic subsidence estimates will be inaccurate on the order of {5} metres. '
+              '.'.format(
+                  well.longitude, well.latitude,
+                  present_day_tectonic_subsidence, present_day_crustal_thickness, well.rift_end_age,
+                  math.fabs(subsidence_residual)),
+              file=sys.stderr)
     
     for decompacted_well in decompacted_wells:
         # The current decompaction time (age of the surface of the current decompacted column of the well).
@@ -617,7 +617,7 @@ def add_continental_tectonic_subsidence(
         
         # Calculate rifting subsidence at decompaction time.
         decompacted_well.tectonic_subsidence = rifting.total_subsidence(
-                beta, pre_rift_crustal_thickness, decompaction_time, well.rift_end_age, well.rift_start_age)
+            beta, pre_rift_crustal_thickness, decompaction_time, well.rift_end_age, well.rift_start_age)
         
         # If we have dynamic topography then add in the difference at current decompaction time compared to rift start.
         if dynamic_topography:
@@ -629,15 +629,15 @@ def add_continental_tectonic_subsidence(
                 if math.isnan(dynamic_topography_at_decompaction_time):
                     # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
                     raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                            dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
+                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the current decompaction time.
                 print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                    'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                        dynamic_topography.grids.grid_list_filename,
-                        well.longitude, well.latitude,
-                        decompaction_time, dynamic_topography_age),
-                    file=sys.stderr)
+                      'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
+                          dynamic_topography.grids.grid_list_filename,
+                          well.longitude, well.latitude,
+                          decompaction_time, dynamic_topography_age),
+                      file=sys.stderr)
             
             # Account for any change in dynamic topography between rift start and current decompaction time.
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
@@ -692,13 +692,13 @@ class TimeDependentGrid(object):
         detect_duplicate_ages = set()
         with codecs.open(grid_list_filename, 'r', 'utf-8') as grid_list_file:
             for line_number, line in enumerate(grid_list_file):
-                line_number = line_number + 1 # Make line number 1-based instead of 0-based.
-                if line.strip().startswith('#'): # Skip comments.
+                line_number = line_number + 1  # Make line number 1-based instead of 0-based.
+                if line.strip().startswith('#'):  # Skip comments.
                     continue
                 row = line.split()
                 if len(row) != 2:
                     raise ValueError(u'Grid list file "{0}" does not contain two columns at line {1}.'.format(
-                            grid_list_filename, line_number))
+                        grid_list_filename, line_number))
                 
                 grid_filename = os.path.join(grids_relative_dir, row[0])
                 try:
@@ -706,12 +706,12 @@ class TimeDependentGrid(object):
                 except ValueError:
                     # Re-raise error with different error message.
                     raise ValueError(u'Grid list file "{0}" does not contain a valid age (2nd column) at line {1}.'.format(
-                            grid_list_filename, line_number))
+                        grid_list_filename, line_number))
                 
                 # Make sure same age doesn't appear twice.
                 if grid_age in detect_duplicate_ages:
                     raise ValueError(u'There are two ages in grid list file "{0}" with the same value {1}.'.format(
-                            grid_list_filename, grid_age))
+                        grid_list_filename, grid_age))
                 detect_duplicate_ages.add(grid_age)
                 
                 self.grid_ages_and_filenames.append((grid_age, grid_filename))
@@ -722,7 +722,6 @@ class TimeDependentGrid(object):
         # Need at least two grids.
         if len(self.grid_ages_and_filenames) < 2:
             raise ValueError(u'The grid list file "{0}" contains fewer than two grids.'.format(grid_list_filename))
-    
     
     def sample(self, longitude, latitude, time):
         """
@@ -757,7 +756,6 @@ class TimeDependentGrid(object):
         # We've already verified in constructor that no two ages are the same (so divide-by-zero is not possible).
         return ((grid_age_1 - time) * grid_value_0 + (time - grid_age_0) * grid_value_1) / (grid_age_1 - grid_age_0)
     
-    
     def get_grids_bounding_time(self, time):
         """
         Returns the two adjacent grid files (and associated times) that surround 'time' as the 2-tuple
@@ -776,15 +774,14 @@ class TimeDependentGrid(object):
             grid_age_1, grid_filename_1 = self.grid_ages_and_filenames[grid_index]
             
             if time < grid_age_1 + 1e-6:
-                grid_age_0, grid_filename_0 = self.grid_ages_and_filenames[grid_index-1]
+                grid_age_0, grid_filename_0 = self.grid_ages_and_filenames[grid_index - 1]
                 return (
-                        (grid_age_0, grid_filename_0),
-                        (grid_age_1, grid_filename_1)
-                    )
+                    (grid_age_0, grid_filename_0),
+                    (grid_age_1, grid_filename_1)
+                )
         
         # Time is outside grid age range ('time' is greater than last grid age).
         return None
-    
     
     def sample_oldest_unmasked(self, longitude, latitude):
         """
@@ -889,7 +886,6 @@ class DynamicTopography(object):
         # So divide-by-zero is not possible.
         return ((grid_age_1 - time) * grid_value_0 + (time - grid_age_0) * grid_value_1) / (grid_age_1 - grid_age_0)
     
-    
     def sample_oldest(self):
         """
         Samples the oldest grid file that is younger than the age-of-appearance of the internal location.
@@ -910,7 +906,6 @@ class DynamicTopography(object):
         # Unable to sample a non-NaN grid value, so just return NaN.
         first_grid_age, _ = self.grid_ages_and_filenames[0]
         return float('nan'), first_grid_age
-    
     
     def _sample_grid(self, grid_age, grid_filename):
         
@@ -935,8 +930,8 @@ def calc_ocean_total_sediment_thickness_isostatic_correction(total_sediment_thic
     
     total_sediment_thickness_kms = total_sediment_thickness / 1000
     total_sediment_thickness_isostatic_correction_kms = (
-            0.43422 * total_sediment_thickness_kms -
-            0.010395 * total_sediment_thickness_kms * total_sediment_thickness_kms)
+        0.43422 * total_sediment_thickness_kms -
+        0.010395 * total_sediment_thickness_kms * total_sediment_thickness_kms)
     total_sediment_thickness_isostatic_correction = 1000 * total_sediment_thickness_isostatic_correction_kms
     
     return total_sediment_thickness_isostatic_correction
@@ -953,14 +948,14 @@ COLUMN_LITHOLOGY = 6
 COLUMN_COMPACTED_DEPTH = 7
 
 decompacted_columns_dict = {
-        'age' : COLUMN_AGE,
-        'decompacted_thickness' : COLUMN_DECOMPACTED_THICKNESS,
-        'decompacted_density' : COLUMN_DECOMPACTED_DENSITY,
-        'tectonic_subsidence' : COLUMN_TECTONIC_SUBSIDENCE,
-        'water_depth' : COLUMN_WATER_DEPTH,
-        'compacted_thickness' : COLUMN_COMPACTED_THICKNESS,
-        'lithology' : COLUMN_LITHOLOGY,
-        'compacted_depth' : COLUMN_COMPACTED_DEPTH}
+    'age': COLUMN_AGE,
+    'decompacted_thickness': COLUMN_DECOMPACTED_THICKNESS,
+    'decompacted_density': COLUMN_DECOMPACTED_DENSITY,
+    'tectonic_subsidence': COLUMN_TECTONIC_SUBSIDENCE,
+    'water_depth': COLUMN_WATER_DEPTH,
+    'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
+    'lithology': COLUMN_LITHOLOGY,
+    'compacted_depth': COLUMN_COMPACTED_DEPTH}
 decompacted_column_names_dict = dict([(v, k) for k, v in decompacted_columns_dict.iteritems()])
 decompacted_column_names = sorted(decompacted_columns_dict.keys())
 
@@ -973,7 +968,7 @@ def write_decompacted_wells(
         decompacted_wells_filename,
         well,
         well_attributes,
-        decompacted_columns = default_decompacted_columns):
+        decompacted_columns=default_decompacted_columns):
     """
     Write decompacted parameters as columns in a text file.
     
@@ -998,7 +993,7 @@ def write_decompacted_wells(
     
     # If 'COLUMN_LITHOLOGY' is specified then it must be the last column.
     if (COLUMN_LITHOLOGY in decompacted_columns and
-        decompacted_columns.index(COLUMN_LITHOLOGY) != len(decompacted_columns)-1):
+        decompacted_columns.index(COLUMN_LITHOLOGY) != len(decompacted_columns) - 1):
         raise ValueError('Lithology columns must be the last column in the decompacted well file.')
     
     with open(decompacted_wells_filename, 'w') as file:
@@ -1052,15 +1047,15 @@ def write_decompacted_wells(
                     column_str = column_float_format_string.format(decompacted_well.tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_WATER_DEPTH:
                     water_depth = decompacted_well.get_water_depth_from_tectonic_subsidence(
-                            decompacted_well.tectonic_subsidence,
-                            getattr(decompacted_well, 'sea_level', None)) # decompacted_well.sea_level may not exist
+                        decompacted_well.tectonic_subsidence,
+                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
                     column_str = column_float_format_string.format(water_depth, width=column_width)
                 elif decompacted_column == COLUMN_COMPACTED_THICKNESS:
                     column_str = column_float_format_string.format(decompacted_well.total_compacted_thickness, width=column_width)
                 elif decompacted_column == COLUMN_LITHOLOGY:
                     # Write the original lithology components of the surface stratigraphic unit.
                     lithology_string = ''.join('{0:<15} {1:<10.2f} '.format(lithology_name, fraction)
-                            for lithology_name, fraction in decompacted_well.surface_unit.lithology_components)
+                                               for lithology_name, fraction in decompacted_well.surface_unit.lithology_components)
                     column_str = column_str_format_string.format(lithology_string, width=column_width)
                 elif decompacted_column == COLUMN_COMPACTED_DEPTH:
                     # Depth of the top of the first/surface stratigraphic unit.
@@ -1082,17 +1077,17 @@ def backtrack_and_write_decompacted(
         topography_filename,
         total_sediment_thickness_filename,
         crustal_thickness_filename,
-        dynamic_topography_model_info = None,
-        sea_level_filename = None,
-        base_lithology_name = DEFAULT_BASE_LITHOLOGY_NAME,
-        ocean_age_to_depth_model = age_to_depth.DEFAULT_MODEL,
-        rifting_period = None,
-        decompacted_columns = default_decompacted_columns,
-        well_location = None,
-        well_bottom_age_column = 0,
-        well_bottom_depth_column = 1,
-        well_lithology_column = 2,
-        ammended_well_output_filename = None):
+        dynamic_topography_model_info=None,
+        sea_level_filename=None,
+        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        rifting_period=None,
+        decompacted_columns=default_decompacted_columns,
+        well_location=None,
+        well_bottom_age_column=0,
+        well_bottom_depth_column=1,
+        well_lithology_column=2,
+        ammended_well_output_filename=None):
     """
     Backtrack well in 'well_filename' and write decompacted data to 'decompacted_output_filename'.
     
@@ -1104,46 +1099,46 @@ def backtrack_and_write_decompacted(
     
     # Decompact the well.
     well, decompacted_wells = backtrack(
-            well_filename,
-            lithologies_filename,
-            age_grid_filename,
-            topography_filename,
-            total_sediment_thickness_filename,
-            crustal_thickness_filename,
-            dynamic_topography_model_info,
-            sea_level_filename,
-            base_lithology_name,
-            ocean_age_to_depth_model,
-            rifting_period,
-            well_location,
-            well_bottom_age_column,
-            well_bottom_depth_column,
-            well_lithology_column)
+        well_filename,
+        lithologies_filename,
+        age_grid_filename,
+        topography_filename,
+        total_sediment_thickness_filename,
+        crustal_thickness_filename,
+        dynamic_topography_model_info,
+        sea_level_filename,
+        base_lithology_name,
+        ocean_age_to_depth_model,
+        rifting_period,
+        well_location,
+        well_bottom_age_column,
+        well_bottom_depth_column,
+        well_lithology_column)
     
     # Attributes of well object to write to file as metadata.
     well_attributes = {
-            'longitude' : 'SiteLongitude',
-            'latitude' : 'SiteLatitude',
-            'rift_start_age' : 'RiftStartAge',
-            'rift_end_age' : 'RiftEndAge',
-            'water_depth' : 'WaterDepth'}
+        'longitude': 'SiteLongitude',
+        'latitude': 'SiteLatitude',
+        'rift_start_age': 'RiftStartAge',
+        'rift_end_age': 'RiftEndAge',
+        'water_depth': 'WaterDepth'}
     
     # Write out amended well data (ie, extra stratigraphic base unit) if requested.
     if ammended_well_output_filename:
         write_well_file(
-                well,
-                ammended_well_output_filename,
-                # Attributes of well object to write to file as metadata...
-                well_attributes = well_attributes)
+            well,
+            ammended_well_output_filename,
+            # Attributes of well object to write to file as metadata...
+            well_attributes=well_attributes)
     
     # Write the decompactions of the well at the ages of its stratigraphic units.
     write_decompacted_wells(
-            decompacted_wells,
-            decompacted_output_filename,
-            well,
-            # Attributes of well object to write to file as metadata...
-            well_attributes,
-            decompacted_columns)
+        decompacted_wells,
+        decompacted_output_filename,
+        well,
+        # Attributes of well object to write to file as metadata...
+        well_attributes,
+        decompacted_columns)
 
 
 ########################
@@ -1212,11 +1207,11 @@ class ArgParseDynamicTopographyAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if len(values) != 3:
             parser.error('Dynamic topography model info must have three parameters '
-                        '(grid list filename, static polygons filename, rotation filename).')
+                         '(grid list filename, static polygons filename, rotation filename).')
         
         grid_list_filename = values[0]
         static_polygons_filename = values[1]
-        rotation_filenames = values[2:] # Needs to be a list.
+        rotation_filenames = values[2:]  # Needs to be a list.
         
         setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
 
@@ -1283,7 +1278,7 @@ __description__ = \
 
 
 def get_command_line_parser(
-        add_arguments_for_input_data = True):
+        add_arguments_for_input_data=True):
     """
     Get command-line parser (argparse.ArgumentParser) and add command-line arguments.
     
@@ -1292,122 +1287,139 @@ def get_command_line_parser(
     """
     
     # The command-line parser.
-    parser = argparse.ArgumentParser(description = __description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
     
-    parser.add_argument('-w', '--well_filename', type=argparse_unicode, required=True,
-            metavar='well_filename',
-            help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
-                'for each stratigraphic unit in a single well.')
-    
-    if add_arguments_for_input_data:
-        parser.add_argument('-l', '--lithologies_filename', type=argparse_unicode, required=True,
-                metavar='lithologies_filename',
-                help='The lithologies filename used to lookup density, surface porosity and porosity decay.')
-    
-    parser.add_argument('-x', '--well_location', nargs=2, action=ArgParseLocationAction,
-            metavar=('well_longitude', 'well_latitude'),
-            help='Optional location of the well. '
-                'Must be specified if the well location is not provided inside the well file '
-                '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
-                'Overrides well file if both specified. '
-                'Longitude and latitude are in degrees.')
-    
-    parser.add_argument('-c', '--well_columns', type=argparse_non_negative_integer, nargs=3, default=[0,1,2],
-            metavar=('bottom_age_column', 'bottom_depth_column', 'lithology_column'),
-            help='The well file column indices (zero-based) for bottom age, bottom depth and lithology(s) respectively. '
-                'This enables unused columns to reside in the well text file. '
-                'For example, to skip unused columns 2 and 3 '
-                '(perhaps containing present day water depth and whether column is under water) '
-                'use column indices 0 1 4. Note that lithologies should be the last column since '
-                'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
-                'Defaults to 0 1 2.')
-    
-    parser.add_argument('-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
-            metavar='decompacted_column_name',
-            help='The columns to output in the decompacted file. '
-                'Choices include {0}. '
-                'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
-                'Defaults to "{1}".'.format(
-                        ', '.join(decompacted_column_names),
-                        ' '.join(default_decompacted_column_names)))
-    
-    parser.add_argument('-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
-            metavar='base_lithology_name',
-            help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
-                 'The well might not record the full depth of sedimentation. '
-                 'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
-                 'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
-    
-    parser.add_argument('-m', '--ocean_age_to_depth_model', type=str, default=default_ocean_age_to_depth_model_name,
-            metavar='ocean_age_to_depth_model',
-            dest='ocean_age_to_depth_model_name',
-            help='The oceanic model used to convert age to depth. '
-                'Choices include {0}. '
-                'Defaults to {1}.'.format(
-                        ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
-                        default_ocean_age_to_depth_model_name))
-    
-    parser.add_argument('-rs', '--rift_start_time', type=argparse_non_negative_float,
-            metavar='rift_start_time',
-            help='Optional start time of rifting (in My). '
-                'Only used if well is located on continental passive margin (outside age grid), '
-                'in which case it is not required (even if also not provided inside the well file as '
-                '"# RiftStartTime = <rift_start_time>") because it will essentially default to '
-                'the rift "end" time. However providing a start time will result in more accurate '
-                'subsidence values generated during rifting.')
-    parser.add_argument('-re', '--rift_end_time', type=argparse_non_negative_float,
-            metavar='rift_end_time',
-            help='Optional end time of rifting (in My). '
-                'Only used if well is located on continental passive margin (outside age grid), '
-                'in which case it must be specified if it is not provided inside the well file '
-                '(as "# RiftEndTime = <rift_end_time>"). Overrides well file if both specified.')
-    
-    parser.add_argument('-o', '--output_well_filename', type=argparse_unicode,
-            metavar='output_well_filename',
-            help='Optional output well filename to write amended well data to. '
-                'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
+    parser.add_argument(
+        '-w', '--well_filename', type=argparse_unicode, required=True,
+        metavar='well_filename',
+        help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
+             'for each stratigraphic unit in a single well.')
     
     if add_arguments_for_input_data:
-        parser.add_argument('-a', '--age_grid_filename', type=argparse_unicode, required=True,
-                metavar='age_grid_filename',
-                help='Used to obtain age of seafloor at well location.')
-        
-        parser.add_argument('-s', '--total_sediment_thickness_filename', type=argparse_unicode, required=True,
-                metavar='total_sediment_thickness_filename',
-                help='Used to obtain total sediment thickness at well location.')
-        
-        parser.add_argument('-k', '--crustal_thickness_filename', type=argparse_unicode, required=True,
-                metavar='crustal_thickness_filename',
-                help='Used to obtain crustal thickness at well location.')
-        
-        parser.add_argument('-t', '--topography_filename', type=argparse_unicode, required=True,
-                metavar='topography_filename',
-                help='Used to obtain water depth at well location.')
-        
-        parser.add_argument('-y', '--dynamic_topography_model_info', nargs=3, action=ArgParseDynamicTopographyAction,
-                metavar=('dynamic_topography_grid_list_filename', 'static_polygon_filename', 'rotation_filename'),
-                help='Optional dynamic topography through time (sampled at reconstructed well locations). '
-                    'Can be used both for oceanic floor and continental passive margin '
-                    '(ie, well location inside or outside age grid). '
-                    'First filename contains a list of dynamic topography grids (and associated times). '
-                    'Second filename contains static polygons associated with dynamic topography model '
-                    '(used to assign plate ID to well location so it can be reconstructed). '
-                    'Third filename is the rotation file associated with model '
-                    '(only the rotation file for static continents/oceans is needed - ie, deformation rotations not needed). '
-                    'Each row in the grid list file should contain two columns. First column containing '
-                    'filename (relative to list file) of a dynamic topography grid at a particular time. '
-                    'Second column containing associated time (in Ma).')
-        
-        parser.add_argument('-sl', '--sea_level_filename', type=str,
-                metavar='sea_level_filename',
-                help='Optional file used to obtain sea level (relative to present-day) over time. '
-                    'If no file is specified then sea level is ignored. '
-                    'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+        parser.add_argument(
+            '-l', '--lithologies_filename', type=argparse_unicode, required=True,
+            metavar='lithologies_filename',
+            help='The lithologies filename used to lookup density, surface porosity and porosity decay.')
     
-    parser.add_argument('output_filename', type=argparse_unicode,
-            metavar='output_filename',
-            help='The output filename used to store the decompacted total sediment thickness and '
-                'water depth through time.')
+    parser.add_argument(
+        '-x', '--well_location', nargs=2, action=ArgParseLocationAction,
+        metavar=('well_longitude', 'well_latitude'),
+        help='Optional location of the well. '
+             'Must be specified if the well location is not provided inside the well file '
+             '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
+             'Overrides well file if both specified. '
+             'Longitude and latitude are in degrees.')
+    
+    parser.add_argument(
+        '-c', '--well_columns', type=argparse_non_negative_integer, nargs=3, default=[0, 1, 2],
+        metavar=('bottom_age_column', 'bottom_depth_column', 'lithology_column'),
+        help='The well file column indices (zero-based) for bottom age, bottom depth and lithology(s) respectively. '
+             'This enables unused columns to reside in the well text file. '
+             'For example, to skip unused columns 2 and 3 '
+             '(perhaps containing present day water depth and whether column is under water) '
+             'use column indices 0 1 4. Note that lithologies should be the last column since '
+             'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
+             'Defaults to 0 1 2.')
+    
+    parser.add_argument(
+        '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
+        metavar='decompacted_column_name',
+        help='The columns to output in the decompacted file. '
+             'Choices include {0}. '
+             'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
+             'Defaults to "{1}".'.format(
+                ', '.join(decompacted_column_names),
+                ' '.join(default_decompacted_column_names)))
+    
+    parser.add_argument(
+        '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
+        metavar='base_lithology_name',
+        help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
+             'The well might not record the full depth of sedimentation. '
+             'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
+             'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
+    
+    parser.add_argument(
+        '-m', '--ocean_age_to_depth_model', type=str, default=default_ocean_age_to_depth_model_name,
+        metavar='ocean_age_to_depth_model',
+        dest='ocean_age_to_depth_model_name',
+        help='The oceanic model used to convert age to depth. '
+             'Choices include {0}. '
+             'Defaults to {1}.'.format(
+                ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
+                default_ocean_age_to_depth_model_name))
+    
+    parser.add_argument(
+        '-rs', '--rift_start_time', type=argparse_non_negative_float,
+        metavar='rift_start_time',
+        help='Optional start time of rifting (in My). '
+             'Only used if well is located on continental passive margin (outside age grid), '
+             'in which case it is not required (even if also not provided inside the well file as '
+             '"# RiftStartTime = <rift_start_time>") because it will essentially default to '
+             'the rift "end" time. However providing a start time will result in more accurate '
+             'subsidence values generated during rifting.')
+    parser.add_argument(
+        '-re', '--rift_end_time', type=argparse_non_negative_float,
+        metavar='rift_end_time',
+        help='Optional end time of rifting (in My). '
+             'Only used if well is located on continental passive margin (outside age grid), '
+             'in which case it must be specified if it is not provided inside the well file '
+             '(as "# RiftEndTime = <rift_end_time>"). Overrides well file if both specified.')
+    
+    parser.add_argument(
+        '-o', '--output_well_filename', type=argparse_unicode,
+        metavar='output_well_filename',
+        help='Optional output well filename to write amended well data to. '
+             'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
+    
+    if add_arguments_for_input_data:
+        parser.add_argument(
+            '-a', '--age_grid_filename', type=argparse_unicode, required=True,
+            metavar='age_grid_filename',
+            help='Used to obtain age of seafloor at well location.')
+        
+        parser.add_argument(
+            '-s', '--total_sediment_thickness_filename', type=argparse_unicode, required=True,
+            metavar='total_sediment_thickness_filename',
+            help='Used to obtain total sediment thickness at well location.')
+        
+        parser.add_argument(
+            '-k', '--crustal_thickness_filename', type=argparse_unicode, required=True,
+            metavar='crustal_thickness_filename',
+            help='Used to obtain crustal thickness at well location.')
+        
+        parser.add_argument(
+            '-t', '--topography_filename', type=argparse_unicode, required=True,
+            metavar='topography_filename',
+            help='Used to obtain water depth at well location.')
+        
+        parser.add_argument(
+            '-y', '--dynamic_topography_model_info', nargs=3, action=ArgParseDynamicTopographyAction,
+            metavar=('dynamic_topography_grid_list_filename', 'static_polygon_filename', 'rotation_filename'),
+            help='Optional dynamic topography through time (sampled at reconstructed well locations). '
+                 'Can be used both for oceanic floor and continental passive margin '
+                 '(ie, well location inside or outside age grid). '
+                 'First filename contains a list of dynamic topography grids (and associated times). '
+                 'Second filename contains static polygons associated with dynamic topography model '
+                 '(used to assign plate ID to well location so it can be reconstructed). '
+                 'Third filename is the rotation file associated with model '
+                 '(only the rotation file for static continents/oceans is needed - ie, deformation rotations not needed). '
+                 'Each row in the grid list file should contain two columns. First column containing '
+                 'filename (relative to list file) of a dynamic topography grid at a particular time. '
+                 'Second column containing associated time (in Ma).')
+        
+        parser.add_argument(
+            '-sl', '--sea_level_filename', type=str,
+            metavar='sea_level_filename',
+            help='Optional file used to obtain sea level (relative to present-day) over time. '
+                 'If no file is specified then sea level is ignored. '
+                 'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+    
+    parser.add_argument(
+        'output_filename', type=argparse_unicode,
+        metavar='output_filename',
+        help='The output filename used to store the decompacted total sediment thickness and '
+             'water depth through time.')
     
     return parser
 
@@ -1459,9 +1471,9 @@ if __name__ == '__main__':
             (args.rift_start_time, args.rift_end_time),
             decompacted_columns,
             args.well_location,
-            args.well_columns[0], # well_bottom_age_column
-            args.well_columns[1], # well_bottom_depth_column
-            args.well_columns[2], # well_lithology_column
+            args.well_columns[0],  # well_bottom_age_column
+            args.well_columns[1],  # well_bottom_depth_column
+            args.well_columns[2],  # well_lithology_column
             args.output_well_filename)
         
         sys.exit(0)
@@ -1469,6 +1481,6 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        #traceback.print_exc()
+        # traceback.print_exc()
         
         sys.exit(1)

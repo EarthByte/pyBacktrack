@@ -66,7 +66,6 @@ class StratigraphicUnit(object):
             for name, value in other_attributes.iteritems():
                 setattr(self, name, value)
     
-    
     def calc_decompacted_thickness(self, decompacted_depth_to_top):
         """
         Calculate decompacted thickness when top of this stratigraphic unit is at depth 'decompacted_depth_to_top'.
@@ -115,8 +114,8 @@ class StratigraphicUnit(object):
         # Constants 'a' and 'b' are calculated outside the iteration loop for efficiency.
         a = -porosity_decay * surface_porosity * math.exp(-decompacted_depth_to_top / porosity_decay)
         b = (-a + present_day_thickness +
-            porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
-                (math.exp(-present_day_thickness / porosity_decay) - 1))
+             porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
+             (math.exp(-present_day_thickness / porosity_decay) - 1))
         
         # Start out with initial estimate - choose the present day thickness.
         decompacted_thickness = present_day_thickness
@@ -135,7 +134,6 @@ class StratigraphicUnit(object):
             decompacted_thickness = new_decompacted_thickness
         
         return decompacted_thickness
-    
     
     def calc_decompacted_density(self, decompacted_thickness, decompacted_depth_to_top):
         """
@@ -169,9 +167,9 @@ class StratigraphicUnit(object):
         #    average_decompacted_density = density + (1 / T) * (density_water - density) * decay * porosity(0) * exp(-D/decay) * (1 - exp(-T/decay))
         #
         return (density +
-                    (DENSITY_WATER - density) * porosity_decay * surface_porosity *
-                    math.exp(-decompacted_depth_to_top / porosity_decay) *
-                    (1 - math.exp(-decompacted_thickness / porosity_decay)) / decompacted_thickness)
+                (DENSITY_WATER - density) * porosity_decay * surface_porosity *
+                math.exp(-decompacted_depth_to_top / porosity_decay) *
+                (1 - math.exp(-decompacted_thickness / porosity_decay)) / decompacted_thickness)
 
 
 class Well(object):
@@ -179,7 +177,7 @@ class Well(object):
     Class containing all the stratigraphic units in a well sorted by age (from youngest to oldest).
     """
     
-    def __init__(self, attributes = None, stratigraphic_units = None):
+    def __init__(self, attributes=None, stratigraphic_units=None):
         """
         attributes: Optional well attributes to store on well object.
                     If specified then must be a dictionary mapping attribute names to values.
@@ -205,12 +203,11 @@ class Well(object):
             return
         
         # Sort by age.
-        stratigraphic_units = sorted(stratigraphic_units, key = lambda unit: unit.top_age)
+        stratigraphic_units = sorted(stratigraphic_units, key=lambda unit: unit.top_age)
         
         # Add the units in order of age.
         for stratigraphic_unit in stratigraphic_units:
             self._add_compacted_unit(stratigraphic_unit)
-    
     
     def add_compacted_unit(self, top_age, bottom_age, top_depth, bottom_depth, lithology_components, lithologies, other_attributes=None):
         """
@@ -232,8 +229,7 @@ class Well(object):
         """
         
         self._add_compacted_unit(
-                StratigraphicUnit(top_age, bottom_age, top_depth, bottom_depth, lithology_components, lithologies, other_attributes))
-    
+            StratigraphicUnit(top_age, bottom_age, top_depth, bottom_depth, lithology_components, lithologies, other_attributes))
     
     def _add_compacted_unit(self, stratigraphic_unit):
         # If adding first unit then check that it has zero top depth.
@@ -253,7 +249,6 @@ class Well(object):
                 raise ValueError('Adjacent stratigraphic units in well must have matching top and bottom depths.')
         
         self.stratigraphic_units.append(stratigraphic_unit)
-    
     
     def decompact(self):
         """
@@ -294,9 +289,9 @@ class Well(object):
                 # These are used to incrementally calculate average density of the entire decompacted stratigraphic column
                 # (used for isostatic correction).
                 decompacted_well.add_decompacted_unit(
-                        unit,
-                        unit_decompacted_thickness,
-                        unit_decompacted_density)
+                    unit,
+                    unit_decompacted_thickness,
+                    unit_decompacted_density)
                 
                 total_decompacted_thickness += unit_decompacted_thickness
             
@@ -335,7 +330,6 @@ class DecompactedWell(object):
         # Private.
         self._total_decompacted_thickness_times_density = 0.0
     
-    
     def add_decompacted_unit(
             self,
             stratigraphic_unit,
@@ -346,7 +340,7 @@ class DecompactedWell(object):
         """
         
         self.decompacted_stratigraphic_units.append(
-                DecompactedStratigraphicUnit(stratigraphic_unit, decompacted_thickness, decompacted_density))
+            DecompactedStratigraphicUnit(stratigraphic_unit, decompacted_thickness, decompacted_density))
         
         # Keep track of total compacted thickness (sum of present day thicknesses).
         self.total_compacted_thickness += stratigraphic_unit.bottom_depth - stratigraphic_unit.top_depth
@@ -355,7 +349,6 @@ class DecompactedWell(object):
         self.total_decompacted_thickness += decompacted_thickness
         self._total_decompacted_thickness_times_density += decompacted_density * decompacted_thickness
     
-    
     def get_age(self):
         """
         Returns the age of the surface of the decompacted column of the well.
@@ -363,7 +356,6 @@ class DecompactedWell(object):
         
         # Return the age of the top of the first stratigraphic unit.
         return self.surface_unit.top_age
-    
     
     def get_average_decompacted_density(self):
         """
@@ -375,7 +367,6 @@ class DecompactedWell(object):
         
         return self._total_decompacted_thickness_times_density / self.total_decompacted_thickness
     
-    
     def get_sediment_isostatic_correction(self):
         """
         Returns the isostatic correction of this decompacted well.
@@ -386,9 +377,8 @@ class DecompactedWell(object):
         """
         
         return (self.total_decompacted_thickness *
-            (DENSITY_MANTLE - self.get_average_decompacted_density()) /
+                (DENSITY_MANTLE - self.get_average_decompacted_density()) /
                 (DENSITY_MANTLE - DENSITY_WATER))
-    
     
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
@@ -407,7 +397,6 @@ class DecompactedWell(object):
         # Add the isostatic correction to the known (loaded) water depth to obtain the deeper
         # isostatically compensated, sediment-free water depth (tectonic subsidence).
         return min_water_depth + isostatic_correction, max_water_depth + isostatic_correction
-    
     
     def get_water_depth_from_tectonic_subsidence(self, tectonic_subsidence, sea_level=None):
         """
@@ -431,11 +420,11 @@ class DecompactedWell(object):
 def read_well_file(
         well_filename,
         lithologies,
-        bottom_age_column = 0,
-        bottom_depth_column = 1,
-        lithology_column = 2,
-        other_columns = None,
-        well_attributes = None):
+        bottom_age_column=0,
+        bottom_depth_column=1,
+        lithology_column=2,
+        other_columns=None,
+        well_attributes=None):
     """
     Reads a text file with each row representing a stratigraphic unit.
     
@@ -502,7 +491,7 @@ def read_well_file(
                 comment_data = comment.split('=')
                 # See if it's a metadata line (has a single '=' char).
                 if len(comment_data) == 2:
-                    name = comment_data[0].strip() # Note: Case-insensitive comparison.
+                    name = comment_data[0].strip()  # Note: Case-insensitive comparison.
                     value = comment_data[1].strip()
                     
                     # See if current line contains a well attribute requested by caller.
@@ -512,7 +501,7 @@ def read_well_file(
                             attributes[attribute_name] = attribute_conversion(value)
                         except Exception as exc:
                             print('WARNING: Line {0} of "{1}": Ignoring {2}: {3}.' .format(
-                                    line_number, well_filename, name, exc), file=sys.stderr)
+                                  line_number, well_filename, name, exc), file=sys.stderr)
                     
                     # else read 'SurfaceAge'...
                     elif name == 'SurfaceAge':
@@ -522,25 +511,25 @@ def read_well_file(
                                 raise ValueError
                             surface_age = age
                         except ValueError:
-                            print('WARNING: Line {0} of "{1}": Ignoring SurfaceAge: {2} is not a number >= 0.' .format(
-                                    line_number, well_filename, value),
-                                file=sys.stderr)
+                            print('WARNING: Line {0} of "{1}": Ignoring SurfaceAge: '
+                                  '{2} is not a number >= 0.' .format(line_number, well_filename, value),
+                                  file=sys.stderr)
                 
                 continue
             
             # The number of columns must include the lithology name and fraction
             # (starting with lithology column - extra strings if more than one lithology component).
             if num_strings < lithology_column + 2:
-                print('WARNING: Line {0} of "{1}": Ignoring lithology: line does not have at least {2} white-space separated strings.'.format(
-                        line_number, well_filename, lithology_column + 2),
-                    file=sys.stderr)
+                print('WARNING: Line {0} of "{1}": Ignoring lithology: line does not have at least '
+                      '{2} white-space separated strings.'.format(line_number, well_filename, lithology_column + 2),
+                      file=sys.stderr)
                 continue
             
             # Need an odd number of strings per line (each lithology component is 2 strings).
             if ((num_strings - lithology_column) % 2) == 1:
-                print('WARNING: Line {0} of "{1}": Ignoring lithology: each extra lithology must have two strings (name and fraction).'.format(
-                        line_number, well_filename),
-                    file=sys.stderr)
+                print('WARNING: Line {0} of "{1}": Ignoring lithology: each extra lithology must have two '
+                      'strings (name and fraction).'.format(line_number, well_filename),
+                      file=sys.stderr)
                 continue
             
             # Attempt to read/convert the column strings.
@@ -556,9 +545,9 @@ def read_well_file(
                     fraction = float(line_string_list[lithology_column + 2 * index + 1])
                     lithology_components.append((name, fraction))
             except ValueError:
-                print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot read age/depth/lithology values.' .format(
-                        line_number, well_filename),
-                    file=sys.stderr)
+                print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot '
+                      'read age/depth/lithology values.' .format(line_number, well_filename),
+                      file=sys.stderr)
                 continue
             
             # Read any extra columns if requested.
@@ -570,9 +559,9 @@ def read_well_file(
                         column_value = float(line_string_list[column])
                         other_attributes[column_name] = column_value
                 except ValueError:
-                    print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot read {2} value at column index {3}.' .format(
-                            line_number, well_filename, column_name, column),
-                        file=sys.stderr)
+                    print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot read {2} '
+                          'value at column index {3}.' .format(line_number, well_filename, column_name, column),
+                          file=sys.stderr)
                     continue
             
             stratigraphic_units.append((bottom_age, bottom_depth, lithology_components, other_attributes))
@@ -581,17 +570,17 @@ def read_well_file(
     
     if stratigraphic_units:
         # Sort the units in order of age (the first entry in each tuple in list of units).
-        stratigraphic_units = sorted(stratigraphic_units, key = lambda unit: unit[0])
+        stratigraphic_units = sorted(stratigraphic_units, key=lambda unit: unit[0])
         
         # Add youngest stratigraphic unit (the unit on the surface).
         surface_unit_bottom_age, surface_unit_bottom_depth, surface_unit_lithology_components, surface_unit_other_attributes = stratigraphic_units[0]
         surface_unit_top_age = surface_age
         surface_unit_top_depth = 0.0
         well.add_compacted_unit(
-                surface_unit_top_age, surface_unit_bottom_age,
-                surface_unit_top_depth, surface_unit_bottom_depth,
-                surface_unit_lithology_components, lithologies,
-                surface_unit_other_attributes)
+            surface_unit_top_age, surface_unit_bottom_age,
+            surface_unit_top_depth, surface_unit_bottom_depth,
+            surface_unit_lithology_components, lithologies,
+            surface_unit_other_attributes)
         
         # Add the remaining units in order of age (starting with second youngest).
         for unit_index in range(1, len(stratigraphic_units)):
@@ -601,10 +590,10 @@ def read_well_file(
             top_age, top_depth, _, _ = stratigraphic_units[unit_index - 1]
             
             well.add_compacted_unit(
-                    top_age, bottom_age,
-                    top_depth, bottom_depth,
-                    lithology_components, lithologies,
-                    other_attributes)
+                top_age, bottom_age,
+                top_depth, bottom_depth,
+                lithology_components, lithologies,
+                other_attributes)
     
     return well
 
@@ -671,7 +660,7 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
                     well_file.write(' {0:<{width}.3f}'.format(column_attribute_value, width=column_widths[2 + other_column_attribute_index]))
             
             # Write the lithology components.
-            for lithology_name, fraction in stratigraphic_unit.lithology_components:    
+            for lithology_name, fraction in stratigraphic_unit.lithology_components:
                 well_file.write(' {0:<15} {1:<10.2f}'.format(lithology_name, fraction))
             
             well_file.write('\n')

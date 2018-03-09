@@ -31,10 +31,10 @@ from scipy.optimize import minimize_scalar
 import sys
 
 
-y_l     = 125000.0   # Initial lithospheric thickness               [m]
+y_l = 125000.0   # Initial lithospheric thickness               [m]
 alpha_v = 3.28e-5    # Volumetric coefficient of thermal expansion  [1/K]
-Tm      = 1333.0     # Temperature of the mantle                    [C]
-kappa   = 1e-6       # Thermal diffusivity                          [m^2/s]
+Tm = 1333.0     # Temperature of the mantle                    [C]
+kappa = 1e-6       # Thermal diffusivity                          [m^2/s]
 
 # Densities of mantle, crust and water (in kg/m^3).
 rhoM = 3330.0
@@ -78,7 +78,7 @@ def post_rift_subsidence(
     tau = (y_l ** 2) / ((np.pi ** 2) * kappa)
     
     # Time in seconds (from My).
-    time_seconds  = time * 365 * 24 * 3600 * 1e6
+    time_seconds = time * 365 * 24 * 3600 * 1e6
     
     return E0 * (beta / np.pi) * np.sin(np.pi / beta) * (1 - np.exp(-time_seconds / tau))
 
@@ -88,7 +88,7 @@ def total_subsidence(
         pre_rift_crustal_thickness,
         time,
         rift_end_time,
-        rift_start_time = None):
+        rift_start_time=None):
     """
     Total subsidence  as syn-rift plus post-rift.
     
@@ -110,7 +110,7 @@ def total_subsidence(
         # Initial rifting plus subsequent thermal subsidence.
         return syn_rift_subsidence(beta, pre_rift_crustal_thickness) + post_rift_subsidence(beta, rift_end_time - time)
     
-    else: # Time is prior to rift end (so no thermal subsidence)...
+    else:  # Time is prior to rift end (so no thermal subsidence)...
         
         # If rift start time is not specified then assume rifting happened instantaneously
         # (from the view of crustal thickness, not thermal subsidence).
@@ -170,7 +170,6 @@ def estimate_beta(
         # We want to minimize difference between actual present day subsidence and subsidence calculated using 'beta'.
         return np.abs(present_day_subsidence - total_subsidence(beta, pre_rift_crustal_thickness, 0.0, rift_end_time))
     
-    
     # Need to apply limits on the range of beta values.
     # The objective function we're minimizing can produce positive subsidence values when beta < 1.0 so
     # we don't want those beta values to be found. Similarly for arbitrarily large beta values.
@@ -182,7 +181,6 @@ def estimate_beta(
     # (perhaps a more realistic limit would be some percentage of lithospheric thickness?).
     max_beta = y_l / present_day_crustal_thickness
     
-    
     # Run SciPy minimization.
     #
     # We bound the range of allowed beta values to [min_beta, max_beta].
@@ -190,10 +188,10 @@ def estimate_beta(
     # Note: It seems SciPy "minimize_scalar()" works a lot better than "minimize()" in this situation.
     #       Well, for some subsidence/thickness values anyway.
     res = minimize_scalar(
-            objective_func,
-            bounds=(min_beta, max_beta),
-            method='bounded',
-            options={'maxiter' : 100})
+        objective_func,
+        bounds=(min_beta, max_beta),
+        method='bounded',
+        options={'maxiter': 100})
     
     # Return estimated beta and the minimum residual between present day subsidence and
     # subsidence calculated using the estimated beta.

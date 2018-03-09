@@ -32,8 +32,8 @@ import sys
 
 def read_curve_function(
         curve_filename,
-        x_column_index = 0,
-        y_column_index = 1):
+        x_column_index=0,
+        y_column_index=1):
     """
     Reads x and y columns (at specified column indices) from curve file and
     returns a function object y(x) that linearly interpolates for arbitrary x values
@@ -72,7 +72,7 @@ def read_curve_function(
             
             if num_strings < min_num_columns:
                 raise ValueError('Curve file "{0}" does not have at least {1} columns at line {2}.'.format(
-                        curve_filename, min_num_columns, line_number))
+                                 curve_filename, min_num_columns, line_number))
 
             # Attempt to convert each string into a floating-point number.
             try:
@@ -81,7 +81,7 @@ def read_curve_function(
             except ValueError:
                 # Raise a more informative error message.
                 raise ValueError('Cannot read x/y values at line {0} of curve file {1}.'.format(
-                        line_number, curve_filename))
+                                 line_number, curve_filename))
             
             x_column.append(x)
             y_column.append(y)
@@ -110,8 +110,8 @@ def read_curve_function(
 
 def interpolate_from_stdin_to_stdout(
         curve_function,
-        input_x_column_index = 0,
-        reverse_output_columns = False):
+        input_x_column_index=0,
+        reverse_output_columns=False):
     """
     Calls curve_function on x data read from stdin and sends x and (interpolated) y data to stdout.
     
@@ -141,7 +141,7 @@ def interpolate_from_stdin_to_stdout(
         
         if num_strings < input_x_column_index + 1:
             raise ValueError('Standard input does not have a column {0} at line {1}.'.format(
-                    input_x_column_index + 1, line_number))
+                             input_x_column_index + 1, line_number))
         
         try:
             x = float(line_string_list[input_x_column_index])
@@ -164,10 +164,9 @@ if __name__ == '__main__':
     import argparse
     import traceback
     
-    
     try:
         __description__ = \
-        """
+            """
         Interpolate a sequence of linear segments (read from a 2-column model file) at values read from
         a specific column in standard input and write 2-column results to standard output.
         
@@ -182,21 +181,26 @@ if __name__ == '__main__':
          """
 
         # The command-line parser.
-        parser = argparse.ArgumentParser(description = __description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
         
-        parser.add_argument('-c', '--curve_filename', type=str, required=True,
-                metavar='curve_filename', help='File containing linear function y=f(x). The first column is x and second column y.')
+        parser.add_argument(
+            '-c', '--curve_filename', type=str, required=True,
+            metavar='curve_filename', help='File containing linear function y=f(x). The first column is x and second column y.')
         
-        parser.add_argument('-cx', '--curve_x_column', type=int, default=0,
-                metavar='curve_x_column_index', help='The zero-based index of column in "curve" file containing x values. Defaults to first column.')
-        parser.add_argument('-cy', '--curve_y_column', type=int, default=1,
-                metavar='curve_y_column_index', help='The zero-based index of column in "curve" file containing y values. Defaults to second column.')
+        parser.add_argument(
+            '-cx', '--curve_x_column', type=int, default=0,
+            metavar='curve_x_column_index', help='The zero-based index of column in "curve" file containing x values. Defaults to first column.')
+        parser.add_argument(
+            '-cy', '--curve_y_column', type=int, default=1,
+            metavar='curve_y_column_index', help='The zero-based index of column in "curve" file containing y values. Defaults to second column.')
         
-        parser.add_argument('-ix', '--input_x_column', type=int, default=0,
-                metavar='input_x_column_index', help='The zero-based index of column in standard "input" containing x values. Defaults to first column.')
+        parser.add_argument(
+            '-ix', '--input_x_column', type=int, default=0,
+            metavar='input_x_column_index', help='The zero-based index of column in standard "input" containing x values. Defaults to first column.')
         
-        parser.add_argument('-r', '--reverse_output_columns', action='store_true',
-                help='Reverse the order of output columns to output as "y x". Defaults to "x y".')
+        parser.add_argument(
+            '-r', '--reverse_output_columns', action='store_true',
+            help='Reverse the order of output columns to output as "y x". Defaults to "x y".')
         
         # Parse command-line options.
         args = parser.parse_args()
@@ -212,6 +216,6 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        #traceback.print_exc()
+        # traceback.print_exc()
         
         sys.exit(1)

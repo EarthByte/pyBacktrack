@@ -40,14 +40,14 @@ def backstrip(
         well_filename,
         lithologies_filename,
         total_sediment_thickness_filename,
-        sea_level_filename = None,
-        base_lithology_name = DEFAULT_BASE_LITHOLOGY_NAME,
-        well_location = None,
-        well_bottom_age_column = 0,
-        well_bottom_depth_column = 1,
-        well_min_water_depth_column = 2,
-        well_max_water_depth_column = 3,
-        well_lithology_column = 4):
+        sea_level_filename=None,
+        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        well_location=None,
+        well_bottom_age_column=0,
+        well_bottom_depth_column=1,
+        well_min_water_depth_column=2,
+        well_max_water_depth_column=3,
+        well_lithology_column=4):
     """
     Finds decompacted total sediment thickness and tectonic subsidence for each age in 'well'.
     
@@ -102,20 +102,20 @@ def backstrip(
     
     # Read the well from a text file.
     well = read_well_file(
-            well_filename,
-            lithologies,
-            well_bottom_age_column,
-            well_bottom_depth_column,
-            well_lithology_column,
-            # Extra columns to read into attributes 'well.StratigraphicUnit.min_water_depth' and
-            # 'well.StratigraphicUnit.max_water_depth' for each row (returned in well.Well)...
-            other_columns = {
-                    'min_water_depth' : well_min_water_depth_column,
-                    'max_water_depth' : well_max_water_depth_column},
-            # Attributes to read from file into returned well object...
-            well_attributes = {
-                    'SiteLongitude' : ('longitude', read_longitude),
-                    'SiteLatitude' : ('latitude', read_latitude)})
+        well_filename,
+        lithologies,
+        well_bottom_age_column,
+        well_bottom_depth_column,
+        well_lithology_column,
+        # Extra columns to read into attributes 'well.StratigraphicUnit.min_water_depth' and
+        # 'well.StratigraphicUnit.max_water_depth' for each row (returned in well.Well)...
+        other_columns={
+            'min_water_depth': well_min_water_depth_column,
+            'max_water_depth': well_max_water_depth_column},
+        # Attributes to read from file into returned well object...
+        well_attributes={
+            'SiteLongitude': ('longitude', read_longitude),
+            'SiteLatitude': ('latitude', read_latitude)})
     # There should be at least one stratigraphic unit - if not then return empty decompaction list.
     if not well.stratigraphic_units:
         return []
@@ -157,20 +157,20 @@ def backstrip(
         # We don't know the min/max water depth of the base unit so
         # just use the min/max water depth of the deepest unit of well.
         base_unit_other_attributes = {
-                'min_water_depth' : deepest_well_unit.min_water_depth,
-                'max_water_depth' : deepest_well_unit.max_water_depth}
+            'min_water_depth': deepest_well_unit.min_water_depth,
+            'max_water_depth': deepest_well_unit.max_water_depth}
         
         well.add_compacted_unit(
-                base_unit_top_age, base_unit_bottom_age,
-                base_unit_top_depth, base_unit_bottom_depth,
-                base_unit_lithogy_components, lithologies,
-                base_unit_other_attributes)
+            base_unit_top_age, base_unit_bottom_age,
+            base_unit_top_depth, base_unit_bottom_depth,
+            base_unit_lithogy_components, lithologies,
+            base_unit_other_attributes)
         
     elif well_sediment_thickness - total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
         print('WARNING: Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}).'.format(
-                well_sediment_thickness, total_sediment_thickness, well.longitude, well.latitude), file=sys.stderr)
+              well_sediment_thickness, total_sediment_thickness, well.longitude, well.latitude), file=sys.stderr)
     
     # Each decompacted well (in returned list) represents decompaction at the age of a stratigraphic unit in the well.
     decompacted_wells = well.decompact()
@@ -185,8 +185,8 @@ def backstrip(
         # stratigraphic layer (in decompacted wells) and added as a 'sea_level' attribute to each decompacted well.
         for decompacted_well in decompacted_wells:
             decompacted_well.sea_level = sea_level.get_average_level(
-                    decompacted_well.surface_unit.bottom_age,
-                    decompacted_well.surface_unit.top_age)
+                decompacted_well.surface_unit.bottom_age,
+                decompacted_well.surface_unit.top_age)
     
     return well, decompacted_wells
 
@@ -226,18 +226,18 @@ COLUMN_LITHOLOGY = 10
 COLUMN_COMPACTED_DEPTH = 11
     
 decompacted_columns_dict = {
-        'age' : COLUMN_AGE,
-        'decompacted_thickness' : COLUMN_DECOMPACTED_THICKNESS,
-        'decompacted_density' : COLUMN_DECOMPACTED_DENSITY,
-        'average_tectonic_subsidence' : COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
-        'min_tectonic_subsidence' : COLUMN_MIN_TECTONIC_SUBSIDENCE,
-        'max_tectonic_subsidence' : COLUMN_MAX_TECTONIC_SUBSIDENCE,
-        'average_water_depth' : COLUMN_AVERAGE_WATER_DEPTH,
-        'min_water_depth' : COLUMN_MIN_WATER_DEPTH,
-        'max_water_depth' : COLUMN_MAX_WATER_DEPTH,
-        'compacted_thickness' : COLUMN_COMPACTED_THICKNESS,
-        'lithology' : COLUMN_LITHOLOGY,
-        'compacted_depth' : COLUMN_COMPACTED_DEPTH}
+    'age': COLUMN_AGE,
+    'decompacted_thickness': COLUMN_DECOMPACTED_THICKNESS,
+    'decompacted_density': COLUMN_DECOMPACTED_DENSITY,
+    'average_tectonic_subsidence': COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
+    'min_tectonic_subsidence': COLUMN_MIN_TECTONIC_SUBSIDENCE,
+    'max_tectonic_subsidence': COLUMN_MAX_TECTONIC_SUBSIDENCE,
+    'average_water_depth': COLUMN_AVERAGE_WATER_DEPTH,
+    'min_water_depth': COLUMN_MIN_WATER_DEPTH,
+    'max_water_depth': COLUMN_MAX_WATER_DEPTH,
+    'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
+    'lithology': COLUMN_LITHOLOGY,
+    'compacted_depth': COLUMN_COMPACTED_DEPTH}
 decompacted_column_names_dict = dict([(v, k) for k, v in decompacted_columns_dict.iteritems()])
 decompacted_column_names = sorted(decompacted_columns_dict.keys())
 
@@ -250,7 +250,7 @@ def write_decompacted_wells(
         decompacted_wells_filename,
         well,
         well_attributes,
-        decompacted_columns = default_decompacted_columns):
+        decompacted_columns=default_decompacted_columns):
     """
     Write decompacted parameters as columns in a text file.
     
@@ -275,7 +275,7 @@ def write_decompacted_wells(
     
     # If 'COLUMN_LITHOLOGY' is specified then it must be the last column.
     if (COLUMN_LITHOLOGY in decompacted_columns and
-        decompacted_columns.index(COLUMN_LITHOLOGY) != len(decompacted_columns)-1):
+        decompacted_columns.index(COLUMN_LITHOLOGY) != len(decompacted_columns) - 1):
         raise ValueError('Lithology columns must be the last column in the decompacted well file.')
     
     with open(decompacted_wells_filename, 'w') as file:
@@ -327,25 +327,25 @@ def write_decompacted_wells(
                     column_str = column_float_format_string.format(average_decompacted_density, width=column_width)
                 elif decompacted_column == COLUMN_AVERAGE_TECTONIC_SUBSIDENCE:
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                            # Use extra attributes (min/max water depth) loaded into original well...
-                            decompacted_well.surface_unit.min_water_depth,
-                            decompacted_well.surface_unit.max_water_depth,
-                            getattr(decompacted_well, 'sea_level', None)) # decompacted_well.sea_level may not exist
+                        # Use extra attributes (min/max water depth) loaded into original well...
+                        decompacted_well.surface_unit.min_water_depth,
+                        decompacted_well.surface_unit.max_water_depth,
+                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
                     average_tectonic_subsidence = (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
                     column_str = column_float_format_string.format(average_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MIN_TECTONIC_SUBSIDENCE:
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                            # Use extra attributes (min/max water depth) loaded into original well...
-                            decompacted_well.surface_unit.min_water_depth,
-                            decompacted_well.surface_unit.max_water_depth,
-                            getattr(decompacted_well, 'sea_level', None)) # decompacted_well.sea_level may not exist
+                        # Use extra attributes (min/max water depth) loaded into original well...
+                        decompacted_well.surface_unit.min_water_depth,
+                        decompacted_well.surface_unit.max_water_depth,
+                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
                     column_str = column_float_format_string.format(min_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MAX_TECTONIC_SUBSIDENCE:
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                            # Use extra attributes (min/max water depth) loaded into original well...
-                            decompacted_well.surface_unit.min_water_depth,
-                            decompacted_well.surface_unit.max_water_depth,
-                            getattr(decompacted_well, 'sea_level', None)) # decompacted_well.sea_level may not exist
+                        # Use extra attributes (min/max water depth) loaded into original well...
+                        decompacted_well.surface_unit.min_water_depth,
+                        decompacted_well.surface_unit.max_water_depth,
+                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
                     column_str = column_float_format_string.format(max_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_AVERAGE_WATER_DEPTH:
                     # Use extra attributes (min/max water depth) loaded into original well...
@@ -362,7 +362,7 @@ def write_decompacted_wells(
                 elif decompacted_column == COLUMN_LITHOLOGY:
                     # Write the original lithology components of the surface stratigraphic unit.
                     lithology_string = ''.join('{0:<15} {1:<10.2f} '.format(lithology_name, fraction)
-                            for lithology_name, fraction in decompacted_well.surface_unit.lithology_components)
+                                               for lithology_name, fraction in decompacted_well.surface_unit.lithology_components)
                     column_str = column_str_format_string.format(lithology_string, width=column_width)
                 elif decompacted_column == COLUMN_COMPACTED_DEPTH:
                     # Depth of the top of the first/surface stratigraphic unit.
@@ -380,11 +380,10 @@ if __name__ == '__main__':
     
     import argparse
     
-    
     def main():
         
         __description__ = \
-    """Find decompacted total sediment thickness and tectonic subsidence through time near passive margins.
+            """Find decompacted total sediment thickness and tectonic subsidence through time near passive margins.
     
     This backstripping script can be used to find tectonic subsidence (due to lithospheric stretching) from
     paleo water depths of the stratigraphic columns and their decompaction through time.
@@ -436,7 +435,7 @@ if __name__ == '__main__':
     """.format(''.join('        {0}\n'.format(column_name) for column_name in decompacted_column_names))
         
         # The command-line parser.
-        parser = argparse.ArgumentParser(description = __description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
         
         def parse_unicode(value_string):
             try:
@@ -447,13 +446,15 @@ if __name__ == '__main__':
             
             return filename
         
-        parser.add_argument('-w', '--well_filename', type=parse_unicode, required=True,
-                metavar='well_filename',
-                help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
-                    'for each stratigraphic unit in a single well.')
-        parser.add_argument('-l', '--lithologies_filename', type=parse_unicode, required=True,
-                metavar='lithologies_filename',
-                help='The lithologies filename used to lookup density, surface porosity and porosity decay.')
+        parser.add_argument(
+            '-w', '--well_filename', type=parse_unicode, required=True,
+            metavar='well_filename',
+            help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
+                 'for each stratigraphic unit in a single well.')
+        parser.add_argument(
+            '-l', '--lithologies_filename', type=parse_unicode, required=True,
+            metavar='lithologies_filename',
+            help='The lithologies filename used to lookup density, surface porosity and porosity decay.')
         
         # Action to parse a longitude/latitude location.
         class LocationAction(argparse.Action):
@@ -476,13 +477,14 @@ if __name__ == '__main__':
                 
                 setattr(namespace, self.dest, (longitude, latitude))
         
-        parser.add_argument('-x', '--well_location', nargs=2, action=LocationAction,
-                metavar=('well_longitude', 'well_latitude'),
-                help='Optional location of the well. '
-                    'Must be specified if the well location is not provided inside the well file '
-                    '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
-                    'Overrides well file if both specified. '
-                    'Longitude and latitude are in degrees.')
+        parser.add_argument(
+            '-x', '--well_location', nargs=2, action=LocationAction,
+            metavar=('well_longitude', 'well_latitude'),
+            help='Optional location of the well. '
+                 'Must be specified if the well location is not provided inside the well file '
+                 '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
+                 'Overrides well file if both specified. '
+                 'Longitude and latitude are in degrees.')
         
         def parse_non_negative_integer(value_string):
             try:
@@ -495,52 +497,59 @@ if __name__ == '__main__':
             
             return value
         
-        parser.add_argument('-c', '--well_columns', type=parse_non_negative_integer, nargs=5, default=[0,1,2,3,4],
-                metavar=('bottom_age_column', 'bottom_depth_column', 'min_water_depth_column', 'max_water_depth_column', 'lithology_column'),
-                help='The well file column indices (zero-based) for bottom age, bottom depth, '
-                    'min water depth, max water depth and lithology(s) respectively. '
-                    'This enables unused columns to reside in the well text file. '
-                    'For example, to skip unused columns 4 and 5 '
-                    '(perhaps containing present day water depth and whether column is under water) '
-                    'use column indices 0 1 2 3 6. Note that lithologies should be the last column since '
-                    'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
-                    'Defaults to 0 1 2 3 4.')
+        parser.add_argument(
+            '-c', '--well_columns', type=parse_non_negative_integer, nargs=5, default=[0, 1, 2, 3, 4],
+            metavar=('bottom_age_column', 'bottom_depth_column', 'min_water_depth_column', 'max_water_depth_column', 'lithology_column'),
+            help='The well file column indices (zero-based) for bottom age, bottom depth, '
+                 'min water depth, max water depth and lithology(s) respectively. '
+                 'This enables unused columns to reside in the well text file. '
+                 'For example, to skip unused columns 4 and 5 '
+                 '(perhaps containing present day water depth and whether column is under water) '
+                 'use column indices 0 1 2 3 6. Note that lithologies should be the last column since '
+                 'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
+                 'Defaults to 0 1 2 3 4.')
         
-        parser.add_argument('-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
-                metavar='decompacted_column_name',
-                help='The columns to output in the decompacted file. '
-                    'Choices include {0}. '
-                    'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
-                    'Defaults to "{1}".'.format(
-                            ', '.join(decompacted_column_names),
-                            ' '.join(default_decompacted_column_names)))
+        parser.add_argument(
+            '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
+            metavar='decompacted_column_name',
+            help='The columns to output in the decompacted file. '
+                 'Choices include {0}. '
+                 'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
+                 'Defaults to "{1}".'.format(
+                    ', '.join(decompacted_column_names),
+                    ' '.join(default_decompacted_column_names)))
         
-        parser.add_argument('-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
-                metavar='base_lithology_name',
-                help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
-                     'The well might not record the full depth of sedimentation. '
-                     'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
-                     'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
+        parser.add_argument(
+            '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
+            metavar='base_lithology_name',
+            help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
+                 'The well might not record the full depth of sedimentation. '
+                 'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
+                 'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
         
-        parser.add_argument('-o', '--output_well_filename', type=parse_unicode,
-                metavar='output_well_filename',
-                help='Optional output well filename to write amended well data to. '
-                    'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
+        parser.add_argument(
+            '-o', '--output_well_filename', type=parse_unicode,
+            metavar='output_well_filename',
+            help='Optional output well filename to write amended well data to. '
+                 'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
         
-        parser.add_argument('-s', '--total_sediment_thickness_filename', type=str, required=True,
-                metavar='total_sediment_thickness_filename',
-                help='Used to obtain total sediment thickness at well location.')
+        parser.add_argument(
+            '-s', '--total_sediment_thickness_filename', type=str, required=True,
+            metavar='total_sediment_thickness_filename',
+            help='Used to obtain total sediment thickness at well location.')
         
-        parser.add_argument('-sl', '--sea_level_filename', type=str,
-                metavar='sea_level_filename',
-                help='Optional file used to obtain sea level (relative to present-day) over time. '
-                    'If no file is specified then sea level is ignored. '
-                    'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+        parser.add_argument(
+            '-sl', '--sea_level_filename', type=str,
+            metavar='sea_level_filename',
+            help='Optional file used to obtain sea level (relative to present-day) over time. '
+                 'If no file is specified then sea level is ignored. '
+                 'If specified then each row should contain an age column followed by a column for sea level (in metres).')
         
-        parser.add_argument('output_filename', type=parse_unicode,
-                metavar='output_filename',
-                help='The output filename used to store the decompacted total sediment thickness and '
-                    'tectonic subsidence through time.')
+        parser.add_argument(
+            'output_filename', type=parse_unicode,
+            metavar='output_filename',
+            help='The output filename used to store the decompacted total sediment thickness and '
+                 'tectonic subsidence through time.')
         
         # Parse command-line options.
         args = parser.parse_args()
@@ -553,39 +562,38 @@ if __name__ == '__main__':
         
         # Decompact the well.
         well, decompacted_wells = backstrip(
-                args.well_filename,
-                args.lithologies_filename,
-                args.total_sediment_thickness_filename,
-                args.sea_level_filename,
-                args.base_lithology_name,
-                args.well_location,
-                well_bottom_age_column = args.well_columns[0],
-                well_bottom_depth_column = args.well_columns[1],
-                well_min_water_depth_column = args.well_columns[2],
-                well_max_water_depth_column = args.well_columns[3],
-                well_lithology_column = args.well_columns[4])
+            args.well_filename,
+            args.lithologies_filename,
+            args.total_sediment_thickness_filename,
+            args.sea_level_filename,
+            args.base_lithology_name,
+            args.well_location,
+            well_bottom_age_column=args.well_columns[0],
+            well_bottom_depth_column=args.well_columns[1],
+            well_min_water_depth_column=args.well_columns[2],
+            well_max_water_depth_column=args.well_columns[3],
+            well_lithology_column=args.well_columns[4])
         
         # Attributes of well object to write to file as metadata.
-        well_attributes = {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
+        well_attributes = {'longitude': 'SiteLongitude', 'latitude': 'SiteLatitude'}
         
         # Write out amended well data (ie, extra stratigraphic base unit) if requested.
         if args.output_well_filename:
             write_well_file(
-                    well,
-                    args.output_well_filename,
-                    ['min_water_depth', 'max_water_depth'],
-                    # Attributes of well object to write to file as metadata...
-                    well_attributes = well_attributes)
+                well,
+                args.output_well_filename,
+                ['min_water_depth', 'max_water_depth'],
+                # Attributes of well object to write to file as metadata...
+                well_attributes=well_attributes)
         
         # Write the decompactions of the well at the ages of its stratigraphic units.
         write_decompacted_wells(
-                decompacted_wells,
-                args.output_filename,
-                well,
-                # Attributes of well object to write to file as metadata...
-                well_attributes,
-                decompacted_columns)
-    
+            decompacted_wells,
+            args.output_filename,
+            well,
+            # Attributes of well object to write to file as metadata...
+            well_attributes,
+            decompacted_columns)
     
     import traceback
     
@@ -595,5 +603,5 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        #traceback.print_exc()
+        # traceback.print_exc()
         sys.exit(1)

@@ -78,9 +78,9 @@ def read_lithologies_file(lithologies_filename):
             # If have more than 4 strings then 5th string should be a comment (ie, start with '#').
             if (len(line_string_list) < 4 or
                 (len(line_string_list) > 4 and not line_string_list[4].startswith('#'))):
-                print('Line {0} of "{1}": Ignoring lithology: line does not have 4 white-space separated strings.'.format(
-                        line_number, lithologies_filename),
-                    file=sys.stderr)
+                print('Line {0} of "{1}": Ignoring lithology: line does not have 4 white-space '
+                      'separated strings.'.format(line_number, lithologies_filename),
+                      file=sys.stderr)
                 continue
                 
             # Attempt to read/convert the strings.
@@ -90,9 +90,9 @@ def read_lithologies_file(lithologies_filename):
                 surface_porosity = float(line_string_list[2])
                 porosity_decay = float(line_string_list[3])
             except ValueError:
-                print('Line {0} of "{1}": Ignoring lithology: cannot read name/density/porosity/decay values.'.format(
-                        line_number, lithologies_filename),
-                    file=sys.stderr)
+                print('Line {0} of "{1}": Ignoring lithology: cannot read name/density/porosity/decay '
+                      'values.'.format(line_number, lithologies_filename),
+                      file=sys.stderr)
                 continue
 
             lithologies[name] = Lithology(density, surface_porosity, porosity_decay)

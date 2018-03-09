@@ -49,7 +49,6 @@ class SeaLevel(object):
         # Read the sea level curve sea_level=function(age) from sea level file.
         self.sea_level_function, self.sea_level_times, _ = interpolate.read_curve_function(sea_level_filename)
 
-    
     def get_average_level(self, begin_time, end_time):
         """
         The average sea level is obtained by integrating sea level curve over the specified time period
@@ -67,11 +66,11 @@ class SeaLevel(object):
         
         # Integrate sea level curve over time interval.
         sea_level_integral, sea_level_integral_error = scipy.integrate.quad(
-                self.sea_level_function,
-                end_time,
-                begin_time,
-                points = times,
-                limit = 2 * len(times))
+            self.sea_level_function,
+            end_time,
+            begin_time,
+            points=times,
+            limit=2 * len(times))
         
         # Average sea level over integrated interval.
         average_sea_level = sea_level_integral / time_interval
@@ -80,9 +79,8 @@ class SeaLevel(object):
         average_sea_level_error = sea_level_integral_error / time_interval
         if math.fabs(average_sea_level_error) > MAX_SEA_LEVEL_ERROR:
             print('WARNING: Unable to accurately sea level curve over time period [{0}, {1}]. '
-                'Average sea level will be inaccurate on the order of {2} metres. '.format(
-                    begin_time, end_time, math.fabs(average_sea_level_error)),
-                file=sys.stderr)
+                  'Average sea level will be inaccurate on the order of {2} metres. '.format(
+                      begin_time, end_time, math.fabs(average_sea_level_error)),
+                  file=sys.stderr)
         
         return average_sea_level
-

@@ -51,7 +51,7 @@ DEFAULT_MODEL = MODEL_GDH1
 
 def age_to_depth(
         age,
-        model = DEFAULT_MODEL):
+        model=DEFAULT_MODEL):
     """
     Converts 'age' (Ma) to basement depth (metres) using the age/depth curve/model 'model'.
     
@@ -74,7 +74,7 @@ def age_to_depth(
 
 
 def age_to_depth_from_stdin_to_stdout(
-        model = DEFAULT_MODEL):
+        model=DEFAULT_MODEL):
     """
     Converts (lon, lat, age) lines on stdin to (lon, lat, depth) on stdout.
     
@@ -93,7 +93,7 @@ def age_to_depth_from_stdin_to_stdout(
         # Need at least 3 strings per line (longitude, latitude and age).
         if len(line_string_list) < 3:
             print('Line {0}: Ignoring point - line does not have at least three white-space separated strings.'.format(
-                    line_number), file=sys.stderr)
+                  line_number), file=sys.stderr)
             continue
 
         # Attempt to convert each string into a floating-point number.
@@ -133,13 +133,13 @@ def age_to_depth_GDH1(age):
 # Converted to Python from C program "age2depth.c".                                     #
 #########################################################################################
 
-CROSBY_2007_DENSM = 3300.0 # Mantle density, kgm-3
-CROSBY_2007_DENSW = 1030.0 # Water density, kgm-3
-CROSBY_2007_KAPPA = 7.8e-7 # Thermal diffusivity, m2s-1
-CROSBY_2007_ALPHA = 3.2e-5 # Thermal expansivity
-CROSBY_2007_TM = 1333.0 # Mantle temperature, C
-CROSBY_2007_RD = 2600.0 # Zero-age depth, m
-CROSBY_2007_PTHICK = 1.02e5 # Plate thickness, m
+CROSBY_2007_DENSM = 3300.0  # Mantle density, kgm-3
+CROSBY_2007_DENSW = 1030.0  # Water density, kgm-3
+CROSBY_2007_KAPPA = 7.8e-7  # Thermal diffusivity, m2s-1
+CROSBY_2007_ALPHA = 3.2e-5  # Thermal expansivity
+CROSBY_2007_TM = 1333.0  # Mantle temperature, C
+CROSBY_2007_RD = 2600.0  # Zero-age depth, m
+CROSBY_2007_PTHICK = 1.02e5  # Plate thickness, m
 
 CROSBY_2007_PERT_A = 300.0
 CROSBY_2007_PERT_B = 15.0
@@ -152,7 +152,7 @@ CROSBY_2007_FTOL = 1.0e-6
 
 def CROSBY_2007_subs(age):
 
-    # Calculates the expected subsidence for a given age and plate model 
+    # Calculates the expected subsidence for a given age and plate model
 
     age *= 1.0e6 * 365.25 * 24.0 * 3600.0
         
@@ -161,12 +161,12 @@ def CROSBY_2007_subs(age):
     
     while True:
 
-        sum = math.exp( -i * i * math.pi * math.pi * CROSBY_2007_KAPPA * age / ( CROSBY_2007_PTHICK * CROSBY_2007_PTHICK ) )
-        sum /= ( i * i )
+        sum = math.exp(-i * i * math.pi * math.pi * CROSBY_2007_KAPPA * age / (CROSBY_2007_PTHICK * CROSBY_2007_PTHICK))
+        sum /= (i * i)
         sum *= -2.0
         sum += oldsum
 
-        fdiff = math.fabs( ( sum - oldsum ) / sum )
+        fdiff = math.fabs((sum - oldsum) / sum)
  
         oldsum = sum
         
@@ -175,19 +175,19 @@ def CROSBY_2007_subs(age):
         if fdiff <= CROSBY_2007_FTOL:
             break
 
-    w = sum * 2.0 * CROSBY_2007_TM * CROSBY_2007_PTHICK / ( math.pi * math.pi )
+    w = sum * 2.0 * CROSBY_2007_TM * CROSBY_2007_PTHICK / (math.pi * math.pi)
     w += CROSBY_2007_TM * CROSBY_2007_PTHICK / 2.0
-    w *= CROSBY_2007_DENSM * CROSBY_2007_ALPHA / ( CROSBY_2007_DENSM - CROSBY_2007_DENSW )
+    w *= CROSBY_2007_DENSM * CROSBY_2007_ALPHA / (CROSBY_2007_DENSM - CROSBY_2007_DENSW)
 
     return w
 
 
 def CROSBY_2007_pert(age):
 
-    ptb = ( age - CROSBY_2007_PERT_D ) / CROSBY_2007_PERT_E
+    ptb = (age - CROSBY_2007_PERT_D) / CROSBY_2007_PERT_E
     ptb *= ptb
     ptb = math.exp(-ptb)
-    ptb *= math.sin( ( age/CROSBY_2007_PERT_B ) - CROSBY_2007_PERT_C )
+    ptb *= math.sin((age / CROSBY_2007_PERT_B) - CROSBY_2007_PERT_C)
     ptb *= CROSBY_2007_PERT_A
 
     return ptb
@@ -195,49 +195,49 @@ def CROSBY_2007_pert(age):
 
 def age_to_depth_CROSBY_2007(age):
     
-    return  CROSBY_2007_RD + CROSBY_2007_subs( age ) - CROSBY_2007_pert( age )
+    return CROSBY_2007_RD + CROSBY_2007_subs(age) - CROSBY_2007_pert(age)
 
 
 if __name__ == '__main__':
     
     import argparse
     
-    
     model_dict = dict((model_name, model) for model, model_name, _ in ALL_MODELS)
     model_name_dict = dict((model, model_name) for model, model_name, _ in ALL_MODELS)
     default_model_name = model_name_dict[DEFAULT_MODEL]
     
     __description__ = \
-    """Converts (lon, lat, age) lines on stdin to (lon, lat, depth) on stdout.
-    
-    Reads text data from standard input where each line contains longitude, latitude (in degrees) and age (in Ma).
-    Writes text data to standard output where each line contains longitude, latitude (in degrees) and depth (in metres).
-    
-    The age-to-depth model can be chosen using the '-m' option.
-    Choices include:{0}
-    ...defaults to {1}.
-    
-    
-    NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
-    For example...
+        """Converts (lon, lat, age) lines on stdin to (lon, lat, depth) on stdout.
+        
+        Reads text data from standard input where each line contains longitude, latitude (in degrees) and age (in Ma).
+        Writes text data to standard output where each line contains longitude, latitude (in degrees) and depth (in metres).
+        
+        The age-to-depth model can be chosen using the '-m' option.
+        Choices include:{0}
+        ...defaults to {1}.
+        
+        
+        NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
+        For example...
 
-    python %(prog)s -m {1} < age_points.xy > depth_points.xy
-    """.format(
+        python %(prog)s -m {1} < age_points.xy > depth_points.xy
+        """.format(
             ''.join('\n\n        {0}: {1}.\n'.format(model_name, model_desc)
                     for _, model_name, model_desc in ALL_MODELS),
             default_model_name)
     
     # The command-line parser.
-    parser = argparse.ArgumentParser(description = __description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
     
-    parser.add_argument('-m', '--model', type=str, default=default_model_name,
-            metavar='model',
-            dest='model_name',
-            help='The model used to convert age to depth. '
-                'Choices include {0} (see above). '
-                'Defaults to {1}.'.format(
-                        ', '.join(model_name for _, model_name, _ in ALL_MODELS),
-                        default_model_name))
+    parser.add_argument(
+        '-m', '--model', type=str, default=default_model_name,
+        metavar='model',
+        dest='model_name',
+        help='The model used to convert age to depth. '
+             'Choices include {0} (see above). '
+             'Defaults to {1}.'.format(
+                ', '.join(model_name for _, model_name, _ in ALL_MODELS),
+                default_model_name))
     
     # Parse command-line options.
     args = parser.parse_args()
