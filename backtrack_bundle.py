@@ -25,7 +25,7 @@
 
 from __future__ import print_function
 import argparse
-import backtrack
+from pybacktrack import backtrack
 import glob
 import os.path
 import sys

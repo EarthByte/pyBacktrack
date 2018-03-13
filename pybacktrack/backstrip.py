@@ -23,12 +23,12 @@
 
 
 from __future__ import print_function
-from call_system_command import call_system_command
-from lithology import read_lithologies_file
+from pybacktrack.lithology import read_lithologies_file
+from pybacktrack.sea_level import SeaLevel
+from pybacktrack.util.call_system_command import call_system_command
+from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import math
-from sea_level import SeaLevel
 import sys
-from well import read_well_file, write_well_file, write_well_metadata
 
 
 # The name of the lithology of the stratigraphic unit at the base of the well to use by default

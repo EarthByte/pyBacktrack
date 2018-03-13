@@ -26,7 +26,7 @@
 
 
 from __future__ import print_function
-import interpolate
+import pybacktrack.util.interpolate
 import math
 import scipy.integrate
 import sys
@@ -47,7 +47,7 @@ class SeaLevel(object):
         """
         
         # Read the sea level curve sea_level=function(age) from sea level file.
-        self.sea_level_function, self.sea_level_times, _ = interpolate.read_curve_function(sea_level_filename)
+        self.sea_level_function, self.sea_level_times, _ = pybacktrack.util.interpolate.read_curve_function(sea_level_filename)
 
     def get_average_level(self, begin_time, end_time):
         """

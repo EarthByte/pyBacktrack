@@ -23,18 +23,18 @@
 
 
 from __future__ import print_function
-import age_to_depth
 import argparse
-from call_system_command import call_system_command
 import codecs
-from lithology import read_lithologies_file
 import math
 import os.path
+import pybacktrack.age_to_depth as age_to_depth
+from pybacktrack.lithology import read_lithologies_file
+import pybacktrack.rifting as rifting
+from pybacktrack.sea_level import SeaLevel
+from pybacktrack.util.call_system_command import call_system_command
+from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import pygplates
-import rifting
-from sea_level import SeaLevel
 import sys
-from well import read_well_file, write_well_file, write_well_metadata
 
 
 # The name of the lithology of the stratigraphic unit at the base of the well to use by default

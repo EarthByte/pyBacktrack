@@ -26,7 +26,7 @@
 
 from __future__ import print_function
 import math
-from lithology import create_lithology_from_components
+from pybacktrack.lithology import create_lithology_from_components
 import sys
 
 
