@@ -53,7 +53,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.napoleon',  # Enable conversion of numpydoc and google style docstrings to reST.
+    #
+    # Enable conversion of numpydoc and google style docstrings to reST...
+    #
+    # 'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',  # For Sphinx >= 1.3, napolean comes bundled with Sphinx (as an extension).
     'sphinx.ext.mathjax',
 ]
 
