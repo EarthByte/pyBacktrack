@@ -14,11 +14,35 @@
 
 import sys
 import os
+from mock import Mock as MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return MagicMock()
+
+#
+# "Read the Docs" does not support dependencies that are C extensions so we need to
+# mock them out to avoid import errors when Sphinx builds documentation.
+#
+# Well, in the *advanced settings* of the "Read the Docs" project you can check the
+# "Use system packages" check box and this will work for numpy and scipy, however
+# it won't work for pygplates (since it's not installed in their build system).
+#
+# See http://docs.readthedocs.io/en/latest/faq.html
+#
+MOCK_MODULES = [
+    #'numpy',
+    #'scipy',
+    'pygplates'
+]
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
+print sys.path
 
 # -- General configuration ------------------------------------------------
 
