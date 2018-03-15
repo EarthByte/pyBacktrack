@@ -1,25 +1,29 @@
 
-"""
-    Copyright (C) 2017 The University of Sydney, Australia
-    
-    This program is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License, version 2, as published by
-    the Free Software Foundation.
-    
-    This program is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more details.
-    
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-"""
+#
+# Copyright (C) 2017 The University of Sydney, Australia
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 2, as published by
+# the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
 
+"""Find decompacted total sediment thickness and water depth through time.
 
-###########################################################################################
-# Find decompacted total sediment thickness and water depth through time in ocean basins. #
-###########################################################################################
+:func:`backtrack` finds decompacted total sediment thickness and water depth for each age in a well.
+
+:func:`write_decompacted_wells` writes decompacted parameters as columns in a text file.
+
+:func:`backtrack_and_write_decompacted` both backtracks well and writes decompacted data.
+"""
 
 
 from __future__ import print_function
@@ -67,68 +71,89 @@ def backtrack(
         well_bottom_age_column=0,
         well_bottom_depth_column=1,
         well_lithology_column=2):
-    """
-    Finds decompacted total sediment thickness and water depth for each age in 'well'.
+    """Finds decompacted total sediment thickness and water depth for each age in a well.
     
-    well_filename: Name of well text file.
+    Parameters
+    ----------
+    well_filename : string
+        Name of well text file.
+    lithologies_filename : string
+        Name of lithologies text file.
+    age_grid_filename : string
+        Age grid filename.
+        Used to obtain age of seafloor at well location.
+    topography_filename : string
+        Topography filename.
+        Used to obtain water depth at well location.
+    total_sediment_thickness_filename : string
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at well location.
+    crustal_thickness_filename : string
+        Crustal thickness filename.
+        Used to obtain crustal thickness at well location.
+    dynamic_topography_model_info : tuple or None
+        Represents a time-dependent dynamic topography raster grid.
+        Currently only used for oceanic floor (ie, well location inside age grid)
+        it is not used if well is on continental crust (passive margin).
+        This is a text file containing a list of dynamic topography grids and associated times.
+        The tuple argument contains the three elements (dynamic topography list filename, static polygon filename, rotation filenames).
+        The first tuple element is the filename of file containing list of dynamic topography grids (and associated times).
+        Each row in this list file should contain two columns.
+        First column containing filename (relative to list file) of a dynamic topography grid at a particular time.
+        Second column containing associated time (in Ma).
+        The second tuple element is the filename of file containing static polygons associated with dynamic topography model.
+        This is used to assign plate ID to well location so it can be reconstructed.
+        The third tuple element is the filename of the rotation file associated with model.
+        Only the rotation file for static continents/oceans is needed (ie, deformation rotations not needed).
+    sea_level_filename : string or None
+        Sea level filename.
+        Used to obtain sea levels relative to present day.
+    base_lithology_name : string or None
+        Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
+        The stratigraphic units in the well might not record the full depth of sedimentation.
+        The base unit covers the remaining depth from bottom of well to the total sediment thickness.
+    ocean_age_to_depth_model :  {age_to_depth.MODEL_GDH1, age_to_depth.MODEL_CROSBY_2007} or None
+        The model to use when converting ocean age to depth at well location
+        (if on ocean floor - not used for continental passive margin).
+    rifting_period : tuple or None
+        Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
+        If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
+        (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
+        If specified then overrides value in well file.
+        If well is on continental passive margin then at least rift end age should be specified
+        either here or in well file.
+    well_location : tuple or None
+        Optional location of well.
+        If not provided then is extracted from the `well_filename` file.
+        If specified then overrides value in well file.
+        If specified then must be a 2-tuple (longitude, latitude) in degrees.
+    well_bottom_age_column : int
+        The column of well file containing bottom age. Defaults to 0.
+    well_bottom_depth_column : int
+        The column of well file containing bottom depth. Defaults to 1.
+    well_lithology_column : int
+        The column of well file containing lithology(s). Defaults to 2.
     
-    lithologies_filename: Name of lithologies text file.
+    Returns
+    -------
+    :class:`Well`
+        The well read from `well_filename`.
+        It may also be ammended with a base stratigraphic unit from the bottom of the well to basement.
+    list of :class:`Well.DecompactedWell`
+        The decompacted wells associated with the well.
     
-    age_grid_filename: Age grid filename.
-                       Used to obtain age of seafloor at well location.
-    
-    topography_filename: Topography filename.
-                         Used to obtain water depth at well location.
-    
-    total_sediment_thickness_filename: Total sediment thickness filename.
-                                       Used to obtain total sediment thickness at well location.
-    
-    crustal_thickness_filename: Crustal thickness filename.
-                                Used to obtain crustal thickness at well location.
-    
-    dynamic_topography_model_info: Represents a time-dependent dynamic topography raster grid.
-                                   Currently only used for oceanic floor (ie, well location inside age grid)
-                                   it is not used if well is on continental crust (passive margin).
-                                   This is a text file containing a list of dynamic topography grids and associated times.
-                                   Each row in this list file should contain two columns.
-                                   First column containing filename (relative to list file) of a
-                                   dynamic topography grid at a particular time.
-                                   Second column containing associated time (in Ma).
-    
-    sea_level_filename: Sea level filename.
-                        Used to obtain sea levels relative to present day.
-    
-    base_lithology_name: Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
-                         The stratigraphic units in the well might not record the full depth of sedimentation.
-                         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
-    
-    ocean_age_to_depth_model: The model to use when converting ocean age to depth at well location
-                              (if on ocean floor - not used for continental passive margin).
-    
-    rifting_period: Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
-                    If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
-                    (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
-                    If specified then overrides value in well file.
-                    If well is on continental passive margin then at least rift end age should be specified
-                    either here or in well file.
-    
-    well_location: Optional location of well. If not provided then is extracted from 'well_filename' file.
-                   If specified then overrides value in well file.
-                   If specified then must be a 2-tuple (longitude, latitude) in degrees.
-    
-    <well columns>: Each column attribute to read from well file (bottom_age, bottom_depth and lithology(s))
-                    has a column index to direct which column it should be read from.
-    
-    Returns: 2-tuple (Well, list of well.DecompactedWell)
-    
-    The tectonic subsidence at each age (of decompacted wells) is added as a 'tectonic_subsidence' attribute
-    to each decompacted well returned.
+    Raises
+    ------
+    ValueError
+        If `lithology_column` is not the largest column number (must be last column).
+    ValueError
+        If `well_location` is not specified *and* the well location was not extracted from the well file.
     
     Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
     which column it should be read from.
     
-    Raises ValueError if 'lithology_column' is not the largest column number (must be last column).
-    Raises ValueError if 'well_location' is not specified *and* the well location was not extracted from the well file.
+    .. note:: The tectonic subsidence at each age (of decompacted wells) is added as a `tectonic_subsidence` attribute
+       to each decompacted well returned.
     """
     
     # Read the lithologies from a text file.
@@ -1222,7 +1247,7 @@ default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_t
 
 
 __description__ = \
-    """Find decompacted total sediment thickness and water depth through time in ocean basins.
+    """Find decompacted total sediment thickness and water depth through time.
     
     This backtracking script can be used to find paleo water depths.
     Paleo water depths are obtained from tectonic subsidence by subtracting the isostatic correction of
