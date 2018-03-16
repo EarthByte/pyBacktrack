@@ -15,11 +15,7 @@
 import sys
 import os
 from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return MagicMock()
+import sphinx
 
 #
 # "Read the Docs" does not support dependencies that are C extensions so we need to
@@ -31,6 +27,10 @@ class Mock(MagicMock):
 #
 # See http://docs.readthedocs.io/en/latest/faq.html
 #
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return MagicMock()
 MOCK_MODULES = [
     #'numpy',
     #'scipy',
@@ -53,13 +53,17 @@ sys.path.insert(0, os.path.abspath('..'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    #
-    # Enable conversion of numpydoc and google style docstrings to reST...
-    #
-    # 'sphinxcontrib.napoleon',
-    'sphinx.ext.napoleon',  # For Sphinx >= 1.3, napolean comes bundled with Sphinx (as an extension).
     'sphinx.ext.mathjax',
 ]
+#
+# Napoleon enables conversion of numpydoc and google style docstrings to reST...
+#
+if sphinx.__version__ >= "1.3":
+    # For Sphinx >= 1.3, napolean comes bundled with Sphinx (as an extension).
+    extensions.append('sphinx.ext.napoleon')
+else:
+    # For Sphinx < 1.3, you need to 'pip install sphinxcontrib.napoleon'.
+    extensions.append('sphinxcontrib.napoleon')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
