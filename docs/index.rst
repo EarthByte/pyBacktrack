@@ -5,38 +5,16 @@
 
 .. _pybacktrack_index:
 
-pyBacktrack documentation
+PyBacktrack documentation
 =========================
 
-A tool for reconstructing paleobathymetry on oceanic and continental crust.
+.. include:: project_description.txt
 
+.. toctree::
+   :maxdepth: 3
 
-.. contents::
-   :local:
-   :depth: 2
-
-
-.. _pybacktrack_installation:
-
-Installation
-------------
-
-Reference
----------
-
-This section documents the Python functions and classes that make up the public interface of the *pybacktrack* package.
-
-
-.. contents::
-   :local:
-   :depth: 2
-
-
-backtrack
-+++++++++
-
-.. automodule:: pybacktrack.backtrack
-   :members: backtrack
+   pybacktrack_installation
+   pybacktrack_reference
 
 
 Indices and tables
