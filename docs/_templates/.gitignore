@@ -1,0 +1,2 @@
+# This file enables us to have a '_template' folder in git (empty folders not allowed)
+# which avoids a Sphinx warning that the folder is missing.
