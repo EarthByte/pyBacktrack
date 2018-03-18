@@ -91,7 +91,7 @@ def backtrack(
     crustal_thickness_filename : string
         Crustal thickness filename.
         Used to obtain crustal thickness at well location.
-    dynamic_topography_model_info : tuple or None
+    dynamic_topography_model_info : tuple, optional
         Represents a time-dependent dynamic topography raster grid.
         Currently only used for oceanic floor (ie, well location inside age grid)
         it is not used if well is on continental crust (passive margin).
@@ -105,33 +105,34 @@ def backtrack(
         This is used to assign plate ID to well location so it can be reconstructed.
         The third tuple element is the filename of the rotation file associated with model.
         Only the rotation file for static continents/oceans is needed (ie, deformation rotations not needed).
-    sea_level_filename : string or None
+    sea_level_filename : string, optional
         Sea level filename.
         Used to obtain sea levels relative to present day.
-    base_lithology_name : string or None
+    base_lithology_name : string, optional
         Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
-    ocean_age_to_depth_model :  {age_to_depth.MODEL_GDH1, age_to_depth.MODEL_CROSBY_2007} or None
+        Defaults to 'Shale'.
+    ocean_age_to_depth_model : {'age_to_depth.MODEL_GDH1', 'age_to_depth.MODEL_CROSBY_2007'}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
-    rifting_period : tuple or None
+    rifting_period : tuple, optional
         Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
         If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
         (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
         If specified then overrides value in well file.
         If well is on continental passive margin then at least rift end age should be specified
         either here or in well file.
-    well_location : tuple or None
+    well_location : tuple, optional
         Optional location of well.
         If not provided then is extracted from the `well_filename` file.
         If specified then overrides value in well file.
         If specified then must be a 2-tuple (longitude, latitude) in degrees.
-    well_bottom_age_column : int
+    well_bottom_age_column : int, optional
         The column of well file containing bottom age. Defaults to 0.
-    well_bottom_depth_column : int
+    well_bottom_depth_column : int, optional
         The column of well file containing bottom depth. Defaults to 1.
-    well_lithology_column : int
+    well_lithology_column : int, optional
         The column of well file containing lithology(s). Defaults to 2.
     
     Returns
@@ -149,11 +150,13 @@ def backtrack(
     ValueError
         If `well_location` is not specified *and* the well location was not extracted from the well file.
     
+    Notes
+    -----
     Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
     which column it should be read from.
     
-    .. note:: The tectonic subsidence at each age (of decompacted wells) is added as a `tectonic_subsidence` attribute
-       to each decompacted well returned.
+    The tectonic subsidence at each age (of decompacted wells) is added as a `tectonic_subsidence` attribute
+    to each decompacted well returned.
     """
     
     # Read the lithologies from a text file.

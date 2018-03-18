@@ -1,25 +1,27 @@
 
-"""
-    Copyright (C) 2017 The University of Sydney, Australia
-    
-    This program is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License, version 2, as published by
-    the Free Software Foundation.
-    
-    This program is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more details.
-    
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-"""
+#
+# Copyright (C) 2017 The University of Sydney, Australia
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 2, as published by
+# the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
 
+"""Find decompacted total sediment thickness and tectonic subsidence through time.
 
-########################################################################################################
-# Find decompacted total sediment thickness and tectonic subsidence through time near passive margins. #
-########################################################################################################
+:func:`backstrip` finds decompacted total sediment thickness and tectonic subsidence for each age in a well.
+
+:func:`write_decompacted_wells` writes decompacted parameters as columns in a text file.
+"""
 
 
 from __future__ import print_function
@@ -383,7 +385,7 @@ if __name__ == '__main__':
     def main():
         
         __description__ = \
-            """Find decompacted total sediment thickness and tectonic subsidence through time near passive margins.
+            """Find decompacted total sediment thickness and tectonic subsidence through time.
     
     This backstripping script can be used to find tectonic subsidence (due to lithospheric stretching) from
     paleo water depths of the stratigraphic columns and their decompaction through time.

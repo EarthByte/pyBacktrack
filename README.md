@@ -2,6 +2,10 @@
 
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
 
+## Documentation
+
+Documentation can be found at http://pybacktrack.readthedocs.io
+
 ## Scripts
 
 In all scripts use the "-h" option to see full details (eg, "python backtrack.py -h").

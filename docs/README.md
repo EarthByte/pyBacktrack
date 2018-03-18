@@ -19,5 +19,5 @@ This is done using the technique prescribed in the [Read the Docs FAQ](http://do
 The Sphinx extension *napoleon* enables conversion of numpydoc and google style docstrings to reST during the documentation build phase.
 The docstrings in the *pybacktrack* Python package use the numpydoc style.
 Also note that "Read the Docs" uses a version of Sphinx >= 1.3 (these versions include napoleon as a bundled extension).
-However version < 1.3 requires you to install 'sphinxcontrib.napoleon', so if you are building documentation locally (via 'make html' for example),
+However version < 1.3 requires you to install 'sphinxcontrib.napoleon', so if you are building documentation locally (via 'make html', or 'python setup.py build_sphinx', for example),
 and you are using Sphinx < 1.3, then you'll need to 'pip install sphinxcontrib.napoleon'.
