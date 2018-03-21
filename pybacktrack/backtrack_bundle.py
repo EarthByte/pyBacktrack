@@ -233,12 +233,6 @@ def backtrack(
     to each decompacted well returned.
     """
     
-    "".format(
-        ', '.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES),
-        ', '.join(BUNDLE_SEA_LEVEL_MODEL_NAMES),
-        pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME
-    )
-    
     # Convert dynamic topography model name to list filename (if specified).
     if dynamic_topography_model_name is None:
         dynamic_topography_model_info = None
