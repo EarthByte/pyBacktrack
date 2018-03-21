@@ -12,12 +12,17 @@ The following Python modules are available...
    :depth: 1
 
 
+pybacktrack.backtrack_bundle
+----------------------------
+
+.. automodule:: pybacktrack.backtrack_bundle
+   :members: backtrack, backtrack_and_write_decompacted
+
 pybacktrack.backtrack
 ---------------------
 
 .. automodule:: pybacktrack.backtrack
-   :members: backtrack, write_decompacted_wells
-..   , backtrack_and_write_decompacted
+   :members: backtrack, write_decompacted_wells, backtrack_and_write_decompacted
 
 pybacktrack.backstrip
 ---------------------
