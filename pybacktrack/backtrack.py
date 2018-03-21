@@ -36,6 +36,7 @@ from pybacktrack.lithology import read_lithologies_file
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
+import pybacktrack.version
 from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import pygplates
 import sys
@@ -1316,6 +1317,8 @@ def get_command_line_parser(
     
     # The command-line parser.
     parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
     parser.add_argument(
         '-w', '--well_filename', type=argparse_unicode, required=True,

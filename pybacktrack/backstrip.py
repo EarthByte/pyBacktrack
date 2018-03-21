@@ -28,6 +28,7 @@ from __future__ import print_function
 from pybacktrack.lithology import read_lithologies_file
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
+import pybacktrack.version
 from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import math
 import sys
@@ -438,6 +439,8 @@ if __name__ == '__main__':
         
         # The command-line parser.
         parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        
+        parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
         
         def parse_unicode(value_string):
             try:

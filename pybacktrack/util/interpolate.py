@@ -25,6 +25,7 @@
 
 
 from __future__ import print_function
+import pybacktrack.version
 import math
 import scipy.interpolate
 import sys
@@ -182,6 +183,8 @@ if __name__ == '__main__':
 
         # The command-line parser.
         parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        
+        parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
         
         parser.add_argument(
             '-c', '--curve_filename', type=str, required=True,
