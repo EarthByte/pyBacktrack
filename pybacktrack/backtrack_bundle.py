@@ -60,61 +60,61 @@ BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH = os.path.join(BUNDLE_DYNAMIC_TOP
 BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS = {
     'terra': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'terra.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'Shephard_etal_ESR2013_Global_staticpolygons.gpmlz'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'static_polygons.gpmlz'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'Shephard_etal_ESR2013_Global_EarthByte_2013.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'rotations.rot')
         ]
     ),
     'M1': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M1.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1_reconstruction', 'Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_20111012.gpmlz'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1', 'static_polygons.gpmlz'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1_reconstruction', 'Caltech_Global_20101129.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1', 'rotations.rot')
         ]
     ),
     'M2': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M2.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2013.2-r213', 'Static_Polygons_Merged_01_07_2013.shp'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'static_polygons.shp'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2013.2-r213', 'Global_EarthByte_TPW_CK95G94_2013.2.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'rotations.rot')
         ]
     ),
     'M3': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M3.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_2015_v2.gpmlz'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_250-0Ma_GK07_2015_v2.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_410-250Ma_GK07_2015_v2.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
         ]
     ),
     'M4': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M4.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_2014.1.shp'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'static_polygons.shp'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'Global_EarthByte_TPW_GeeK07_2014.1_VanDerMeer_CrossoverFix.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'rotations.rot')
         ]
     ),
     'M5': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M5.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2013.2-r213', 'Static_Polygons_Merged_01_07_2013.shp'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'static_polygons.shp'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2013.2-r213', 'Global_EarthByte_TPW_CK95G94_2013.2.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'rotations.rot')
         ]
     ),
     'M6': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M6.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_2015_v2.gpmlz'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_250-0Ma_GK07_2015_v2.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_410-250Ma_GK07_2015_v2.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
         ]
     ),
     'M7': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M7.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_2015_v2.gpmlz'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
         [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_250-0Ma_GK07_2015_v2.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'Global_Model_WD_Internal_Release_2015_v2', 'Global_EB_410-250Ma_GK07_2015_v2.rot')
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
         ]
     )
 }
