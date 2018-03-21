@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+# Project description needed in source distribution since used by 'setup.py'...
+include docs/project_description.txt
+recursive-include pybacktrack/bundle_data *
