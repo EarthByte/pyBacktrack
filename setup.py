@@ -19,7 +19,27 @@ setup(
     version=__version__,
     description=project_description,
     long_description=project_long_description,
+    url='https://github.com/EarthByte/pyBacktrack',
+    author='John Cannon',
+    author_email='john.cannon@sydney.edu.au',
+    license='GPL',
+    classifiers=['Intended Audience :: Developers',
+                 'Intended Audience :: Education',
+                 'Intended Audience :: Science/Research',
+                 'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+                 'Operating System :: POSIX :: Linux',
+                 'Operating System :: MacOS :: MacOS X',
+                 'Operating System :: Microsoft :: Windows',
+                 'Programming Language :: Python :: 2.7',
+                 'Topic :: Scientific/Engineering'],
+    keywords='bathymetry backtrack backstrip rift subsidence tectonic',
+    project_urls={
+        'Documentation': 'http://pybacktrack.readthedocs.io',
+        'Source': 'https://github.com/EarthByte/pyBacktrack'
+    },
     packages=['pybacktrack', 'pybacktrack.util'],
+    install_requires=['numpy', 'scipy'],
+    python_requires='==2.7.*',  # Python 3 currently not supported.
     #
     # From the setuptools docs...
     #
@@ -31,8 +51,4 @@ setup(
     #
     include_package_data=True,
     # package_data={'pybacktrack': ['bundle_data/*']},
-    install_requires=['numpy', 'scipy'],
-    url='http://github.com/EarthByte/pyBacktrack',
-    author='John Cannon',
-    license='GPL',
     zip_safe=False)
