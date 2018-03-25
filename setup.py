@@ -30,6 +30,7 @@ setup(
                  'Operating System :: POSIX :: Linux',
                  'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows',
+                 'Programming Language :: Python :: 2 :: Only',
                  'Programming Language :: Python :: 2.7',
                  'Topic :: Scientific/Engineering'],
     keywords='bathymetry backtrack backstrip rift subsidence tectonic',
@@ -39,6 +40,10 @@ setup(
     },
     packages=['pybacktrack', 'pybacktrack.util'],
     install_requires=['numpy', 'scipy'],
+    # 'pytest-runner' is needed so that 'python setup.py test' works.
+    # It gets installed to local './.eggs', not installed on the system...
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     python_requires='==2.7.*',  # Python 3 currently not supported.
     #
     # From the setuptools docs...
