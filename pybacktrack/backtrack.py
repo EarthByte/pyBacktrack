@@ -114,7 +114,7 @@ def backtrack(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to 'Shale'.
-    ocean_age_to_depth_model : {'age_to_depth.MODEL_GDH1', 'age_to_depth.MODEL_CROSBY_2007'}, optional
+    ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
     rifting_period : tuple, optional

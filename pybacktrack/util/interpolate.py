@@ -185,8 +185,8 @@ def interpolate_file(
                 continue
             
             if num_strings < input_x_column_index + 1:
-                raise ValueError('Input file does not have a column {0} at line {1}.'.format(
-                                 input_x_column_index + 1, line_number))
+                raise ValueError('Input file {0} does not have a column {1} at line {2}.'.format(
+                                 input_filename, input_x_column_index + 1, line_number))
             
             try:
                 x = float(line_string_list[input_x_column_index])

@@ -17,7 +17,7 @@ Convert age to basement depth in ocean basins.
 For example:
 
 ```
-  python -m pybacktrack.age_to_depth -m GDH1 < lon_lat_age.xy > lon_lat_depth.xy
+  python -m pybacktrack.age_to_depth -m GDH1 -r test_data/test_ages.txt test_data/test_depths_from_ages.txt
 ```
 
 Currently supports two models:

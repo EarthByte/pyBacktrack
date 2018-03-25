@@ -30,8 +30,14 @@ pybacktrack.backstrip
 .. automodule:: pybacktrack.backstrip
    :members: backstrip, write_decompacted_wells
 
-.. pybacktrack.util.interpolate
-.. ----------------------------
+pybacktrack.age_to_depth
+------------------------
 
-.. .. automodule:: pybacktrack.util.interpolate
-   :members:
+.. automodule:: pybacktrack.age_to_depth
+   :members: age_to_depth, age_to_depth_file
+
+pybacktrack.util.interpolate
+----------------------------
+
+.. automodule:: pybacktrack.util.interpolate
+   :members: read_curve_function, interpolate_file
