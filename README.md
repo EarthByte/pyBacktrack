@@ -32,7 +32,7 @@ Interpolate a model of age-to-depth (linear segments) at given depths (stratigra
 For example, to read a file (from standard input) containing depths and write a file (via standard output) containing interpolated ages and those depths:
 
 ```
-  python -m pybacktrack.util.interpolate -cx 1 -cy 0 -r -c test_data/ODP-114-699_age-depth-model.txt < test_data/ODP-114-699_strat_boundaries.txt > test_data/ODP-114-699_strat_boundaries_age_depth.txt
+  python -m pybacktrack.util.interpolate -cx 1 -cy 0 -r -c test_data/ODP-114-699_age-depth-model.txt test_data/ODP-114-699_strat_boundaries.txt test_data/ODP-114-699_strat_boundaries_age_depth.txt
 ```
 
 Note that it's a general interpolate script for piecewise linear y=f(x), so can be used for other types of data (hence the extra options).
