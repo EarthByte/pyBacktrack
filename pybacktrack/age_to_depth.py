@@ -20,7 +20,7 @@
 
 :func:`age_to_depth` converts ocean basin age to basement depth using a specified age/depth model.
 
-:func:`age_to_depth_file` converts age to depth by reading `lon, lat, age` rows from input file and writing `lon, lat, depth` rows to output file.
+:func:`age_to_depth_file` converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
 """
 
 
@@ -92,56 +92,72 @@ def age_to_depth(
 def age_to_depth_file(
         input_filename,
         output_filename,
-        model=DEFAULT_MODEL):
-    """Converts age to depth by reading `lon, lat, age` rows from input file and writing `lon, lat, depth` rows to output file.
+        model=DEFAULT_MODEL,
+        age_column_index=0,
+        reverse_output_columns=False):
+    """Converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
     
     Parameters
     ----------
     input_filename : string
-        Name of input text file containing the `lon, lat, age` rows.
-        Age is in Ma.
+        Name of input text file containing the `age` values.
+        A single `age` value is obtained from each row by indexing the `age_column_index` column (zero-based index).
     output_filename : string
-        Name of output text file containing `lon, lat, depth` rows.
-        Depth is in metres.
-        Each `depth` in output row is converted from `age` in associated input row.
+        Name of output text file containing `age` and `depth` values.
+        Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
     model : {MODEL_GDH1, MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to basement depth.
+    age_column_index : int, optional
+        Determines which column of input file to read `age` values from.
+    reverse_output_columns : bool, optional
+        Determines order of `age` and `depth` columns in output file.
+        If `True` then output `depth age`, otherwise output `age depth`.
     
     Raises
     ------
     ValueError
-        If cannot read `lon, lat, age` values, as floating-point numbers, from input file.
+        If cannot read `age` value, as a floating-point number, from input file at column index `age_column_index`.
     """
     
     with open(input_filename, 'rU') as input_file, open(output_filename, 'w') as output_file:
         for line_number, line in enumerate(input_file):
-
+            
             # Make line number 1-based instead of 0-based.
             line_number = line_number + 1
-
+            
             # Split the line into strings (separated by whitespace).
             line_string_list = line.split()
-
-            # Need at least 3 strings per line (longitude, latitude and age).
-            if len(line_string_list) < 3:
-                print('Line {0} in {1}: Ignoring point - line does not have at least three white-space separated strings.'.format(
-                      line_number, input_filename), file=sys.stderr)
+            
+            num_strings = len(line_string_list)
+            
+            # If just a line containing white-space then skip to next line.
+            if num_strings == 0:
                 continue
-
-            # Attempt to convert each string into a floating-point number.
+            
+            # If line is a comment then ignore and then skip to next line.
+            if (line_string_list[0].startswith('#') or
+                line_string_list[0].startswith('>')):
+                continue
+            
+            if num_strings < age_column_index + 1:
+                raise ValueError('Input file {0} does not have a column {1} at line {2}.'.format(
+                                 input_filename, age_column_index + 1, line_number))
+            
             try:
-                # Use GMT (lon/lat) order.
-                lon = float(line_string_list[0])
-                lat = float(line_string_list[1])
-                age = float(line_string_list[2])
+                age = float(line_string_list[age_column_index])
             except ValueError:
-                print('Line {0} in {1}: Ignoring point - cannot read lon/lat/age values.'.format(
-                      line_number, input_filename), file=sys.stderr)
-                continue
+                # Raise a more informative error message.
+                raise ValueError('Cannot read age value at line {0} of input file {1}.'.format(
+                                 line_number, input_filename))
             
             depth = age_to_depth(age, model)
             
-            output_file.write('{0}\t{1}\t{2}\n'.format(lon, lat, depth))
+            if reverse_output_columns:
+                output_row = depth, age
+            else:
+                output_row = age, depth
+            
+            output_file.write('{0:.2f}\t{1:.2f}\n'.format(*output_row))
 
 
 #########################################################################################
@@ -249,10 +265,10 @@ if __name__ == '__main__':
     default_model_name = model_name_dict[DEFAULT_MODEL]
     
     __description__ = \
-        """Converts (lon, lat, age) lines on stdin to (lon, lat, depth) on stdout.
+        """Converts rows containing age in input file to rows containing age and depth in output file.
         
-        Reads text data from input file where each line contains longitude, latitude (in degrees) and age (in Ma).
-        Writes text data to output file where each line contains longitude, latitude (in degrees) and depth (in metres).
+        Reads text data from input file where each line contains age (in Ma).
+        Writes text data to output file where each line contains age (in Ma) and depth (in metres), optionally reversed.
         
         The age-to-depth model can be chosen using the '-m' option.
         Choices include:{0}
@@ -284,6 +300,14 @@ if __name__ == '__main__':
                 default_model_name))
     
     parser.add_argument(
+        '-a', '--age_column', type=int, default=0,
+        metavar='age_column_index', help='The zero-based index of column in input file containing age values. Defaults to first column.')
+    
+    parser.add_argument(
+        '-r', '--reverse_output_columns', action='store_true',
+        help='Reverse the order of output columns to output as "depth age". Defaults to "age depth".')
+    
+    parser.add_argument(
         'input_filename', type=argparse_unicode,
         metavar='input_filename',
         help='The input filename containing the "age" values.')
@@ -305,6 +329,8 @@ if __name__ == '__main__':
     age_to_depth_file(
         args.input_filename,
         args.output_filename,
-        model)
+        model,
+        args.age_column,
+        args.reverse_output_columns)
     
     sys.exit(0)
