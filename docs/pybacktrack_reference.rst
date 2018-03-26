@@ -18,6 +18,11 @@ pybacktrack.backtrack_bundle
 .. automodule:: pybacktrack.backtrack_bundle
    :members: backtrack, backtrack_and_write_decompacted
 
+pybacktrack.bundle_data
+-----------------------
+
+.. automodule:: pybacktrack.bundle_data
+
 pybacktrack.backtrack
 ---------------------
 

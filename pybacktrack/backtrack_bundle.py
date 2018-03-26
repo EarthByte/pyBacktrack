@@ -16,128 +16,30 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-"""An easier-to-use version of the `backtrack` module that references included bundled data.
+"""An easier-to-use version of the `backtrack` module that references included :mod:`bundled data<pybacktrack.bundle_data>`.
 
-The bundled data includes:
+:func:`backtrack` same as :func:`pybacktrack.backtrack.backtrack` but uses :mod:`bundled data<pybacktrack.bundle_data>`.
 
-- a lithologies text file
-- an age grid
-- a sediment thickness grid
-- a crustal thickness grid
-- a topography grid
-- a collection of common dynamic topography models
-- a couple of sea level curves
-
-:func:`backtrack` same as :func:`pybacktrack.backtrack.backtrack` but uses bundled data.
-
-:func:`backtrack_and_write_decompacted` same as :func:`pybacktrack.backtrack.backtrack_and_write_decompacted` but uses bundled data.
+:func:`backtrack_and_write_decompacted` same as :func:`pybacktrack.backtrack.backtrack_and_write_decompacted` but uses :mod:`bundled data<pybacktrack.bundle_data>`.
 """
 
 from __future__ import print_function
 import argparse
 import pybacktrack.age_to_depth
 import pybacktrack.backtrack
+import pybacktrack.bundle_data
 import os.path
 import sys
 import traceback
 
 
-# Base directory of the bundled data.
-# This is an absolute path so that scripts outside the pybacktrack package can also reference the bundled data.
-MODULE_DIR = os.path.abspath(os.path.dirname(__file__))
-BUNDLE_PATH = os.path.join(MODULE_DIR, 'bundle_data')
-
-BUNDLE_LITHOLOGIES_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'lithologies.txt')
-BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
-BUNDLE_TOPOGRAPHY_FILENAME = os.path.join(BUNDLE_PATH, 'topography', 'ETOPO1_0.1.grd')
-BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME = os.path.join(BUNDLE_PATH, 'sediment_thickness', 'sedthick_world_v3_5min_epsg4326_cf.nc')
-BUNDLE_CRUSTAL_THICKNESS_FILENAME = os.path.join(BUNDLE_PATH, 'crustal_thickness', 'crsthk.grd')
-
-BUNDLE_DYNAMIC_TOPOGRAPHY_PATH = os.path.join(BUNDLE_PATH, 'dynamic_topography')
-BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH = os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_PATH, 'models')
-BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH = os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_PATH, 'reconstructions')
-# Dict mapping dynamic topography model name to model information 3-tuple of (grid list filenames, static polygon filename and rotation filenames).
-BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS = {
-    'terra': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'terra.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'static_polygons.gpmlz'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'rotations.rot')
-        ]
-    ),
-    'M1': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M1.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1', 'static_polygons.gpmlz'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'M1', 'rotations.rot')
-        ]
-    ),
-    'M2': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M2.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'static_polygons.shp'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'rotations.rot')
-        ]
-    ),
-    'M3': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M3.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
-        ]
-    ),
-    'M4': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M4.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'static_polygons.shp'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2014_1_401', 'rotations.rot')
-        ]
-    ),
-    'M5': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M5.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'static_polygons.shp'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2013.2-r213', 'rotations.rot')
-        ]
-    ),
-    'M6': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M6.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
-        ]
-    ),
-    'M7': (
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'M7.grids'),
-        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'static_polygons.gpmlz'),
-        [
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
-            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
-        ]
-    )
-}
-# Dynamic topography model names.
-BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES = BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS.keys()
-
-BUNDLE_SEA_LEVEL_PATH = os.path.join(BUNDLE_PATH, 'sea_level')
-# Dict mapping sea level model name to model filename.
-BUNDLE_SEA_LEVEL_MODEL_FILES = {
-    'Haq87_SealevelCurve': os.path.join(BUNDLE_SEA_LEVEL_PATH, 'Haq87_SealevelCurve.dat'),
-    'Haq87_SealevelCurve_Longterm': os.path.join(BUNDLE_SEA_LEVEL_PATH, 'Haq87_SealevelCurve_Longterm.dat')
-}
-# Sea level model names.
-BUNDLE_SEA_LEVEL_MODEL_NAMES = BUNDLE_SEA_LEVEL_MODEL_FILES.keys()
-
-
 def backtrack(
         well_filename,
-        lithologies_filename=BUNDLE_LITHOLOGIES_FILENAME,
-        age_grid_filename=BUNDLE_AGE_GRID_FILENAME,
-        topography_filename=BUNDLE_TOPOGRAPHY_FILENAME,
-        total_sediment_thickness_filename=BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-        crustal_thickness_filename=BUNDLE_CRUSTAL_THICKNESS_FILENAME,
+        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
+        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
+        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
         dynamic_topography_model_name=None,
         sea_level_model_name=None,
         base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,
@@ -147,10 +49,28 @@ def backtrack(
         well_bottom_age_column=0,
         well_bottom_depth_column=1,
         well_lithology_column=2):
-    """Finds decompacted total sediment thickness and water depth for each age in a well.
+    # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
+    # the expanded values of the bundle filenames.
+    """backtrack(\
+        well_filename,\
+        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,\
+        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,\
+        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,\
+        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        dynamic_topography_model_name=None,\
+        sea_level_model_name=None,\
+        base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        ocean_age_to_depth_model=pybacktrack.age_to_depth.DEFAULT_MODEL,\
+        rifting_period=None,\
+        well_location=None,\
+        well_bottom_age_column=0,\
+        well_bottom_depth_column=1,\
+        well_lithology_column=2)
+    Finds decompacted total sediment thickness and water depth for each age in a well.
     
     This function is very similar to :func:`pybacktrack.backtrack.backtrack` except it has
-    default values that reference the bundled data included in the `pybacktrack` package.
+    default values that reference the :mod:`bundled data<pybacktrack.bundle_data>` included in the `pybacktrack` package.
     It also uses a model name (instead of filenames) for dynamic topography and sea-level curve to
     make specifying them even easier (especially dynamic topography).
     
@@ -187,7 +107,7 @@ def backtrack(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to 'Shale'.
-    ocean_age_to_depth_model : {age_to_depth.MODEL_GDH1, age_to_depth.MODEL_CROSBY_2007}, optional
+    ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
     rifting_period : tuple, optional
@@ -238,7 +158,7 @@ def backtrack(
         dynamic_topography_model_info = None
     else:
         try:
-            dynamic_topography_model_info = BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS[dynamic_topography_model_name]
+            dynamic_topography_model_info = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS[dynamic_topography_model_name]
         except KeyError:
             raise ValueError("%s is not a valid dynamic topography model name" % dynamic_topography_model_name)
     
@@ -247,7 +167,7 @@ def backtrack(
         sea_level_filename = None
     else:
         try:
-            sea_level_filename = BUNDLE_SEA_LEVEL_MODEL_FILES[sea_level_model_name]
+            sea_level_filename = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_FILES[sea_level_model_name]
         except KeyError:
             raise ValueError("%s is not a valid sea level model name" % sea_level_model_name)
     
@@ -273,11 +193,11 @@ def backtrack(
 def backtrack_and_write_decompacted(
         decompacted_output_filename,
         well_filename,
-        lithologies_filename=BUNDLE_LITHOLOGIES_FILENAME,
-        age_grid_filename=BUNDLE_AGE_GRID_FILENAME,
-        topography_filename=BUNDLE_TOPOGRAPHY_FILENAME,
-        total_sediment_thickness_filename=BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-        crustal_thickness_filename=BUNDLE_CRUSTAL_THICKNESS_FILENAME,
+        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
+        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
+        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
         dynamic_topography_model_name=None,
         sea_level_model_name=None,
         base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,
@@ -303,7 +223,7 @@ def backtrack_and_write_decompacted(
         dynamic_topography_model_info = None
     else:
         try:
-            dynamic_topography_model_info = BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS[dynamic_topography_model_name]
+            dynamic_topography_model_info = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS[dynamic_topography_model_name]
         except KeyError:
             raise ValueError("%s is not a valid dynamic topography model name" % dynamic_topography_model_name)
     
@@ -312,7 +232,7 @@ def backtrack_and_write_decompacted(
         sea_level_filename = None
     else:
         try:
-            sea_level_filename = BUNDLE_SEA_LEVEL_MODEL_FILES[sea_level_model_name]
+            sea_level_filename = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_FILES[sea_level_model_name]
         except KeyError:
             raise ValueError("%s is not a valid sea level model name" % sea_level_model_name)
     
@@ -348,10 +268,10 @@ if __name__ == '__main__':
         # Allow user to override default lithologies filename (if they don't want the one in the bundled data).
         parser.add_argument(
             '-l', '--lithologies_filename', type=pybacktrack.backtrack.argparse_unicode,
-            default=BUNDLE_LITHOLOGIES_FILENAME,
+            default=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
             metavar='lithologies_filename',
             help='Optional lithologies filename used to lookup density, surface porosity and porosity decay. '
-                 'Defaults to "{0}".'.format(BUNDLE_LITHOLOGIES_FILENAME))
+                 'Defaults to "{0}".'.format(pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME))
         
         # Optional dynamic topography model name.
         parser.add_argument(
@@ -360,13 +280,13 @@ if __name__ == '__main__':
             help='Optional dynamic topography through time at well location. '
                  'Can be used both for oceanic floor and continental passive margin '
                  '(ie, well location inside or outside age grid). '
-                 'Choices include {0}.'.format(', '.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+                 'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
         
         parser.add_argument(
             '-sl', '--sea_level_model', type=str,
             metavar='sea_level_model',
             help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
-                 'Choices include {0}.'.format(', '.join(BUNDLE_SEA_LEVEL_MODEL_NAMES)))
+                 'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
         
         # Parse command-line options.
         args = parser.parse_args()
