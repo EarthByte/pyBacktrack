@@ -44,9 +44,7 @@ Find tectonic subsidence from paleo water depths near passive margins.
 For example:
 
 ```
-  # FIXME: Need a site with min/max paleo water depths for backstripping.
-  #
-  # python -m pybacktrack.backstrip -w tests/data/DSDP-36-327-Lithology.txt -l pybacktrack/bundle_data/lithologies/lithologies.txt -c 0 1 2 3 6 -d age compacted_depth compacted_thickness decompacted_thickness average_tectonic_subsidence average_water_depth lithology -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc -o tests/data/DSDP-36-327_backstrip_amended.txt -- tests/data/DSDP-36-327_backstrip_decompat.txt
+  python -m pybacktrack.backstrip -w tests/data/DSDP-36-327-Lithology.txt -l pybacktrack/bundle_data/lithologies/lithologies.txt -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat -o tests/data/DSDP-36-327_backstrip_amended.txt -- tests/data/DSDP-36-327_backstrip_decompat.txt
 ```
 
 ### backtrack
@@ -68,11 +66,11 @@ Ocean basin example using bundled data (via the 'backtrack_bundle' module):
 Passive margin example using bundled data (via the 'backtrack_bundle' module):
 
 ```
-  python -m pybacktrack.backtrack_bundle -w tests/data/DSDP-36-327-Lithology.txt -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology -y M2 -sl Haq87_SealevelCurve_Longterm -o tests/data/DSDP-36-327_backtrack_amended.txt -- tests/data/DSDP-36-327_backtrack_decompat.txt
+  python -m pybacktrack.backtrack_bundle -w tests/data/DSDP-36-327-Lithology.txt -c 0 1 4 -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology -y M2 -sl Haq87_SealevelCurve_Longterm -o tests/data/DSDP-36-327_backtrack_amended.txt -- tests/data/DSDP-36-327_backtrack_decompat.txt
 ```
 
 ...the equivalent example using the 'backtrack' module is...
 
 ```
-  python -m pybacktrack.backtrack -w tests/data/DSDP-36-327-Lithology.txt -l pybacktrack/bundle_data/lithologies/lithologies.txt -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology -a pybacktrack/bundle_data/age/agegrid_6m.grd -t pybacktrack/bundle_data/topography/ETOPO1_0.1.grd -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc -k pybacktrack/bundle_data/crustal_thickness/crsthk.grd -y pybacktrack/bundle_data/dynamic_topography/models/M2.grids pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/static_polygons.shp pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/rotations.rot -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat -o tests/data/DSDP-36-327_backtrack_amended.txt -- tests/data/DSDP-36-327_backtrack_decompat.txt
+  python -m pybacktrack.backtrack -w tests/data/DSDP-36-327-Lithology.txt -c 0 1 4 -l pybacktrack/bundle_data/lithologies/lithologies.txt -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology -a pybacktrack/bundle_data/age/agegrid_6m.grd -t pybacktrack/bundle_data/topography/ETOPO1_0.1.grd -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc -k pybacktrack/bundle_data/crustal_thickness/crsthk.grd -y pybacktrack/bundle_data/dynamic_topography/models/M2.grids pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/static_polygons.shp pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/rotations.rot -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat -o tests/data/DSDP-36-327_backtrack_amended.txt -- tests/data/DSDP-36-327_backtrack_decompat.txt
 ```
