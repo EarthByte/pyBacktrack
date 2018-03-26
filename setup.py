@@ -43,7 +43,7 @@ setup(
     # 'pytest-runner' is needed so that 'python setup.py test' works.
     # It gets installed to local './.eggs', not installed on the system...
     setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'pytest-pep8'],
     python_requires='==2.7.*',  # Python 3 currently not supported.
     #
     # From the setuptools docs...
