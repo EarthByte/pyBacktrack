@@ -61,9 +61,9 @@ def age_to_depth(
     ----------
     age : float
         The age in Ma.
-    model : {MODEL_GDH1, MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to basement depth.
-        Defaults to `MODEL_GDH1` (Stein and Stein 1992).
+        Defaults to `pybacktrack.age_to_depth.MODEL_GDH1` (Stein and Stein 1992).
     
     Returns
     -------
@@ -105,7 +105,7 @@ def age_to_depth_file(
     output_filename : string
         Name of output text file containing `age` and `depth` values.
         Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
-    model : {MODEL_GDH1, MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to basement depth.
     age_column_index : int, optional
         Determines which column of input file to read `age` values from.

@@ -22,8 +22,7 @@ def test_age_to_depth_file(tmpdir):
     test_data_dir = py.path.local(__file__).dirpath('data')
     
     # Original input/output age-to-depth test data.
-    input_base_filename = 'test_ages.txt'
-    input_filename = test_data_dir.join(input_base_filename)
+    input_filename = test_data_dir.join('test_ages.txt')
     output_base_filename = 'test_depths_from_ages.txt'
     output_filename = test_data_dir.join(output_base_filename)
     
