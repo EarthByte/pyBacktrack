@@ -48,7 +48,10 @@ def test_backtrack(tmpdir):
         bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
         bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS['M2'],
         bundle_data.BUNDLE_SEA_LEVEL_MODEL_FILES['Haq87_SealevelCurve_Longterm'],
-        decompacted_columns=[0, 7, 5, 1, 2, 4, 3, 6],
+        decompacted_columns=[backtrack.COLUMN_AGE, backtrack.COLUMN_COMPACTED_DEPTH,
+                             backtrack.COLUMN_COMPACTED_THICKNESS, backtrack.COLUMN_DECOMPACTED_THICKNESS,
+                             backtrack.COLUMN_DECOMPACTED_DENSITY, backtrack.COLUMN_WATER_DEPTH,
+                             backtrack.COLUMN_TECTONIC_SUBSIDENCE, backtrack.COLUMN_LITHOLOGY],
         ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
