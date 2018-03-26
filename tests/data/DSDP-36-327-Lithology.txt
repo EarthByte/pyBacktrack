@@ -10,12 +10,12 @@
 # SurfaceAge = 0 
 # WaterDepth = 2400
 
-## bottom_age bottom_depth lithology
-   1.5        10.0         Shaley_sand 1
-   55.8       30.0         Clay 1
-   59.9       68.0         Diatomite 0.7 Clay 0.3
-   62.2       90.0         Clay 1
-   77.4       142.0        Coccolith_ooze 0.7 Biogenic_sand 0.3 
-   86.4       154.0        Clay 1
-   113.1      324.0        Coccolith_ooze 0.3 Clay 0.7
-   122.3      469.5        Clay 1
+## bottom_age bottom_depth min_water_depth max_water_depth lithology
+   1.5        10.0         2350.0          2450.0          Shaley_sand 1
+   55.8       30.0         1860.0          1960.0          Clay 1
+   59.9       68.0         1790.0          1890.0          Diatomite 0.7 Clay 0.3
+   62.2       90.0         1780.0          1880.0          Clay 1
+   77.4       142.0        1455.0          1555.0          Coccolith_ooze 0.7 Biogenic_sand 0.3 
+   86.4       154.0        1185.0          1285.0          Clay 1
+   113.1      324.0        210.0           310.0           Coccolith_ooze 0.3 Clay 0.7
+   122.3      469.5        0.0             100.0           Clay 1
