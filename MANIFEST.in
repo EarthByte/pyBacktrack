@@ -1,6 +1,7 @@
-include README.md
+include README.rst
 include LICENSE
-# Project description needed in source distribution since used by 'setup.py'
-# (eg, to build/cache binary distribution when installing from source distribution with 'pip install <sdist>')...
-include docs/project_description.txt
 recursive-include pybacktrack/bundle_data *
+recursive-include tests *
+recursive-include docs *
+prune docs/_build
+prune tests/__pycache__
