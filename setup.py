@@ -1,15 +1,12 @@
 import os.path
 from setuptools import setup
 
-# Open project description text file.
-#
-# The first line must be the short description.
-# Followed by a blank line.
-# Followed by the long description.
-with open(os.path.join('docs', 'project_description.txt')) as project_description_file:
-    project_description_lines = project_description_file.read().strip().split("\n")
-project_description = project_description_lines[0]
-project_long_description = "\n".join(project_description_lines[2:])
+# Project short description.
+short_description = 'A tool for reconstructing paleobathymetry on oceanic and continental crust.'
+
+# Read project long description from 'README'.
+with open('README.rst') as long_description_file:
+    long_description = long_description_file.read()
 
 # Read package __version__.
 exec(open('pybacktrack/version.py').read())
@@ -17,8 +14,8 @@ exec(open('pybacktrack/version.py').read())
 setup(
     name='pybacktrack',
     version=__version__,
-    description=project_description,
-    long_description=project_long_description,
+    description=short_description,
+    long_description=long_description,
     url='https://github.com/EarthByte/pyBacktrack',
     author='John Cannon',
     author_email='john.cannon@sydney.edu.au',
