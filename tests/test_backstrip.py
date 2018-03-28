@@ -41,7 +41,7 @@ def test_backstrip(tmpdir):
         str(input_well_filename),
         bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
         bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-        bundle_data.BUNDLE_SEA_LEVEL_MODEL_FILES['Haq87_SealevelCurve_Longterm'])
+        bundle_data.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'])
     
     # Attributes of well object to write to file as metadata.
     well_attributes = {'longitude': 'SiteLongitude', 'latitude': 'SiteLatitude'}

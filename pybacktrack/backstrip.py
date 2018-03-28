@@ -385,8 +385,7 @@ if __name__ == '__main__':
     
     def main():
         
-        __description__ = \
-            """Find decompacted total sediment thickness and tectonic subsidence through time.
+        __description__ = """Find decompacted total sediment thickness and tectonic subsidence through time.
     
     This backstripping script can be used to find tectonic subsidence (due to lithospheric stretching) from
     paleo water depths of the stratigraphic columns and their decompaction through time.

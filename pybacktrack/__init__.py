@@ -27,10 +27,9 @@ The ``pybacktrack`` package has the ``__version__`` attribute:
 
 The following ``pybacktrack`` modules are available:
 
-- :mod:`pybacktrack.backtrack_bundle`
-- :mod:`pybacktrack.bundle_data`
 - :mod:`pybacktrack.backtrack`
 - :mod:`pybacktrack.backstrip`
+- :mod:`pybacktrack.bundle_data`
 - :mod:`pybacktrack.age_to_depth`
 - :mod:`pybacktrack.util.interpolate`
 """

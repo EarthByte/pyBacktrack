@@ -14,17 +14,6 @@ pybacktrack
 
 .. automodule:: pybacktrack
 
-pybacktrack.backtrack_bundle
-----------------------------
-
-.. automodule:: pybacktrack.backtrack_bundle
-   :members: backtrack, backtrack_and_write_decompacted
-
-pybacktrack.bundle_data
------------------------
-
-.. automodule:: pybacktrack.bundle_data
-
 pybacktrack.backtrack
 ---------------------
 
@@ -36,6 +25,11 @@ pybacktrack.backstrip
 
 .. automodule:: pybacktrack.backstrip
    :members: backstrip, write_decompacted_wells
+
+pybacktrack.bundle_data
+-----------------------
+
+.. automodule:: pybacktrack.bundle_data
 
 pybacktrack.age_to_depth
 ------------------------
