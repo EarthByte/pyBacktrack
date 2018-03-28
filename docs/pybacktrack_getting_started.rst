@@ -85,24 +85,24 @@ The following example is used to demonstrate both approaches. It backtracks an o
 Use a built-in module script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since the :mod:`backtrack_bundle<pybacktrack.backtrack_bundle>` module (inside ``pybacktrack``) can be run as a script,
-we can invoke it on the command-line using ``python -m pybacktrack.backtrack_bundle`` followed by command line options that are specific to that module.
+Since the :mod:`backtrack<pybacktrack.backtrack>` module (inside ``pybacktrack``) can be run as a script,
+we can invoke it on the command-line using ``python -m pybacktrack.backtrack`` followed by command line options that are specific to that module.
 
 To see its command-line options, run:
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_bundle --help
+    python -m pybacktrack.backtrack --help
 
 The backtracking example can now be demonstrated by running:
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_bundle \
+    python -m pybacktrack.backtrack \
         -w tests/data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
-        -y M2 \
-        -sl Haq87_SealevelCurve_Longterm \
+        -ym M2 \
+        -slm Haq87_SealevelCurve_Longterm \
         -o tests/data/ODP-114-699_backtrack_amended.txt \
         -- \
         tests/data/ODP-114-699_backtrack_decompat.txt
@@ -116,11 +116,10 @@ An alternative to running a built-in script is to write your own script (using a
 calls their functions.
 
 The following Python code does the same as the :ref:`built-in script<pybacktrack_use_a_builtin_module_script>` by calling the
-:func:`pybacktrack.backtrack_bundle.backtrack_and_write_decompacted` function:
+:func:`pybacktrack.backtrack.backtrack_and_write_decompacted` function:
 
 .. code-block:: python
 
-    import pybacktrack.backtrack_bundle as backtrack_bundle
     import pybacktrack.backtrack as backtrack
     
     # Input and output filenames (available in 'tests/data/' directory of pyBacktrack source code).
@@ -129,11 +128,11 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     decompacted_output_filename = 'tests/data/ODP-114-699_backtrack_decompat.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
-    backtrack_bundle.backtrack_and_write_decompacted(
+    backtrack.backtrack_and_write_decompacted(
         decompacted_output_filename,
         input_well_filename,
-        dynamic_topography_model_name='M2',
-        sea_level_model_name='Haq87_SealevelCurve_Longterm',
+        dynamic_topography_model='M2',
+        sea_level_model='Haq87_SealevelCurve_Longterm',
         # The columns in decompacted output file...
         decompacted_columns=[backtrack.COLUMN_AGE,
                              backtrack.COLUMN_COMPACTED_DEPTH,
