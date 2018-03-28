@@ -39,7 +39,7 @@ To install the latest development version (requires Git), run:
 
   pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
 
-.. note:: | You may need to update your `Git` if you receive an error ending with "*tlsv1 alert protocol version*".
+.. note:: | You may need to update your `Git` if you receive an error ending with ``tlsv1 alert protocol version``.
           | This is apparently due to an `update on GitHub <https://blog.github.com/2018-02-23-weak-cryptographic-standards-removed>`_.
 
 This will automatically install the `NumPy` and `SciPy` requirements. However `GMT` and `pyGPlates` need to be manually installed (see :ref:`pyBacktrack requirements <pybacktrack_requirements>`).
@@ -54,35 +54,19 @@ A Backtracking Example
 
 Once :ref:`installed <pybacktrack_installation>` the ``pybacktrack`` Python package is available to:
 
-- use existing module scripts (inside ``pybacktrack``), or
+- use built-in module scripts (inside ``pybacktrack``), or
 - ``import pybacktrack`` into your own script.
 
-This example demonstrates both approaches to backtracking an ocean drill site and saving the output to a text file.
+The following example is used to demonstrate both approaches. It backtracks an ocean drill site and saves the output to a text file by:
 
-.. _pybacktrack_use_an_existing_module_script:
+- reading the ocean drill site file ``tests/data/ODP-114-699-Lithology.txt``,
+- backtracking it using:
 
-Use an existing module script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  * the ``M2`` dynamic topography model, and
+  * the ``Haq87_SealevelCurve_Longterm`` sea-level model,
 
-Since the :mod:`backtrack_bundle<pybacktrack.backtrack_bundle>` module (inside ``pybacktrack``) can be run as a script,
-we can invoke it on the command-line using ``python -m pybacktrack.backtrack_bundle`` followed by command line options.
-
-To see the command-line options run:
-
-.. code-block:: python
-
-    python -m pybacktrack.backtrack_bundle --help
-
-The following usage:
-
-- reads the ocean drill site file *tests/data/ODP-114-699-Lithology.txt*,
-- backtracks it using:
-
-  * the *M2* dynamic topography model, and
-  * the *Haq87_SealevelCurve_Longterm* sea-level model,
-
-- writes the amended drill site to *tests/data/ODP-114-699_backtrack_amended.txt*, and
-- writes the following columns to *tests/data/ODP-114-699_backtrack_decompat.txt*:
+- writing the amended drill site to ``tests/data/ODP-114-699_backtrack_amended.txt``, and
+- writing the following columns to ``tests/data/ODP-114-699_backtrack_decompat.txt``:
 
   * age
   * compacted_depth
@@ -92,6 +76,25 @@ The following usage:
   * water_depth
   * tectonic_subsidence
   * lithology
+
+.. note:: | The input and output filenames specified above are available in the ``tests/data/`` directory of the pyBacktrack source code.
+          | This example also uses the :mod:`bundled data<pybacktrack.bundle_data>` internally.
+
+.. _pybacktrack_use_a_builtin_module_script:
+
+Use a built-in module script
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since the :mod:`backtrack_bundle<pybacktrack.backtrack_bundle>` module (inside ``pybacktrack``) can be run as a script,
+we can invoke it on the command-line using ``python -m pybacktrack.backtrack_bundle`` followed by command line options that are specific to that module.
+
+To see its command-line options, run:
+
+.. code-block:: python
+
+    python -m pybacktrack.backtrack_bundle --help
+
+The backtracking example can now be demonstrated by running:
 
 .. code-block:: python
 
@@ -104,18 +107,15 @@ The following usage:
         -- \
         tests/data/ODP-114-699_backtrack_decompat.txt
 
-.. note:: | The input and output filenames specified above are available in 'tests/data/' directory of pyBacktrack source code.
-          | And the :mod:`bundled data<pybacktrack.bundle_data>` is also used internally.
+.. _pybacktrack_import_into_your_own_script:
 
-.. _pybacktrack_importing_into_your_own_script:
+Import into your own script
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Importing into your own script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-An alternative to running an existing script is to write your own script (using a text editor) that imports ``pybacktrack`` modules and
+An alternative to running a built-in script is to write your own script (using a text editor) that imports ``pybacktrack`` modules and
 calls their functions.
 
-The following Python code does the same as the :ref:`above script<pybacktrack_use_an_existing_module_script>` by calling the
+The following Python code does the same as the :ref:`built-in script<pybacktrack_use_a_builtin_module_script>` by calling the
 :func:`pybacktrack.backtrack_bundle.backtrack_and_write_decompacted` function:
 
 .. code-block:: python
@@ -146,7 +146,7 @@ The following Python code does the same as the :ref:`above script<pybacktrack_us
         # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
         ammended_well_output_filename=amended_well_output_filename)
 
-If you save the above code to a file called *my_backtrack_script.py* then you can run it as:
+If you save the above code to a file called ``my_backtrack_script.py`` then you can run it as:
 
 .. code-block:: python
 
