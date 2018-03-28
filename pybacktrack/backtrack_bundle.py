@@ -16,7 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-"""An easier-to-use version of the `backtrack` module that references included :mod:`bundled data<pybacktrack.bundle_data>`.
+"""An easier-to-use version of the :mod:`backtrack<pybacktrack.backtrack>` module that references included :mod:`bundled data<pybacktrack.bundle_data>`.
 
 :func:`backtrack` same as :func:`pybacktrack.backtrack.backtrack` but uses :mod:`bundled data<pybacktrack.bundle_data>`.
 
