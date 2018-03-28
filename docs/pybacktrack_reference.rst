@@ -5,12 +5,14 @@ Reference
 
 This section documents the Python functions and classes that make up the public interface of the *pybacktrack* package.
 
-The following Python modules are available...
-
 .. contents::
    :local:
    :depth: 1
 
+pybacktrack
+-----------
+
+.. automodule:: pybacktrack
 
 pybacktrack.backtrack_bundle
 ----------------------------
