@@ -57,29 +57,31 @@ The following module attributes are available:
 
   Bundled crustal thickness grid file.
 
-- **pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS**
+- **pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS**
 
   Bundled dynamic topography models.
 
   This is a dict mapping dynamic topography model name to model information 3-tuple of (grid list filenames, static polygon filename and rotation filenames).
-  Each *key* in the dict can be passed to the `dynamic_topography_model_name` argument of :func:`pybacktrack.backtrack_bundle.backtrack`.
   Each *value* in the dict can be passed to the `dynamic_topography_model_info` argument of :func:`pybacktrack.backtrack.backtrack`.
 
 - **pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES**
 
-  A list of bundled dynamic topography model *names* (keys in `BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS`).
+  A list of bundled dynamic topography model *names* (keys in `BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS`).
+  
+  Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6`` and ``M7``.
 
-- **pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_PATH**
+- **pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS**
 
   Bundled sea level models.
 
   This is a dict mapping sea level model name to sea level file.
-  Each *key* in the dict can be passed to the `sea_level_model_name` argument of :func:`pybacktrack.backtrack_bundle.backtrack`.
   Each *value* in the dict can be passed to the `sea_level_filename` argument of :func:`pybacktrack.backtrack.backtrack`.
 
 - **pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES**
 
-  A list of bundled sea level model *names* (keys in `BUNDLE_SEA_LEVEL_MODEL_FILES`).
+  A list of bundled sea level model *names* (keys in `BUNDLE_SEA_LEVEL_MODELS`).
+  
+  Choices include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
 """
 
 
@@ -101,7 +103,7 @@ BUNDLE_CRUSTAL_THICKNESS_FILENAME = os.path.join(BUNDLE_PATH, 'crustal_thickness
 BUNDLE_DYNAMIC_TOPOGRAPHY_PATH = os.path.join(BUNDLE_PATH, 'dynamic_topography')
 BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH = os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_PATH, 'models')
 BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH = os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_PATH, 'reconstructions')
-BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS = {
+BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS = {
     'terra': (
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'terra.grids'),
         os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'terra', 'static_polygons.gpmlz'),
@@ -163,12 +165,12 @@ BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS = {
     )
 }
 
-BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES = BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS.keys()
+BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES = BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS.keys()
 
 BUNDLE_SEA_LEVEL_PATH = os.path.join(BUNDLE_PATH, 'sea_level')
-BUNDLE_SEA_LEVEL_MODEL_FILES = {
+BUNDLE_SEA_LEVEL_MODELS = {
     'Haq87_SealevelCurve': os.path.join(BUNDLE_SEA_LEVEL_PATH, 'Haq87_SealevelCurve.dat'),
     'Haq87_SealevelCurve_Longterm': os.path.join(BUNDLE_SEA_LEVEL_PATH, 'Haq87_SealevelCurve_Longterm.dat')
 }
 
-BUNDLE_SEA_LEVEL_MODEL_NAMES = BUNDLE_SEA_LEVEL_MODEL_FILES.keys()
+BUNDLE_SEA_LEVEL_MODEL_NAMES = BUNDLE_SEA_LEVEL_MODELS.keys()
