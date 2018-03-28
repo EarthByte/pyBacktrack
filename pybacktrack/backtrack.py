@@ -126,7 +126,7 @@ def backtrack(
         either here or in well file.
     well_location : tuple, optional
         Optional location of well.
-        If not provided then is extracted from the `well_filename` file.
+        If not provided then is extracted from the ``well_filename`` file.
         If specified then overrides value in well file.
         If specified then must be a 2-tuple (longitude, latitude) in degrees.
     well_bottom_age_column : int, optional
@@ -139,7 +139,7 @@ def backtrack(
     Returns
     -------
     :class:`Well`
-        The well read from `well_filename`.
+        The well read from ``well_filename``.
         It may also be ammended with a base stratigraphic unit from the bottom of the well to basement.
     list of :class:`Well.DecompactedWell`
         The decompacted wells associated with the well.
@@ -147,16 +147,16 @@ def backtrack(
     Raises
     ------
     ValueError
-        If `lithology_column` is not the largest column number (must be last column).
+        If ``lithology_column`` is not the largest column number (must be last column).
     ValueError
-        If `well_location` is not specified *and* the well location was not extracted from the well file.
+        If ``well_location`` is not specified *and* the well location was not extracted from the well file.
     
     Notes
     -----
     Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
     which column it should be read from.
     
-    The tectonic subsidence at each age (of decompacted wells) is added as a `tectonic_subsidence` attribute
+    The tectonic subsidence at each age (of decompacted wells) is added as a *tectonic_subsidence* attribute
     to each decompacted well returned.
     """
     

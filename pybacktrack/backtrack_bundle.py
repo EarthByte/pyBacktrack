@@ -70,7 +70,7 @@ def backtrack(
     Finds decompacted total sediment thickness and water depth for each age in a well.
     
     This function is very similar to :func:`pybacktrack.backtrack.backtrack` except it has
-    default values that reference the :mod:`bundled data<pybacktrack.bundle_data>` included in the `pybacktrack` package.
+    default values that reference the :mod:`bundled data<pybacktrack.bundle_data>` included in the ``pybacktrack`` package.
     It also uses a model name (instead of filenames) for dynamic topography and sea-level curve to
     make specifying them even easier (especially dynamic topography).
     
@@ -119,7 +119,7 @@ def backtrack(
         either here or in well file.
     well_location : tuple, optional
         Optional location of well.
-        If not provided then is extracted from the `well_filename` file.
+        If not provided then is extracted from the ``well_filename`` file.
         If specified then overrides value in well file.
         If specified then must be a 2-tuple (longitude, latitude) in degrees.
     well_bottom_age_column : int, optional
@@ -132,24 +132,24 @@ def backtrack(
     Returns
     -------
     :class:`Well`
-        The well read from `well_filename`.
-        It may also be ammended with a base stratigraphic unit from the bottom of the well to basement.
+        The well read from ``well_filename``.
+        It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
     list of :class:`Well.DecompactedWell`
         The decompacted wells associated with the well.
     
     Raises
     ------
     ValueError
-        If `lithology_column` is not the largest column number (must be last column).
+        If ``lithology_column`` is not the largest column number (must be last column).
     ValueError
-        If `well_location` is not specified *and* the well location was not extracted from the well file.
+        If ``well_location`` is not specified *and* the well location was not extracted from the well file.
     
     Notes
     -----
     Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
     which column it should be read from.
     
-    The tectonic subsidence at each age (of decompacted wells) is added as a `tectonic_subsidence` attribute
+    The tectonic subsidence at each age (of decompacted wells) is added as a *tectonic_subsidence* attribute
     to each decompacted well returned.
     """
     
@@ -209,13 +209,116 @@ def backtrack_and_write_decompacted(
         well_bottom_depth_column=1,
         well_lithology_column=2,
         ammended_well_output_filename=None):
-    """
-    Backtrack well in 'well_filename' and write decompacted data to 'decompacted_output_filename'.
+    # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
+    # the expanded values of the bundle filenames.
+    """backtrack_and_write_decompacted(\
+        decompacted_output_filename,\
+        well_filename,\
+        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,\
+        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,\
+        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,\
+        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        dynamic_topography_model_name=None,\
+        sea_level_model_name=None,\
+        base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        ocean_age_to_depth_model=pybacktrack.age_to_depth.DEFAULT_MODEL,\
+        rifting_period=None,\
+        decompacted_columns=pybacktrack.backtrack.default_decompacted_columns,\
+        well_location=None,\
+        well_bottom_age_column=0,\
+        well_bottom_depth_column=1,\
+        well_lithology_column=2,\
+        ammended_well_output_filename=None)
+    Same as :func:`pybacktrack.backtrack_bundle.backtrack` but also writes decompacted results to a text file.
     
-    Also optionally write ammended well data (ie, including extra stratigraphic base unit) to
-    'ammended_well_output_filename' if specified.
+    Also optionally write amended well data (ie, including extra stratigraphic base unit from well bottom to ocean basement)
+    to ``ammended_well_output_filename`` if specified.
     
-    See 'backtrack()' and 'write_decompacted_wells()' for more details.
+    This function is very similar to :func:`pybacktrack.backtrack.backtrack_and_write_decompacted` except it has
+    default values that reference the :mod:`bundled data<pybacktrack.bundle_data>` included in the `pybacktrack` package.
+    It also uses a model name (instead of filenames) for dynamic topography and sea-level curve to
+    make specifying them even easier (especially dynamic topography).
+    
+    Parameters
+    ----------
+    decompacted_output_filename : string
+        Name of text file to write decompacted results to.
+    well_filename : string
+        Name of well text file.
+    lithologies_filename : string, optional
+        Name of lithologies text file.
+    age_grid_filename : string, optional
+        Age grid filename.
+        Used to obtain age of seafloor at well location.
+    topography_filename : string, optional
+        Topography filename.
+        Used to obtain water depth at well location.
+    total_sediment_thickness_filename : string, optional
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at well location.
+    crustal_thickness_filename : string, optional
+        Crustal thickness filename.
+        Used to obtain crustal thickness at well location.
+    dynamic_topography_model_name : string, optional
+        Represents a time-dependent dynamic topography raster grid.
+        Currently only used for oceanic floor (ie, well location inside age grid)
+        it is not used if well is on continental crust (passive margin).
+        This is the name of a bundled dynamic topography model.
+        Choices include 'terra', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6' and 'M7'.
+    sea_level_model_name : string, optional
+        Name of the bundled sea level model.
+        Choices include 'Haq87_SealevelCurve' and 'Haq87_SealevelCurve_Longterm'.
+        Used to obtain sea levels relative to present day.
+    base_lithology_name : string, optional
+        Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
+        The stratigraphic units in the well might not record the full depth of sedimentation.
+        The base unit covers the remaining depth from bottom of well to the total sediment thickness.
+        Defaults to 'Shale'.
+    ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
+        The model to use when converting ocean age to depth at well location
+        (if on ocean floor - not used for continental passive margin).
+    rifting_period : tuple, optional
+        Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
+        If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
+        (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
+        If specified then overrides value in well file.
+        If well is on continental passive margin then at least rift end age should be specified
+        either here or in well file.
+    decompacted_columns : list of {pybacktrack.backtrack.COLUMN_AGE, \
+                                   pybacktrack.backtrack.COLUMN_DECOMPACTED_THICKNESS, \
+                                   pybacktrack.backtrack.COLUMN_DECOMPACTED_DENSITY, \
+                                   pybacktrack.backtrack.COLUMN_TECTONIC_SUBSIDENCE, \
+                                   pybacktrack.backtrack.COLUMN_WATER_DEPTH, \
+                                   pybacktrack.backtrack.COLUMN_COMPACTED_THICKNESS, \
+                                   pybacktrack.backtrack.COLUMN_LITHOLOGY, \
+                                   pybacktrack.backtrack.COLUMN_COMPACTED_DEPTH}, optional
+        The decompacted columns (and their order) to output to ``decompacted_output_filename``.
+    well_location : tuple, optional
+        Optional location of well.
+        If not provided then is extracted from the ``well_filename`` file.
+        If specified then overrides value in well file.
+        If specified then must be a 2-tuple (longitude, latitude) in degrees.
+    well_bottom_age_column : int, optional
+        The column of well file containing bottom age. Defaults to 0.
+    well_bottom_depth_column : int, optional
+        The column of well file containing bottom depth. Defaults to 1.
+    well_lithology_column : int, optional
+        The column of well file containing lithology(s). Defaults to 2.
+    ammended_well_output_filename: string, optional
+        Amended well data filename. Useful if an extra stratigraphic base unit is added from well bottom to ocean basement.
+    
+    Raises
+    ------
+    ValueError
+        If ``lithology_column`` is not the largest column number (must be last column).
+    ValueError
+        If ``well_location`` is not specified *and* the well location was not extracted from the well file.
+    
+    Notes
+    -----
+    Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
+    which column it should be read from.
     """
     
     # Convert dynamic topography model name to list filename (if specified).

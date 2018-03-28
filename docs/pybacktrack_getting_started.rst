@@ -76,9 +76,13 @@ To see the command-line options run:
 The following usage:
 
 - reads the ocean drill site file *tests/data/ODP-114-699-Lithology.txt*,
-- backtracks it using the *M2* dynamic topography model and the *Haq87_SealevelCurve_Longterm* sea-level model,
-- writes the ammended drill site to *tests/data/ODP-114-699_backtrack_amended.txt*, and
-- writes the backtracked results to *tests/data/ODP-114-699_backtrack_decompat.txt*, containing the following columns:
+- backtracks it using:
+
+  * the *M2* dynamic topography model, and
+  * the *Haq87_SealevelCurve_Longterm* sea-level model,
+
+- writes the amended drill site to *tests/data/ODP-114-699_backtrack_amended.txt*, and
+- writes the following columns to *tests/data/ODP-114-699_backtrack_decompat.txt*:
 
   * age
   * compacted_depth
@@ -109,28 +113,41 @@ Importing into your own script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An alternative to running an existing script is to write your own script (using a text editor) that imports ``pybacktrack`` modules and
-calls their functions. The following Python code does the same as the :ref:`above script<pybacktrack_use_an_existing_module_script>`:
+calls their functions.
+
+The following Python code does the same as the :ref:`above script<pybacktrack_use_an_existing_module_script>` by calling the
+:func:`pybacktrack.backtrack_bundle.backtrack_and_write_decompacted` function:
 
 .. code-block:: python
 
     import pybacktrack.backtrack_bundle as backtrack_bundle
     import pybacktrack.backtrack as backtrack
     
-    # The input and output filenames (available in 'tests/data/' directory of pyBacktrack source code).
+    # Input and output filenames (available in 'tests/data/' directory of pyBacktrack source code).
     input_well_filename = 'tests/data/ODP-114-699-Lithology.txt'
-    ammended_well_output_filename = 'tests/data/ODP-114-699_backtrack_amended.txt'
+    amended_well_output_filename = 'tests/data/ODP-114-699_backtrack_amended.txt'
     decompacted_output_filename = 'tests/data/ODP-114-699_backtrack_decompat.txt'
     
-    # Read input well file, and write ammended well and decompacted results to output files.
+    # Read input well file, and write amended well and decompacted results to output files.
     backtrack_bundle.backtrack_and_write_decompacted(
         decompacted_output_filename,
         input_well_filename,
         dynamic_topography_model_name='M2',
         sea_level_model_name='Haq87_SealevelCurve_Longterm',
         # The columns in decompacted output file...
-        decompacted_columns=[backtrack.COLUMN_AGE, backtrack.COLUMN_COMPACTED_DEPTH,
-                             backtrack.COLUMN_COMPACTED_THICKNESS, backtrack.COLUMN_DECOMPACTED_THICKNESS,
-                             backtrack.COLUMN_DECOMPACTED_DENSITY, backtrack.COLUMN_WATER_DEPTH,
-                             backtrack.COLUMN_TECTONIC_SUBSIDENCE, backtrack.COLUMN_LITHOLOGY],
-        # There can be an extra stratigraphic well layer added from bottom of well to ocean basement...
-        ammended_well_output_filename=ammended_well_output_filename)
+        decompacted_columns=[backtrack.COLUMN_AGE,
+                             backtrack.COLUMN_COMPACTED_DEPTH,
+                             backtrack.COLUMN_COMPACTED_THICKNESS,
+                             backtrack.COLUMN_DECOMPACTED_THICKNESS,
+                             backtrack.COLUMN_DECOMPACTED_DENSITY,
+                             backtrack.COLUMN_WATER_DEPTH,
+                             backtrack.COLUMN_TECTONIC_SUBSIDENCE,
+                             backtrack.COLUMN_LITHOLOGY],
+        # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
+        ammended_well_output_filename=amended_well_output_filename)
+
+If you save the above code to a file called *my_backtrack_script.py* then you can run it as:
+
+.. code-block:: python
+
+    python my_backtrack_script.py
