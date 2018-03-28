@@ -27,11 +27,11 @@
 
 
 from __future__ import print_function
-import argparse
 import codecs
 import math
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
+import pybacktrack.bundle_data
 from pybacktrack.lithology import read_lithologies_file
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
@@ -113,7 +113,7 @@ def backtrack(
         Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
-        Defaults to 'Shale'.
+        Defaults to ``Shale``.
     ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
@@ -1170,88 +1170,92 @@ def backtrack_and_write_decompacted(
         decompacted_columns)
 
 
-########################
-# Command-line parsing #
-########################
-
-
-def argparse_unicode(value_string):
-    try:
-        # Filename uses the system encoding - decode from 'str' to 'unicode'.
-        filename = value_string.decode(sys.getfilesystemencoding())
-    except UnicodeDecodeError:
-        raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
+if __name__ == '__main__':
     
-    return filename
-
-
-def argparse_non_negative_integer(value_string):
-    try:
-        value = int(value_string)
-    except ValueError:
-        raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
+    ########################
+    # Command-line parsing #
+    ########################
     
-    if value < 0:
-        raise argparse.ArgumentTypeError("%g is a negative number" % value)
+    import argparse
     
-    return value
-
-
-def argparse_non_negative_float(value_string):
-    try:
-        value = float(value_string)
-    except ValueError:
-        raise argparse.ArgumentTypeError("%s is not a number" % value_string)
-    
-    if value < 0:
-        raise argparse.ArgumentTypeError("%g is a negative number" % value)
-    
-    return value
-
-
-# Action to parse a longitude/latitude location.
-class ArgParseLocationAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        # Need two numbers (lon and lat).
-        if len(values) != 2:
-            parser.error('location must be specified as two numbers (longitude and latitude)')
-        
+    def argparse_unicode(value_string):
         try:
-            # Convert strings to float.
-            longitude = float(values[0])
-            latitude = float(values[1])
+            # Filename uses the system encoding - decode from 'str' to 'unicode'.
+            filename = value_string.decode(sys.getfilesystemencoding())
+        except UnicodeDecodeError:
+            raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
+        
+        return filename
+
+
+    def argparse_non_negative_integer(value_string):
+        try:
+            value = int(value_string)
         except ValueError:
-            raise argparse.ArgumentTypeError("encountered a longitude or latitude that is not a number")
+            raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
         
-        if longitude < -360 or longitude > 360:
-            parser.error('longitude must be in the range [-360, 360]')
-        if latitude < -90 or latitude > 90:
-            parser.error('latitude must be in the range [-90, 90]')
+        if value < 0:
+            raise argparse.ArgumentTypeError("%g is a negative number" % value)
         
-        setattr(namespace, self.dest, (longitude, latitude))
+        return value
 
 
-# Action to parse dynamic topography model information.
-class ArgParseDynamicTopographyAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if len(values) != 3:
-            parser.error('Dynamic topography model info must have three parameters '
-                         '(grid list filename, static polygons filename, rotation filename).')
+    def argparse_non_negative_float(value_string):
+        try:
+            value = float(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a number" % value_string)
         
-        grid_list_filename = values[0]
-        static_polygons_filename = values[1]
-        rotation_filenames = values[2:]  # Needs to be a list.
+        if value < 0:
+            raise argparse.ArgumentTypeError("%g is a negative number" % value)
         
-        setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
+        return value
 
 
-ocean_age_to_depth_model_dict = dict((model_name, model) for model, model_name, _ in age_to_depth.ALL_MODELS)
-ocean_age_to_depth_model_name_dict = dict((model, model_name) for model, model_name, _ in age_to_depth.ALL_MODELS)
-default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_to_depth.DEFAULT_MODEL]
+    # Action to parse a longitude/latitude location.
+    class ArgParseLocationAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            # Need two numbers (lon and lat).
+            if len(values) != 2:
+                parser.error('location must be specified as two numbers (longitude and latitude)')
+            
+            try:
+                # Convert strings to float.
+                longitude = float(values[0])
+                latitude = float(values[1])
+            except ValueError:
+                raise argparse.ArgumentTypeError("encountered a longitude or latitude that is not a number")
+            
+            if longitude < -360 or longitude > 360:
+                parser.error('longitude must be in the range [-360, 360]')
+            if latitude < -90 or latitude > 90:
+                parser.error('latitude must be in the range [-90, 90]')
+            
+            setattr(namespace, self.dest, (longitude, latitude))
 
 
-__description__ = \
-    """Find decompacted total sediment thickness and water depth through time.
+    # Action to parse dynamic topography model information.
+    class ArgParseDynamicTopographyAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if len(values) != 3:
+                parser.error('Dynamic topography model info must have three parameters '
+                             '(grid list filename, static polygons filename, rotation filename).')
+            
+            grid_list_filename = values[0]
+            static_polygons_filename = values[1]
+            rotation_filenames = values[2:]  # Needs to be a list.
+            
+            setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
+
+
+    ocean_age_to_depth_model_dict = dict((model_name, model) for model, model_name, _ in age_to_depth.ALL_MODELS)
+    ocean_age_to_depth_model_name_dict = dict((model, model_name) for model, model_name, _ in age_to_depth.ALL_MODELS)
+    default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_to_depth.DEFAULT_MODEL]
+
+
+    def main():
+        
+        __description__ = """Find decompacted total sediment thickness and water depth through time.
     
     This backtracking script can be used to find paleo water depths.
     Paleo water depths are obtained from tectonic subsidence by subtracting the isostatic correction of
@@ -1304,130 +1308,148 @@ __description__ = \
 
     python %(prog)s ... -w well.xy -c 0 1 4 -d age decompacted_thickness -- decompacted_well.xy
     """.format(''.join('        {0}\n'.format(column_name) for column_name in decompacted_column_names))
-
-
-def get_command_line_parser(
-        add_arguments_for_input_data=True):
-    """
-    Get command-line parser (argparse.ArgumentParser) and add command-line arguments.
     
-    If 'add_arguments_for_input_data' is True then add command-line arguments for input data other than
-    the well input and output filenames.
-    """
-    
-    # The command-line parser.
-    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    
-    parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
-    
-    parser.add_argument(
-        '-w', '--well_filename', type=argparse_unicode, required=True,
-        metavar='well_filename',
-        help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
-             'for each stratigraphic unit in a single well.')
-    
-    if add_arguments_for_input_data:
+        #
+        # Gather command-line options.
+        #
+        
+        # The command-line parser.
+        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        
+        parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
+        
         parser.add_argument(
-            '-l', '--lithologies_filename', type=argparse_unicode, required=True,
+            '-w', '--well_filename', type=argparse_unicode, required=True,
+            metavar='well_filename',
+            help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
+                 'for each stratigraphic unit in a single well.')
+        
+        # Allow user to override default lithologies filename (if they don't want the one in the bundled data).
+        parser.add_argument(
+            '-l', '--lithologies_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
             metavar='lithologies_filename',
-            help='The lithologies filename used to lookup density, surface porosity and porosity decay.')
-    
-    parser.add_argument(
-        '-x', '--well_location', nargs=2, action=ArgParseLocationAction,
-        metavar=('well_longitude', 'well_latitude'),
-        help='Optional location of the well. '
-             'Must be specified if the well location is not provided inside the well file '
-             '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
-             'Overrides well file if both specified. '
-             'Longitude and latitude are in degrees.')
-    
-    parser.add_argument(
-        '-c', '--well_columns', type=argparse_non_negative_integer, nargs=3, default=[0, 1, 2],
-        metavar=('bottom_age_column', 'bottom_depth_column', 'lithology_column'),
-        help='The well file column indices (zero-based) for bottom age, bottom depth and lithology(s) respectively. '
-             'This enables unused columns to reside in the well text file. '
-             'For example, to skip unused columns 2 and 3 '
-             '(perhaps containing present day water depth and whether column is under water) '
-             'use column indices 0 1 4. Note that lithologies should be the last column since '
-             'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
-             'Defaults to 0 1 2.')
-    
-    parser.add_argument(
-        '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
-        metavar='decompacted_column_name',
-        help='The columns to output in the decompacted file. '
-             'Choices include {0}. '
-             'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
-             'Defaults to "{1}".'.format(
-                ', '.join(decompacted_column_names),
-                ' '.join(default_decompacted_column_names)))
-    
-    parser.add_argument(
-        '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
-        metavar='base_lithology_name',
-        help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
-             'The well might not record the full depth of sedimentation. '
-             'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
-             'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
-    
-    parser.add_argument(
-        '-m', '--ocean_age_to_depth_model', type=str, default=default_ocean_age_to_depth_model_name,
-        metavar='ocean_age_to_depth_model',
-        dest='ocean_age_to_depth_model_name',
-        help='The oceanic model used to convert age to depth. '
-             'Choices include {0}. '
-             'Defaults to {1}.'.format(
-                ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
-                default_ocean_age_to_depth_model_name))
-    
-    parser.add_argument(
-        '-rs', '--rift_start_time', type=argparse_non_negative_float,
-        metavar='rift_start_time',
-        help='Optional start time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid), '
-             'in which case it is not required (even if also not provided inside the well file as '
-             '"# RiftStartTime = <rift_start_time>") because it will essentially default to '
-             'the rift "end" time. However providing a start time will result in more accurate '
-             'subsidence values generated during rifting.')
-    parser.add_argument(
-        '-re', '--rift_end_time', type=argparse_non_negative_float,
-        metavar='rift_end_time',
-        help='Optional end time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid), '
-             'in which case it must be specified if it is not provided inside the well file '
-             '(as "# RiftEndTime = <rift_end_time>"). Overrides well file if both specified.')
-    
-    parser.add_argument(
-        '-o', '--output_well_filename', type=argparse_unicode,
-        metavar='output_well_filename',
-        help='Optional output well filename to write amended well data to. '
-             'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
-    
-    if add_arguments_for_input_data:
+            help='Optional lithologies filename used to lookup density, surface porosity and porosity decay. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME))
+        
         parser.add_argument(
-            '-a', '--age_grid_filename', type=argparse_unicode, required=True,
+            '-x', '--well_location', nargs=2, action=ArgParseLocationAction,
+            metavar=('well_longitude', 'well_latitude'),
+            help='Optional location of the well. '
+                 'Must be specified if the well location is not provided inside the well file '
+                 '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
+                 'Overrides well file if both specified. '
+                 'Longitude and latitude are in degrees.')
+        
+        parser.add_argument(
+            '-c', '--well_columns', type=argparse_non_negative_integer, nargs=3, default=[0, 1, 2],
+            metavar=('bottom_age_column', 'bottom_depth_column', 'lithology_column'),
+            help='The well file column indices (zero-based) for bottom age, bottom depth and lithology(s) respectively. '
+                 'This enables unused columns to reside in the well text file. '
+                 'For example, to skip unused columns 2 and 3 '
+                 '(perhaps containing present day water depth and whether column is under water) '
+                 'use column indices 0 1 4. Note that lithologies should be the last column since '
+                 'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
+                 'Defaults to 0 1 2.')
+        
+        parser.add_argument(
+            '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
+            metavar='decompacted_column_name',
+            help='The columns to output in the decompacted file. '
+                 'Choices include {0}. '
+                 'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
+                 'Defaults to "{1}".'.format(
+                    ', '.join(decompacted_column_names),
+                    ' '.join(default_decompacted_column_names)))
+        
+        parser.add_argument(
+            '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
+            metavar='base_lithology_name',
+            help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
+                 'The well might not record the full depth of sedimentation. '
+                 'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
+                 'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
+        
+        parser.add_argument(
+            '-m', '--ocean_age_to_depth_model', type=str, default=default_ocean_age_to_depth_model_name,
+            metavar='ocean_age_to_depth_model',
+            dest='ocean_age_to_depth_model_name',
+            help='The oceanic model used to convert age to depth. '
+                 'Choices include {0}. '
+                 'Defaults to {1}.'.format(
+                    ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
+                    default_ocean_age_to_depth_model_name))
+        
+        parser.add_argument(
+            '-rs', '--rift_start_time', type=argparse_non_negative_float,
+            metavar='rift_start_time',
+            help='Optional start time of rifting (in My). '
+                 'Only used if well is located on continental passive margin (outside age grid), '
+                 'in which case it is not required (even if also not provided inside the well file as '
+                 '"# RiftStartTime = <rift_start_time>") because it will essentially default to '
+                 'the rift "end" time. However providing a start time will result in more accurate '
+                 'subsidence values generated during rifting.')
+        parser.add_argument(
+            '-re', '--rift_end_time', type=argparse_non_negative_float,
+            metavar='rift_end_time',
+            help='Optional end time of rifting (in My). '
+                 'Only used if well is located on continental passive margin (outside age grid), '
+                 'in which case it must be specified if it is not provided inside the well file '
+                 '(as "# RiftEndTime = <rift_end_time>"). Overrides well file if both specified.')
+        
+        parser.add_argument(
+            '-o', '--output_well_filename', type=argparse_unicode,
+            metavar='output_well_filename',
+            help='Optional output well filename to write amended well data to. '
+                 'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
+        
+        # Allow user to override default age grid filename (if they don't want the one in the bundled data).
+        parser.add_argument(
+            '-a', '--age_grid_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
             metavar='age_grid_filename',
-            help='Used to obtain age of seafloor at well location.')
+            help='Optional age grid filename used to obtain age of seafloor at well location. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
         
+        # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
         parser.add_argument(
-            '-s', '--total_sediment_thickness_filename', type=argparse_unicode, required=True,
+            '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
             metavar='total_sediment_thickness_filename',
-            help='Used to obtain total sediment thickness at well location.')
+            help='Optional filename used to obtain total sediment thickness at well location. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
         
+        # Allow user to override default crustal thickness filename (if they don't want the one in the bundled data).
         parser.add_argument(
-            '-k', '--crustal_thickness_filename', type=argparse_unicode, required=True,
+            '-k', '--crustal_thickness_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
             metavar='crustal_thickness_filename',
-            help='Used to obtain crustal thickness at well location.')
+            help='Optional filename used to obtain crustal thickness at well location. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME))
         
+        # Allow user to override default topography filename (if they don't want the one in the bundled data).
         parser.add_argument(
-            '-t', '--topography_filename', type=argparse_unicode, required=True,
+            '-t', '--topography_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
             metavar='topography_filename',
-            help='Used to obtain water depth at well location.')
+            help='Optional topography filename used to obtain water depth at well location. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME))
         
-        parser.add_argument(
+        # Can optionally specify dynamic topography as a triplet of filenames or a model name (if using bundled data) but not both.
+        dynamic_topography_argument_group = parser.add_mutually_exclusive_group()
+        dynamic_topography_argument_group.add_argument(
+            '-ym', '--bundle_dynamic_topography_model', type=str,
+            metavar='bundle_dynamic_topography_model',
+            help='Optional dynamic topography through time at well location. '
+                 'If no model (or filenames) specified then dynamic topography is ignored. '
+                 'Can be used both for oceanic floor and continental passive margin '
+                 '(ie, well location inside or outside age grid). '
+                 'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        dynamic_topography_argument_group.add_argument(
             '-y', '--dynamic_topography_model_info', nargs=3, action=ArgParseDynamicTopographyAction,
             metavar=('dynamic_topography_grid_list_filename', 'static_polygon_filename', 'rotation_filename'),
             help='Optional dynamic topography through time (sampled at reconstructed well locations). '
+                 'If no filenames (or model) specified then dynamic topography is ignored. '
                  'Can be used both for oceanic floor and continental passive margin '
                  '(ie, well location inside or outside age grid). '
                  'First filename contains a list of dynamic topography grids (and associated times). '
@@ -1439,52 +1461,71 @@ def get_command_line_parser(
                  'filename (relative to list file) of a dynamic topography grid at a particular time. '
                  'Second column containing associated time (in Ma).')
         
-        parser.add_argument(
-            '-sl', '--sea_level_filename', type=str,
+        # Can optionally specify sea level as a filename or  model name (if using bundled data) but not both.
+        sea_level_argument_group = parser.add_mutually_exclusive_group()
+        sea_level_argument_group.add_argument(
+            '-slm', '--bundle_sea_level_model', type=str,
+            metavar='bundle_sea_level_model',
+            help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
+                 'If no model (or filename) is specified then sea level is ignored. '
+                 'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
+        sea_level_argument_group.add_argument(
+            '-sl', '--sea_level_filename', type=argparse_unicode,
             metavar='sea_level_filename',
             help='Optional file used to obtain sea level (relative to present-day) over time. '
-                 'If no file is specified then sea level is ignored. '
+                 'If no filename (or model) is specified then sea level is ignored. '
                  'If specified then each row should contain an age column followed by a column for sea level (in metres).')
-    
-    parser.add_argument(
-        'output_filename', type=argparse_unicode,
-        metavar='output_filename',
-        help='The output filename used to store the decompacted total sediment thickness and '
-             'water depth through time.')
-    
-    return parser
-
-
-def post_process_command_line(args):
-    
-    # Convert output column names to enumerations.
-    try:
-        decompacted_columns = [decompacted_columns_dict[column_name] for column_name in args.decompacted_columns]
-    except KeyError:
-        raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
-    
-    # Convert age-to-depth model name to enumeration.
-    try:
-        ocean_age_to_depth_model = ocean_age_to_depth_model_dict[args.ocean_age_to_depth_model_name]
-    except KeyError:
-        raise argparse.ArgumentTypeError("%s is not a valid ocean age-to-depth model" % args.ocean_age_to_depth_model_name)
-    
-    return decompacted_columns, ocean_age_to_depth_model
-
-
-if __name__ == '__main__':
-    
-    import traceback
-    
-    try:
-        # Gather command-line options.
-        parser = get_command_line_parser()
         
+        parser.add_argument(
+            'output_filename', type=argparse_unicode,
+            metavar='output_filename',
+            help='The output filename used to store the decompacted total sediment thickness and '
+                 'water depth through time.')
+        
+        #
         # Parse command-line options.
+        #
         args = parser.parse_args()
         
+        #
         # Do any necessary post-processing/validation of parsed options.
-        decompacted_columns, ocean_age_to_depth_model = post_process_command_line(args)
+        #
+        
+        # Convert output column names to enumerations.
+        try:
+            decompacted_columns = [decompacted_columns_dict[column_name] for column_name in args.decompacted_columns]
+        except KeyError:
+            raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
+        
+        # Convert age-to-depth model name to enumeration.
+        try:
+            ocean_age_to_depth_model = ocean_age_to_depth_model_dict[args.ocean_age_to_depth_model_name]
+        except KeyError:
+            raise argparse.ArgumentTypeError("%s is not a valid ocean age-to-depth model" % args.ocean_age_to_depth_model_name)
+        
+        # Get dynamic topography model info.
+        if args.bundle_dynamic_topography_model is not None:
+            try:
+                # Convert dynamic topography model name to model info.
+                dynamic_topography_model_info = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_INFOS[args.bundle_dynamic_topography_model]
+            except KeyError:
+                raise ValueError("%s is not a valid dynamic topography model name" % args.bundle_dynamic_topography_model)
+        elif args.dynamic_topography_model_info is not None:
+            dynamic_topography_model_info = args.dynamic_topography_model_info
+        else:
+            dynamic_topography_model_info = None
+        
+        # Get sea level filename.
+        if args.bundle_sea_level_model is not None:
+            try:
+                # Convert sea level model name to filename.
+                sea_level_filename = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_FILES[args.bundle_sea_level_model]
+            except KeyError:
+                raise ValueError("%s is not a valid sea level model name" % args.bundle_sea_level_model)
+        elif args.sea_level_filename is not None:
+            sea_level_filename = args.sea_level_filename
+        else:
+            sea_level_filename = None
         
         # Backtrack and write output data.
         backtrack_and_write_decompacted(
@@ -1495,8 +1536,8 @@ if __name__ == '__main__':
             args.topography_filename,
             args.total_sediment_thickness_filename,
             args.crustal_thickness_filename,
-            args.dynamic_topography_model_info,
-            args.sea_level_filename,
+            dynamic_topography_model_info,
+            sea_level_filename,
             args.base_lithology_name,
             ocean_age_to_depth_model,
             (args.rift_start_time, args.rift_end_time),
@@ -1508,10 +1549,14 @@ if __name__ == '__main__':
             args.output_well_filename)
         
         sys.exit(0)
-        
+    
+    import traceback
+    
+    try:
+        main()
+        sys.exit(0)
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
         # traceback.print_exc()
-        
         sys.exit(1)
