@@ -24,7 +24,8 @@ of the total sedimentary section, and thus bathymetry, through time.
 .. toctree::
    :maxdepth: 3
 
-   pybacktrack_installation
+   pybacktrack_getting_started
+   pybacktrack_examples
    pybacktrack_reference
 
 
