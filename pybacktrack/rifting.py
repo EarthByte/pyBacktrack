@@ -34,15 +34,15 @@ from scipy.optimize import minimize_scalar
 import sys
 
 
-y_l = 125000.0   # Initial lithospheric thickness               [m]
-alpha_v = 3.28e-5    # Volumetric coefficient of thermal expansion  [1/K]
-Tm = 1333.0     # Temperature of the mantle                    [C]
-kappa = 1e-6       # Thermal diffusivity                          [m^2/s]
+_y_l = 125000.0   # Initial lithospheric thickness               [m]
+_alpha_v = 3.28e-5    # Volumetric coefficient of thermal expansion  [1/K]
+_Tm = 1333.0     # Temperature of the mantle                    [C]
+_kappa = 1e-6       # Thermal diffusivity                          [m^2/s]
 
 # Densities of mantle, crust and water (in kg/m^3).
-rhoM = 3330.0
-rhoC = 2800.0
-rhoW = 1030.0
+_rhoM = 3330.0
+_rhoC = 2800.0
+_rhoW = 1030.0
 
 
 def syn_rift_subsidence(
@@ -57,13 +57,13 @@ def syn_rift_subsidence(
     """
     
     # Assuming subsidence filled with water (no sediment).
-    # If we were using sediment (plus water) then we'd replace 'rhoW' with the column
+    # If we were using sediment (plus water) then we'd replace '_rhoW' with the column
     # density of sediment plus water. However we use water only since we can later adjust
     # subsidence with an isostatic sediment contribution.
     tc = pre_rift_crustal_thickness
-    return (y_l * (1 - 1 / beta) *
-            ((rhoM - rhoC) * (tc / y_l) * (1 - alpha_v * Tm * tc / y_l) - alpha_v * Tm * rhoM / 2.0) /
-            (rhoM * (1 - alpha_v * Tm) - rhoW))
+    return (_y_l * (1 - 1 / beta) *
+            ((_rhoM - _rhoC) * (tc / _y_l) * (1 - _alpha_v * _Tm * tc / _y_l) - _alpha_v * _Tm * _rhoM / 2.0) /
+            (_rhoM * (1 - _alpha_v * _Tm) - _rhoW))
 
 
 def post_rift_subsidence(
@@ -77,8 +77,8 @@ def post_rift_subsidence(
     time: Time since end of rifting (in My).
     """
     
-    E0 = 4 * y_l * rhoM * alpha_v * Tm / ((np.pi ** 2) * (rhoM - rhoW))
-    tau = (y_l ** 2) / ((np.pi ** 2) * kappa)
+    E0 = 4 * _y_l * _rhoM * _alpha_v * _Tm / ((np.pi ** 2) * (_rhoM - _rhoW))
+    tau = (_y_l ** 2) / ((np.pi ** 2) * _kappa)
     
     # Time in seconds (from My).
     time_seconds = time * 365 * 24 * 3600 * 1e6
@@ -182,7 +182,7 @@ def estimate_beta(
     min_beta = 1.0
     # Initial (pre-rift) crustal thickness should not exceed initial lithospheric thickness
     # (perhaps a more realistic limit would be some percentage of lithospheric thickness?).
-    max_beta = y_l / present_day_crustal_thickness
+    max_beta = _y_l / present_day_crustal_thickness
     
     # Run SciPy minimization.
     #

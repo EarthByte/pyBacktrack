@@ -36,7 +36,7 @@ import sys
 
 
 # Warn the user if the inaccuracy of average sea level exceeds this amount (in metres)...
-MAX_SEA_LEVEL_ERROR = 1
+_MAX_SEA_LEVEL_ERROR = 1
 
 
 class SeaLevel(object):
@@ -80,7 +80,7 @@ class SeaLevel(object):
         
         # Warn the user if average sea level is inaccurate.
         average_sea_level_error = sea_level_integral_error / time_interval
-        if math.fabs(average_sea_level_error) > MAX_SEA_LEVEL_ERROR:
+        if math.fabs(average_sea_level_error) > _MAX_SEA_LEVEL_ERROR:
             print('WARNING: Unable to accurately integrate sea level curve over time period [{0}, {1}]. '
                   'Average sea level will be inaccurate on the order of {2} metres. '.format(
                       begin_time, end_time, math.fabs(average_sea_level_error)),
