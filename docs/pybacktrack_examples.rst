@@ -25,7 +25,8 @@ For example:
 
     python -m pybacktrack.age_to_depth \
         -m GDH1 \
-        -r tests/data/test_ages.txt \
+        -r \
+        tests/data/test_ages.txt \
         tests/data/test_depths_from_ages.txt
 
 Currently supports two models:
@@ -103,7 +104,7 @@ Passive margin example:
         -- \
         tests/data/DSDP-36-327_backtrack_decompat.txt
 
-And since the above examples default to using the internal :mod:`bundled data<pybacktrack.bundle_data>` they are equivalent to the following longer versions...
+And since the above examples default to using the internal :ref:`bundled data<pybacktrack_bundle_data>` they are equivalent to the following longer versions...
 
 Ocean basin example:
 

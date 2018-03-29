@@ -155,6 +155,8 @@ Utilities
 
 .. autofunction:: pybacktrack.interpolate_file
 
+.. _pybacktrack_bundle_data:
+
 Bundle data
 -----------
 

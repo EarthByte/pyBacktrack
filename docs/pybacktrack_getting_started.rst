@@ -23,7 +23,7 @@ PyBacktrack depends on:
 `NumPy` and `SciPy` are automatically installed by `pip` (see :ref:`pyBacktrack installation <pybacktrack_installation>`), however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
 
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
-Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :mod:`bundled grid files in pyBacktrack<pybacktrack.bundle_data>` are in NetCDF4 format.
+Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_bundle_data>` are in NetCDF4 format.
 
 `pyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
@@ -41,6 +41,11 @@ To install the latest development version (requires Git), run:
 
 .. note:: | You may need to update your `Git` if you receive an error ending with ``tlsv1 alert protocol version``.
           | This is apparently due to an `update on GitHub <https://blog.github.com/2018-02-23-weak-cryptographic-standards-removed>`_.
+
+...or download the `pyBacktrack source code <https://github.com/EarthByte/pyBacktrack>`_, extract to a local directory and run:
+::
+
+  pip install <path-to-local-directory>
 
 This will automatically install the `NumPy` and `SciPy` requirements. However `GMT` and `pyGPlates` need to be manually installed (see :ref:`pyBacktrack requirements <pybacktrack_requirements>`).
 
@@ -78,14 +83,14 @@ The following example is used to demonstrate both approaches. It backtracks an o
   * lithology
 
 .. note:: | The input and output filenames specified above are available in the ``tests/data/`` directory of the pyBacktrack source code.
-          | This example also uses the :mod:`bundled data<pybacktrack.bundle_data>` internally.
+          | This example also uses the :ref:`bundled data<pybacktrack_bundle_data>` internally.
 
 .. _pybacktrack_use_a_builtin_module_script:
 
 Use a built-in module script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since the :mod:`backtrack<pybacktrack.backtrack>` module (inside ``pybacktrack``) can be run as a script,
+Since there is a ``backtrack`` module inside ``pybacktrack`` that can be run as a script,
 we can invoke it on the command-line using ``python -m pybacktrack.backtrack`` followed by command line options that are specific to that module.
 
 To see its command-line options, run:
@@ -94,7 +99,7 @@ To see its command-line options, run:
 
     python -m pybacktrack.backtrack --help
 
-The backtracking example can now be demonstrated by running:
+The backtracking example can now be demonstrated by running the script as:
 
 .. code-block:: python
 
@@ -112,15 +117,15 @@ The backtracking example can now be demonstrated by running:
 Import into your own script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An alternative to running a built-in script is to write your own script (using a text editor) that imports ``pybacktrack`` modules and
-calls their functions.
+An alternative to running a built-in script is to write your own script (using a text editor) that imports ``pybacktrack`` and
+calls its functions.
 
 The following Python code does the same as the :ref:`built-in script<pybacktrack_use_a_builtin_module_script>` by calling the
-:func:`pybacktrack.backtrack.backtrack_and_write_decompacted` function:
+:func:`pybacktrack.backtrack_and_write_well` function:
 
 .. code-block:: python
 
-    import pybacktrack.backtrack as backtrack
+    import pybacktrack
     
     # Input and output filenames (available in 'tests/data/' directory of pyBacktrack source code).
     input_well_filename = 'tests/data/ODP-114-699-Lithology.txt'
@@ -128,20 +133,20 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     decompacted_output_filename = 'tests/data/ODP-114-699_backtrack_decompat.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
-    backtrack.backtrack_and_write_decompacted(
+    pybacktrack.backtrack_and_write_well(
         decompacted_output_filename,
         input_well_filename,
         dynamic_topography_model='M2',
         sea_level_model='Haq87_SealevelCurve_Longterm',
         # The columns in decompacted output file...
-        decompacted_columns=[backtrack.COLUMN_AGE,
-                             backtrack.COLUMN_COMPACTED_DEPTH,
-                             backtrack.COLUMN_COMPACTED_THICKNESS,
-                             backtrack.COLUMN_DECOMPACTED_THICKNESS,
-                             backtrack.COLUMN_DECOMPACTED_DENSITY,
-                             backtrack.COLUMN_WATER_DEPTH,
-                             backtrack.COLUMN_TECTONIC_SUBSIDENCE,
-                             backtrack.COLUMN_LITHOLOGY],
+        decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
+                             pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
+                             pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
         # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
         ammended_well_output_filename=amended_well_output_filename)
 
