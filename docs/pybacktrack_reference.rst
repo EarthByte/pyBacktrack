@@ -142,6 +142,12 @@ Continental rifting
 
 .. autofunction:: pybacktrack.post_rift_subsidence
 
+Dynamic topography
+------------------
+
+.. autoclass:: pybacktrack.DynamicTopography
+   :members:
+
 Average sea level variations
 ----------------------------
 

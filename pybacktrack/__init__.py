@@ -67,6 +67,9 @@ from pybacktrack.rifting import \
     syn_rift_subsidence, \
     post_rift_subsidence
 
+from pybacktrack.dynamic_topography import \
+    DynamicTopography
+
 from pybacktrack.sea_level import \
     SeaLevel
 
@@ -139,6 +142,8 @@ __all__ = [
     'total_rift_subsidence',
     'syn_rift_subsidence',
     'post_rift_subsidence',
+    # From dynamic_topography module...
+    'DynamicTopography',
     # From sea_level module...
     'SeaLevel',
     # From interpolate module...
