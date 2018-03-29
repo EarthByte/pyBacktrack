@@ -24,7 +24,10 @@
 """
 
 
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+
 from pybacktrack.lithology import read_lithologies_file
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command

@@ -24,7 +24,10 @@
 #########################################################################
 
 
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+
 import math
 from pybacktrack.lithology import create_lithology_from_components
 import sys
