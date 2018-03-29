@@ -1,4 +1,3 @@
-import os.path
 from setuptools import setup
 
 # Project short description.

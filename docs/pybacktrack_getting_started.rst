@@ -49,7 +49,7 @@ To install the latest development version (requires Git), run:
 
 This will automatically install the `NumPy` and `SciPy` requirements. However `GMT` and `pyGPlates` need to be manually installed (see :ref:`pyBacktrack requirements <pybacktrack_requirements>`).
 
-.. note:: A `PyPi <https://pypi.org/>`_ package, that can be installed with ``pip install pybacktrack``, will soon be provided.
+.. note:: A `PyPi <https://pypi.org/>`_ package, that can simply be installed as ``pip install pybacktrack``, will soon be provided.
 
 
 .. _pybacktrack_a_backtracking_example:
