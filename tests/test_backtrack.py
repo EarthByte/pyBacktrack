@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
-import pybacktrack.backtrack as backtrack
+import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
 
@@ -84,15 +84,15 @@ def test_backtrack_ODP(tmpdir):
     #         --
     #         tests/data/ODP-114-699_backtrack_decompat.txt
     #
-    backtrack.backtrack_and_write_decompacted(
+    pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),
         str(input_well_filename),
         dynamic_topography_model='M2',
         sea_level_model='Haq87_SealevelCurve_Longterm',
-        decompacted_columns=[backtrack.COLUMN_AGE, backtrack.COLUMN_COMPACTED_DEPTH,
-                             backtrack.COLUMN_COMPACTED_THICKNESS, backtrack.COLUMN_DECOMPACTED_THICKNESS,
-                             backtrack.COLUMN_DECOMPACTED_DENSITY, backtrack.COLUMN_WATER_DEPTH,
-                             backtrack.COLUMN_TECTONIC_SUBSIDENCE, backtrack.COLUMN_LITHOLOGY],
+        decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
         ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
@@ -130,15 +130,15 @@ def test_backtrack_DSDP(tmpdir):
     #         --
     #         tests/data/DSDP-36-327_backtrack_decompat.txt
     #
-    backtrack.backtrack_and_write_decompacted(
+    pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),
         str(input_well_filename),
         dynamic_topography_model='M2',
         sea_level_model='Haq87_SealevelCurve_Longterm',
-        decompacted_columns=[backtrack.COLUMN_AGE, backtrack.COLUMN_COMPACTED_DEPTH,
-                             backtrack.COLUMN_COMPACTED_THICKNESS, backtrack.COLUMN_DECOMPACTED_THICKNESS,
-                             backtrack.COLUMN_DECOMPACTED_DENSITY, backtrack.COLUMN_WATER_DEPTH,
-                             backtrack.COLUMN_TECTONIC_SUBSIDENCE, backtrack.COLUMN_LITHOLOGY],
+        decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
         well_lithology_column=4,  # Skip min_water_depth and max_water_depth columns (2 and 3).
         ammended_well_output_filename=str(test_ammended_well_output_filename))
     

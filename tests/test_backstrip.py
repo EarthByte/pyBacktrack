@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
-import pybacktrack.backstrip as backstrip
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
@@ -82,14 +81,14 @@ def test_backstrip(tmpdir):
     #         --
     #         tests/data/DSDP-36-327_backstrip_decompat.txt
     #
-    backstrip.backstrip_and_write_decompacted(
+    pybacktrack.backstrip_and_write_well(
         str(test_decompacted_output_filename),
         str(input_well_filename),
         sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
-        decompacted_columns=[backstrip.COLUMN_AGE, backstrip.COLUMN_COMPACTED_DEPTH,
-                             backstrip.COLUMN_COMPACTED_THICKNESS, backstrip.COLUMN_DECOMPACTED_THICKNESS,
-                             backstrip.COLUMN_DECOMPACTED_DENSITY, backstrip.COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
-                             backstrip.COLUMN_AVERAGE_WATER_DEPTH, backstrip.COLUMN_LITHOLOGY],
+        decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
+                             pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
+                             pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
+                             pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
         ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
