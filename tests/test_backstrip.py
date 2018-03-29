@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import pytest
 import pybacktrack.backstrip as backstrip
-import pybacktrack.bundle_data as bundle_data
+import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
 
@@ -30,22 +30,18 @@ def test_backstrip_script(tmpdir):
     #
     #     python -m pybacktrack.backstrip
     #         -w tests/data/DSDP-36-327-Lithology.txt
-    #         -l pybacktrack/bundle_data/lithologies/lithologies.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
-    #         -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc
-    #         -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat
+    #         -slm Haq87_SealevelCurve_Longterm
     #         -o tests/data/DSDP-36-327_backstrip_amended.txt
     #         --
     #         tests/data/DSDP-36-327_backstrip_decompat.txt
     #
     backstrip_script_command_line = ['python', '-m', 'pybacktrack.backstrip',
                                      '-w', str(input_well_filename),
-                                     '-l', bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness',
                                      'decompacted_thickness', 'decompacted_density',
                                      'average_tectonic_subsidence', 'average_water_depth', 'lithology',
-                                     '-s', bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-                                     '-sl', bundle_data.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
+                                     '-slm', 'Haq87_SealevelCurve_Longterm',
                                      '-o', str(test_ammended_well_output_filename),
                                      '--',
                                      str(test_decompacted_output_filename)]
@@ -80,10 +76,8 @@ def test_backstrip(tmpdir):
     #
     #     python -m pybacktrack.backstrip
     #         -w tests/data/DSDP-36-327-Lithology.txt
-    #         -l pybacktrack/bundle_data/lithologies/lithologies.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
-    #         -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc
-    #         -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat
+    #         -slm Haq87_SealevelCurve_Longterm
     #         -o tests/data/DSDP-36-327_backstrip_amended.txt
     #         --
     #         tests/data/DSDP-36-327_backstrip_decompat.txt
@@ -91,9 +85,7 @@ def test_backstrip(tmpdir):
     backstrip.backstrip_and_write_decompacted(
         str(test_decompacted_output_filename),
         str(input_well_filename),
-        bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
-        bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-        bundle_data.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
+        sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
         decompacted_columns=[backstrip.COLUMN_AGE, backstrip.COLUMN_COMPACTED_DEPTH,
                              backstrip.COLUMN_COMPACTED_THICKNESS, backstrip.COLUMN_DECOMPACTED_THICKNESS,
                              backstrip.COLUMN_DECOMPACTED_DENSITY, backstrip.COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
