@@ -34,8 +34,8 @@ import sys
 
 
 # Density in kg/m3.
-DENSITY_WATER = 1030.0
-DENSITY_MANTLE = 3330.0
+_DENSITY_WATER = 1030.0
+_DENSITY_MANTLE = 3330.0
 
 
 class StratigraphicUnit(object):
@@ -170,7 +170,7 @@ class StratigraphicUnit(object):
         #    average_decompacted_density = density + (1 / T) * (density_water - density) * decay * porosity(0) * exp(-D/decay) * (1 - exp(-T/decay))
         #
         return (density +
-                (DENSITY_WATER - density) * porosity_decay * surface_porosity *
+                (_DENSITY_WATER - density) * porosity_decay * surface_porosity *
                 math.exp(-decompacted_depth_to_top / porosity_decay) *
                 (1 - math.exp(-decompacted_thickness / porosity_decay)) / decompacted_thickness)
 
@@ -380,8 +380,8 @@ class DecompactedWell(object):
         """
         
         return (self.total_decompacted_thickness *
-                (DENSITY_MANTLE - self.get_average_decompacted_density()) /
-                (DENSITY_MANTLE - DENSITY_WATER))
+                (_DENSITY_MANTLE - self.get_average_decompacted_density()) /
+                (_DENSITY_MANTLE - _DENSITY_WATER))
     
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
@@ -395,7 +395,7 @@ class DecompactedWell(object):
         isostatic_correction = self.get_sediment_isostatic_correction()
         
         if sea_level is not None:
-            isostatic_correction -= sea_level * (DENSITY_MANTLE / (DENSITY_MANTLE - DENSITY_WATER))
+            isostatic_correction -= sea_level * (_DENSITY_MANTLE / (_DENSITY_MANTLE - _DENSITY_WATER))
         
         # Add the isostatic correction to the known (loaded) water depth to obtain the deeper
         # isostatically compensated, sediment-free water depth (tectonic subsidence).
@@ -413,7 +413,7 @@ class DecompactedWell(object):
         isostatic_correction = self.get_sediment_isostatic_correction()
         
         if sea_level is not None:
-            isostatic_correction -= sea_level * (DENSITY_MANTLE / (DENSITY_MANTLE - DENSITY_WATER))
+            isostatic_correction -= sea_level * (_DENSITY_MANTLE / (_DENSITY_MANTLE - _DENSITY_WATER))
         
         # Subtract the isostatic correction from the known tectonic subsidence (unloaded water depth)
         # to get the (loaded) water depth at the decompacted sediment/water interface.
@@ -542,7 +542,7 @@ def read_well_file(
                 
                 # Read the lithology components (name, fraction) pairs.
                 lithology_components = []
-                num_lithology_components = (num_strings - lithology_column) / 2
+                num_lithology_components = (num_strings - lithology_column) // 2
                 for index in range(num_lithology_components):
                     name = line_string_list[lithology_column + 2 * index]
                     fraction = float(line_string_list[lithology_column + 2 * index + 1])
