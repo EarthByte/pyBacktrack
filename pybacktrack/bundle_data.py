@@ -62,7 +62,7 @@ The following module attributes are available:
   Bundled dynamic topography models.
 
   This is a dict mapping dynamic topography model name to model information 3-tuple of (grid list filenames, static polygon filename and rotation filenames).
-  Each *value* in the dict can be passed to the `dynamic_topography_model_info` argument of :func:`pybacktrack.backtrack.backtrack`.
+  Each *value* in the dict can be passed to the ``dynamic_topography_model`` argument of :func:`pybacktrack.backtrack_well` and :func:`pybacktrack.backtrack_and_write_well`.
 
 - **pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES**
 
@@ -75,7 +75,7 @@ The following module attributes are available:
   Bundled sea level models.
 
   This is a dict mapping sea level model name to sea level file.
-  Each *value* in the dict can be passed to the `sea_level_filename` argument of :func:`pybacktrack.backtrack.backtrack`.
+  Each *value* in the dict can be passed to the ``sea_level_model`` argument of :func:`pybacktrack.backtrack_well` and :func:`pybacktrack.backtrack_and_write_well`.
 
 - **pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES**
 

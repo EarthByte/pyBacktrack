@@ -129,7 +129,7 @@ def backstrip_well(
         raise ValueError('Well location was not extracted from well file and was not specified by user.')
     
     # Sample total sediment thickness grid at well location.
-    total_sediment_thickness = sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
+    total_sediment_thickness = _sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
     # If sampled outside total sediment thickness grid then set total sediment thickness to zero.
     # This will result in a base stratigraphic layer not getting added underneath the well to fill
     # in the total sediment thickness (but the well is probably close to the coastlines where it's shallow
@@ -192,7 +192,7 @@ def backstrip_well(
     return well, decompacted_wells
 
 
-def sample_grid(longitude, latitude, grid_filename):
+def _sample_grid(longitude, latitude, grid_filename):
     """
     Samples the grid file 'grid_filename' at the longitude/latitude location (in degrees).
     
@@ -225,8 +225,8 @@ COLUMN_MAX_WATER_DEPTH = 8
 COLUMN_COMPACTED_THICKNESS = 9
 COLUMN_LITHOLOGY = 10
 COLUMN_COMPACTED_DEPTH = 11
-    
-decompacted_columns_dict = {
+
+_DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
     'decompacted_thickness': COLUMN_DECOMPACTED_THICKNESS,
     'decompacted_density': COLUMN_DECOMPACTED_DENSITY,
@@ -239,19 +239,19 @@ decompacted_columns_dict = {
     'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
     'lithology': COLUMN_LITHOLOGY,
     'compacted_depth': COLUMN_COMPACTED_DEPTH}
-decompacted_column_names_dict = dict([(v, k) for k, v in decompacted_columns_dict.iteritems()])
-decompacted_column_names = sorted(decompacted_columns_dict.keys())
+_DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.iteritems()])
+_DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
-default_decompacted_column_names = ['age', 'decompacted_thickness']
-default_decompacted_columns = [decompacted_columns_dict[column_name] for column_name in default_decompacted_column_names]
+_DEFAULT_DECOMPACTED_COLUMN_NAMES = ['age', 'decompacted_thickness']
+DEFAULT_DECOMPACTED_COLUMNS = [_DECOMPACTED_COLUMNS_DICT[column_name] for column_name in _DEFAULT_DECOMPACTED_COLUMN_NAMES]
 
 
 def write_well(
         decompacted_wells,
         decompacted_wells_filename,
         well,
-        well_attributes,
-        decompacted_columns=default_decompacted_columns):
+        well_attributes=None,
+        decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS):
     """
     Write decompacted parameters as columns in a text file.
     
@@ -292,7 +292,7 @@ def write_well(
         # Write a header showing each column name.
         column_widths = []
         for column_index, decompacted_column in enumerate(decompacted_columns):
-            decompacted_column_name = decompacted_column_names_dict[decompacted_column]
+            decompacted_column_name = _DECOMPACTED_COLUMN_NAMES_DICT[decompacted_column]
             
             if column_index == 0:
                 column_name_format_string = '# ' + str_format_string
@@ -384,7 +384,7 @@ def backstrip_and_write_well(
         total_sediment_thickness_filename,
         sea_level_filename=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
-        decompacted_columns=default_decompacted_columns,
+        decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS,
         well_location=None,
         well_bottom_age_column=0,
         well_bottom_depth_column=1,
@@ -492,7 +492,7 @@ if __name__ == '__main__':
     For example...
 
     python %(prog)s -w well.xy -l lithologies.txt -s tot_sed_thickness.nc -c 0 1 2 3 6 -d age decompacted_thickness -- decompacted_well.xy
-    """.format(''.join('        {0}\n'.format(column_name) for column_name in decompacted_column_names))
+    """.format(''.join('        {0}\n'.format(column_name) for column_name in _DECOMPACTED_COLUMN_NAMES))
         
         # The command-line parser.
         parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -572,14 +572,14 @@ if __name__ == '__main__':
                  'Defaults to 0 1 2 3 4.')
         
         parser.add_argument(
-            '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
+            '-d', '--decompacted_columns', type=str, nargs='+', default=_DEFAULT_DECOMPACTED_COLUMN_NAMES,
             metavar='decompacted_column_name',
             help='The columns to output in the decompacted file. '
                  'Choices include {0}. '
                  'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
                  'Defaults to "{1}".'.format(
-                    ', '.join(decompacted_column_names),
-                    ' '.join(default_decompacted_column_names)))
+                    ', '.join(_DECOMPACTED_COLUMN_NAMES),
+                    ' '.join(_DEFAULT_DECOMPACTED_COLUMN_NAMES)))
         
         parser.add_argument(
             '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -618,7 +618,7 @@ if __name__ == '__main__':
         
         # Convert output column names to enumerations.
         try:
-            decompacted_columns = [decompacted_columns_dict[column_name] for column_name in args.decompacted_columns]
+            decompacted_columns = [_DECOMPACTED_COLUMNS_DICT[column_name] for column_name in args.decompacted_columns]
         except KeyError:
             raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
         

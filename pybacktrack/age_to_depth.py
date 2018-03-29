@@ -18,9 +18,9 @@
 
 """Convert ocean basin ages (Ma) to basement depth (metres) using different age/depth models.
 
-:func:`age_to_depth` converts ocean basin age to basement depth using a specified age/depth model.
+:func:`convert_age_to_depth` converts ocean basin age to basement depth using a specified age/depth model.
 
-:func:`age_to_depth_file` converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
+:func:`convert_age_to_depth_files` converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
 """
 
 
@@ -55,18 +55,18 @@ ALL_MODELS = [
 DEFAULT_MODEL = MODEL_GDH1
 
 
-def age_to_depth(
+def convert_age_to_depth(
         age,
         model=DEFAULT_MODEL):
-    """Convert ocean basin age to basement depth using a specified age/depth model.
+    """convert_age_to_depth(age, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL)
+    Convert ocean basin age to basement depth using a specified age/depth model.
     
     Parameters
     ----------
     age : float
         The age in Ma.
-    model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to basement depth.
-        Defaults to `pybacktrack.age_to_depth.MODEL_GDH1` (Stein and Stein 1992).
     
     Returns
     -------
@@ -85,20 +85,21 @@ def age_to_depth(
         raise ValueError('Age must be non-negative')
     
     if model == MODEL_GDH1:
-        return age_to_depth_GDH1(age)
+        return _age_to_depth_GDH1(age)
     elif model == MODEL_CROSBY_2007:
-        return age_to_depth_CROSBY_2007(age)
+        return _age_to_depth_CROSBY_2007(age)
     
     raise ValueError('Unexpected model.')
 
 
-def age_to_depth_file(
+def convert_age_to_depth_files(
         input_filename,
         output_filename,
         model=DEFAULT_MODEL,
         age_column_index=0,
         reverse_output_columns=False):
-    """Converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
+    """convert_age_to_depth_files(input_filename, output_filename, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL, age_column_index=0)
+    Converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
     
     Parameters
     ----------
@@ -108,7 +109,7 @@ def age_to_depth_file(
     output_filename : string
         Name of output text file containing `age` and `depth` values.
         Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
-    model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to basement depth.
     age_column_index : int, optional
         Determines which column of input file to read `age` values from.
@@ -153,7 +154,7 @@ def age_to_depth_file(
                 raise ValueError('Cannot read age value at line {0} of input file {1}.'.format(
                                  line_number, input_filename))
             
-            depth = age_to_depth(age, model)
+            depth = convert_age_to_depth(age, model)
             
             if reverse_output_columns:
                 output_row = depth, age
@@ -168,7 +169,7 @@ def age_to_depth_file(
 # "Model for the global variation in oceanic depth and heat flow with lithospheric age" #
 #########################################################################################
 
-def age_to_depth_GDH1(age):
+def _age_to_depth_GDH1(age):
     
     if age < 0:
         raise ValueError('Age must be non-negative')
@@ -185,7 +186,7 @@ def age_to_depth_GDH1(age):
 # Converted to Python from C program "age2depth.c".                                     #
 #########################################################################################
 
-def age_to_depth_CROSBY_2007(age):
+def _age_to_depth_CROSBY_2007(age):
     
     return _CROSBY_2007_RD + _CROSBY_2007_subs(age) - _CROSBY_2007_pert(age)
 
@@ -329,7 +330,7 @@ if __name__ == '__main__':
     except KeyError:
         raise argparse.ArgumentTypeError("%s is not a valid model" % args.model_name)
     
-    age_to_depth_file(
+    convert_age_to_depth_files(
         args.input_filename,
         args.output_filename,
         model,

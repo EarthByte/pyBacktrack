@@ -66,7 +66,7 @@ def read_curve_function(
     
     Notes
     -----
-    The returned `x` and `y` columns are useful if integrating the curve function with scipy.integrate.quad
+    The returned `x` and `y` columns are useful if integrating the curve function with ``scipy.integrate.quad``
     (since can pass x column to its `points` argument and `len(x)` to its `limit`).
     """
     

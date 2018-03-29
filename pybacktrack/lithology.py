@@ -37,6 +37,10 @@ from __future__ import print_function
 import sys
 
 
+DEFAULT_BASE_LITHOLOGY_NAME = 'Shale'
+"""Default name of the lithology of the stratigraphic unit at the base of the well."""
+
+
 class Lithology(object):
     """
     Class to specify lithology data.

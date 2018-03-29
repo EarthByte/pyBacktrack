@@ -18,11 +18,11 @@
 
 """Find decompacted total sediment thickness and water depth through time.
 
-:func:`backtrack` finds decompacted total sediment thickness and water depth for each age in a well.
+:func:`pybacktrack.backtrack_well` finds decompacted total sediment thickness and water depth for each age in a well.
 
-:func:`write_decompacted_wells` writes decompacted parameters as columns in a text file.
+:func:`pybacktrack.write_backtrack_well` writes decompacted parameters as columns in a text file.
 
-:func:`backtrack_and_write_decompacted` both backtracks well and writes decompacted data.
+:func:`pybacktrack.backtrack_and_write_well` both backtracks well and writes decompacted data.
 """
 
 
@@ -35,7 +35,7 @@ import math
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
-from pybacktrack.lithology import read_lithologies_file
+from pybacktrack.lithology import read_lithologies_file, DEFAULT_BASE_LITHOLOGY_NAME
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
@@ -45,21 +45,17 @@ import pygplates
 import sys
 
 
-# The name of the lithology of the stratigraphic unit at the base of the well to use by default
-# (if no 'base_lithology_name' parameter passed to function).
-DEFAULT_BASE_LITHOLOGY_NAME = 'Shale'
-
 # Density in kg/m3.
-DENSITY_WATER = 1030.0
-DENSITY_CRUST = 2800.0
-DENSITY_MANTLE = 3330.0
+_DENSITY_WATER = 1030.0
+_DENSITY_CRUST = 2800.0
+_DENSITY_MANTLE = 3330.0
 
 # Warn the user if the rifting stretching factor (beta) estimate results in a
 # tectonic subsidence inaccuracy (at present day) exceeding this amount (in metres)...
-MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 100
+_MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 100
 
 
-def backtrack(
+def backtrack_well(
         well_filename,
         lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
@@ -77,17 +73,17 @@ def backtrack(
         well_lithology_column=2):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
-    """backtrack(\
+    """backtrack_well(\
         well_filename,\
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,\
-        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,\
-        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,\
-        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
-        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        lithologies_filename=pybacktrack.BUNDLE_LITHOLOGIES_FILENAME,\
+        age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
+        topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
+        total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
-        base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,\
-        ocean_age_to_depth_model=pybacktrack.age_to_depth.DEFAULT_MODEL,\
+        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         rifting_period=None,\
         well_location=None,\
         well_bottom_age_column=0,\
@@ -143,7 +139,7 @@ def backtrack(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
     rifting_period : tuple, optional
@@ -167,10 +163,10 @@ def backtrack(
     
     Returns
     -------
-    :class:`Well`
+    :class:`pybacktrack.Well`
         The well read from ``well_filename``.
         It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
-    list of :class:`Well.DecompactedWell`
+    list of :class:`pybacktrack.DecompactedWell`
         The decompacted wells associated with the well.
     
     Raises
@@ -217,7 +213,7 @@ def backtrack(
         return []
     
     # Sample age grid at well location.
-    age = sample_grid(well.longitude, well.latitude, age_grid_filename)
+    age = _sample_grid(well.longitude, well.latitude, age_grid_filename)
     # If sampled outside age grid then well is on continental crust near a passive margin.
     # In this case we'll using passive margin rifting to calculate tectonic subsidence instead of
     # ocean floor age-to-depth models.
@@ -233,7 +229,7 @@ def backtrack(
                              'Either add RiftEndAge to the well file or specify rift end age on command-line.')
     
     # Sample topography grid at well location.
-    present_day_topography = sample_grid(well.longitude, well.latitude, topography_filename)
+    present_day_topography = _sample_grid(well.longitude, well.latitude, topography_filename)
     # If sampled outside topography grid then set topography to zero.
     # Shouldn't happen since topography grid is not masked anywhere.
     if math.isnan(present_day_topography):
@@ -245,7 +241,7 @@ def backtrack(
     present_day_water_depth = max(0, present_day_water_depth)
     
     # Sample total sediment thickness grid at well location.
-    present_day_total_sediment_thickness = sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
+    present_day_total_sediment_thickness = _sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
     # If sampled outside total sediment thickness grid then set total sediment thickness to zero.
     # This will result in a base stratigraphic layer not getting added underneath the well to fill
     # in the total sediment thickness (but the well is probably close to the coastlines where it's shallow
@@ -254,7 +250,7 @@ def backtrack(
         present_day_total_sediment_thickness = 0.0
     
     # Sample crustal thickness grid at well location.
-    present_day_crustal_thickness = sample_grid(well.longitude, well.latitude, crustal_thickness_filename)
+    present_day_crustal_thickness = _sample_grid(well.longitude, well.latitude, crustal_thickness_filename)
     # If sampled outside crustal thickness then set crustal thickness to zero.
     # Shouldn't happen since crustal thickness grid is not masked anywhere.
     if math.isnan(present_day_crustal_thickness):
@@ -262,7 +258,7 @@ def backtrack(
     
     # Add a base stratigraphic unit from the bottom of the well to basement if the stratigraphic units
     # in the well do not record the total sediment thickness.
-    add_stratigraphic_unit_to_basement(
+    _add_stratigraphic_unit_to_basement(
         well,
         present_day_total_sediment_thickness,
         lithologies,
@@ -275,7 +271,7 @@ def backtrack(
     # Calculate sea level (relative to present day) for each decompaction age (unpacking of stratigraphic units)
     # that is an average over the decompacted surface layer's period of deposition.
     if sea_level_model:
-        add_sea_level(
+        _add_sea_level(
             well,
             decompacted_wells,
             # Create sea level object for integrating sea level over time periods...
@@ -289,7 +285,7 @@ def backtrack(
     # is more accurate so we'll use that instead. It also means the decompacted water depth at age zero (ie, top of well)
     # will match the water depth we obtained from topography above.
     #
-    # present_day_total_sediment_isostatic_correction = calc_ocean_total_sediment_thickness_isostatic_correction(present_day_total_sediment_thickness)
+    # present_day_total_sediment_isostatic_correction = _calc_ocean_total_sediment_thickness_isostatic_correction(present_day_total_sediment_thickness)
     present_day_total_sediment_isostatic_correction = decompacted_wells[0].get_sediment_isostatic_correction()
     
     # Unload the sediment to get unloaded water depth.
@@ -309,7 +305,7 @@ def backtrack(
     # The tectonic subsidence curve can later be used to calculate paleo (loaded) water depths.
     if age is not None:
         # Oceanic crust.
-        add_oceanic_tectonic_subsidence(
+        _add_oceanic_tectonic_subsidence(
             well,
             decompacted_wells,
             present_day_tectonic_subsidence,
@@ -318,7 +314,7 @@ def backtrack(
             dynamic_topography)
     else:
         # Continental crust.
-        add_continental_tectonic_subsidence(
+        _add_continental_tectonic_subsidence(
             well,
             decompacted_wells,
             present_day_tectonic_subsidence,
@@ -426,7 +422,7 @@ def load_well(
     return well
 
 
-def add_stratigraphic_unit_to_basement(
+def _add_stratigraphic_unit_to_basement(
         well,
         present_day_total_sediment_thickness,
         lithologies,
@@ -483,7 +479,7 @@ def add_stratigraphic_unit_to_basement(
               file=sys.stderr)
 
 
-def add_sea_level(
+def _add_sea_level(
         well,
         decompacted_wells,
         sea_level):
@@ -500,7 +496,7 @@ def add_sea_level(
             decompacted_well.surface_unit.top_age)
 
 
-def add_oceanic_tectonic_subsidence(
+def _add_oceanic_tectonic_subsidence(
         well,
         decompacted_wells,
         present_day_tectonic_subsidence,
@@ -515,7 +511,7 @@ def add_oceanic_tectonic_subsidence(
     """
     
     # Present-day tectonic subsidence calculated from age-to-depth model.
-    present_day_tectonic_subsidence_from_model = age_to_depth.age_to_depth(age, ocean_age_to_depth_model)
+    present_day_tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(age, ocean_age_to_depth_model)
     
     # NOT NEEDED: Initially the idea was to determine contribution of dynamic topography to
     # present-day subsidence (compared to contribution of anomalous ocean crustal thickness) and
@@ -536,7 +532,7 @@ def add_oceanic_tectonic_subsidence(
     #     # age-to-depth modelled subsidence should be reduced (increased) to estimate actual subsidence.
     #     present_day_tectonic_subsidence_from_model += (
     #             (OCEAN_CRUSTAL_THICKNESS - present_day_crustal_thickness) *
-    #             (DENSITY_MANTLE - DENSITY_CRUST) / (DENSITY_MANTLE - DENSITY_WATER))
+    #             (_DENSITY_MANTLE - _DENSITY_CRUST) / (_DENSITY_MANTLE - _DENSITY_WATER))
     
     # There will be a difference between unloaded water depth and subsidence based on age-to-depth model.
     # Assume this offset is constant for all ages and use it to adjust the subsidence obtained from age-to-depth model for other ages.
@@ -564,7 +560,7 @@ def add_oceanic_tectonic_subsidence(
         paleo_age_of_crust_at_decompaction_time = max(0, age - decompaction_time)
         
         # Use age-to-depth model to lookup depth given the age.
-        tectonic_subsidence_from_model = age_to_depth.age_to_depth(paleo_age_of_crust_at_decompaction_time, ocean_age_to_depth_model)
+        tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(paleo_age_of_crust_at_decompaction_time, ocean_age_to_depth_model)
         
         # We add in the constant offset between the age-to-depth model (at age of well) and unloaded water depth at present day.
         decompacted_well.tectonic_subsidence = tectonic_subsidence_from_model + tectonic_subsidence_model_adjustment
@@ -595,7 +591,7 @@ def add_oceanic_tectonic_subsidence(
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
 
 
-def add_continental_tectonic_subsidence(
+def _add_continental_tectonic_subsidence(
         well,
         decompacted_wells,
         present_day_tectonic_subsidence,
@@ -669,7 +665,7 @@ def add_continental_tectonic_subsidence(
     # exceeds typical lithospheric thicknesses.
     # In this case the beta factor is clamped to avoid this but, as a result, the calculated subsidence
     # is not as deep as the actual subsidence.
-    if math.fabs(subsidence_residual) > MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
+    if math.fabs(subsidence_residual) > _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
         print('WARNING: Unable to accurately estimate rifting stretching factor (beta) at well location ({0}, {1}) '
               'where unloaded subsidence is {2}, crustal thickness is {3} and rift end time is {4}. '
               'Tectonic subsidence estimates will be inaccurate on the order of {5} metres. '
@@ -712,7 +708,7 @@ def add_continental_tectonic_subsidence(
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_rift_start
 
 
-def sample_grid(longitude, latitude, grid_filename):
+def _sample_grid(longitude, latitude, grid_filename):
     """
     Samples the grid file 'grid_filename' at the longitude/latitude location (in degrees).
     
@@ -808,12 +804,12 @@ class TimeDependentGrid(object):
         
         # If 'time' matches either grid age then sample associated grid.
         if math.fabs(time - grid_age_0) < 1e-6:
-            return sample_grid(longitude, latitude, grid_filename_0)
+            return _sample_grid(longitude, latitude, grid_filename_0)
         if math.fabs(time - grid_age_1) < 1e-6:
-            return sample_grid(longitude, latitude, grid_filename_1)
+            return _sample_grid(longitude, latitude, grid_filename_1)
         
-        grid_value_0 = sample_grid(longitude, latitude, grid_filename_0)
-        grid_value_1 = sample_grid(longitude, latitude, grid_filename_1)
+        grid_value_0 = _sample_grid(longitude, latitude, grid_filename_0)
+        grid_value_1 = _sample_grid(longitude, latitude, grid_filename_1)
         
         # If either value is NaN then return NaN.
         if math.isnan(grid_value_0) or math.isnan(grid_value_1):
@@ -868,7 +864,7 @@ class TimeDependentGrid(object):
         for index in range(len(self.grid_ages_and_filenames) - 1, -1, -1):
             grid_age, grid_filename = self.grid_ages_and_filenames[index]
             
-            grid_value = sample_grid(longitude, latitude, grid_filename)
+            grid_value = _sample_grid(longitude, latitude, grid_filename)
             if not math.isnan(grid_value):
                 return grid_value, grid_age
             
@@ -985,10 +981,10 @@ class DynamicTopography(object):
         reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
         
         # Sample mantle frame grid (using global/module function).
-        return sample_grid(reconstructed_longitude, reconstructed_latitude, grid_filename)
+        return pybacktrack.backtrack._sample_grid(reconstructed_longitude, reconstructed_latitude, grid_filename)
 
 
-def calc_ocean_total_sediment_thickness_isostatic_correction(total_sediment_thickness):
+def _calc_ocean_total_sediment_thickness_isostatic_correction(total_sediment_thickness):
     """
     Calculate isostatic correction for total (compacted) sediment thickness (in metres) for oceanic crust.
     
@@ -1005,7 +1001,7 @@ def calc_ocean_total_sediment_thickness_isostatic_correction(total_sediment_thic
     return total_sediment_thickness_isostatic_correction
 
 
-# Enumerations for the 'decompacted_columns' argument in 'write_decompacted_wells()'.
+# Enumerations for the 'decompacted_columns' argument in 'write_well()'.
 COLUMN_AGE = 0
 COLUMN_DECOMPACTED_THICKNESS = 1
 COLUMN_DECOMPACTED_DENSITY = 2
@@ -1015,7 +1011,7 @@ COLUMN_COMPACTED_THICKNESS = 5
 COLUMN_LITHOLOGY = 6
 COLUMN_COMPACTED_DEPTH = 7
 
-decompacted_columns_dict = {
+_DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
     'decompacted_thickness': COLUMN_DECOMPACTED_THICKNESS,
     'decompacted_density': COLUMN_DECOMPACTED_DENSITY,
@@ -1024,39 +1020,57 @@ decompacted_columns_dict = {
     'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
     'lithology': COLUMN_LITHOLOGY,
     'compacted_depth': COLUMN_COMPACTED_DEPTH}
-decompacted_column_names_dict = dict([(v, k) for k, v in decompacted_columns_dict.iteritems()])
-decompacted_column_names = sorted(decompacted_columns_dict.keys())
+_DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.iteritems()])
+_DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
-default_decompacted_column_names = ['age', 'decompacted_thickness']
-default_decompacted_columns = [decompacted_columns_dict[column_name] for column_name in default_decompacted_column_names]
+_DEFAULT_DECOMPACTED_COLUMN_NAMES = ['age', 'decompacted_thickness']
+DEFAULT_DECOMPACTED_COLUMNS = [_DECOMPACTED_COLUMNS_DICT[column_name] for column_name in _DEFAULT_DECOMPACTED_COLUMN_NAMES]
 
 
-def write_decompacted_wells(
+def write_well(
         decompacted_wells,
         decompacted_wells_filename,
         well,
-        well_attributes,
-        decompacted_columns=default_decompacted_columns):
-    """
+        well_attributes=None,
+        decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS):
+    """write_backtrack_well(\
+        decompacted_wells,\
+        decompacted_wells_filename,\
+        well,\
+        well_attributes=None,\
+        decompacted_columns=pybacktrack.BACKTRACK_DEFAULT_DECOMPACTED_COLUMNS):
     Write decompacted parameters as columns in a text file.
     
-    decompacted_wells: a sequence of well.DecompactedWell.
+    Parameters
+    ----------
+    decompacted_wells : sequence of :class:`pybacktrack.DecompactedWell`
+        The decompacted wells returned by :func:`pybacktrack.backtrack_well`.
+    decompacted_wells_filename : string
+        Name of output text file.
+    well : :class:`pybacktrack.Well`
+        The well to extract metadata from.
+    well_attributes : dict, optional
+        Optional attributes in :class:`pybacktrack.Well` object to write to well file metadata.
+        If specified then must be a dictionary mapping each attribute name to a metadata name.
+        For example, ``{'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}``.
+        will write ``well.longitude`` (if not None) to metadata 'SiteLongitude', etc.
+        Not that the attributes must exist in ``well`` (but can be set to None).
+    decompacted_columns : list of {pybacktrack.BACKTRACK_COLUMN_AGE, \
+                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, \
+                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, \
+                                   pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, \
+                                   pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, \
+                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, \
+                                   pybacktrack.BACKTRACK_COLUMN_LITHOLOGY, \
+                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH}, optional
+        The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
     
-    decompacted_wells_filename: name of output text file.
-    
-    well: The well to extract metadata from.
-    
-    well_attributes: Optional attributes in Well object to write to well file metadata.
-                     If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}.
-                     will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
-                     Not that the attributes must exist in 'well' (but can be set to None).
-    
-    decompacted_columns: Sequence of enumerations specifying which decompacted parameters to write.
-                         The sequence is ordered by output column.
-    
-    Raises ValueError if an unrecognised value is encountered in 'decompacted_columns'.
-    Raises ValueError if 'COLUMN_LITHOLOGY' is specified in 'decompacted_columns' but is not the last column.
+    Raises
+    ------
+    ValueError
+        If an unrecognised value is encountered in ``decompacted_columns``.
+    ValueError
+        If ``COLUMN_LITHOLOGY`` is specified in ``decompacted_columns`` but is not the last column.
     """
     
     # If 'COLUMN_LITHOLOGY' is specified then it must be the last column.
@@ -1077,7 +1091,7 @@ def write_decompacted_wells(
         # Write a header showing each column name.
         column_widths = []
         for column_index, decompacted_column in enumerate(decompacted_columns):
-            decompacted_column_name = decompacted_column_names_dict[decompacted_column]
+            decompacted_column_name = _DECOMPACTED_COLUMN_NAMES_DICT[decompacted_column]
             
             if column_index == 0:
                 column_name_format_string = '# ' + str_format_string
@@ -1137,7 +1151,7 @@ def write_decompacted_wells(
             file.write('\n')
 
 
-def backtrack_and_write_decompacted(
+def backtrack_and_write_well(
         decompacted_output_filename,
         well_filename,
         lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
@@ -1150,7 +1164,7 @@ def backtrack_and_write_decompacted(
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
         rifting_period=None,
-        decompacted_columns=default_decompacted_columns,
+        decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS,
         well_location=None,
         well_bottom_age_column=0,
         well_bottom_depth_column=1,
@@ -1158,26 +1172,26 @@ def backtrack_and_write_decompacted(
         ammended_well_output_filename=None):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
-    """backtrack_and_write_decompacted(\
+    """backtrack_and_write_well(\
         decompacted_output_filename,\
         well_filename,\
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,\
-        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,\
-        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,\
-        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
-        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        lithologies_filename=pybacktrack.BUNDLE_LITHOLOGIES_FILENAME,\
+        age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
+        topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
+        total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
-        base_lithology_name=pybacktrack.backtrack.DEFAULT_BASE_LITHOLOGY_NAME,\
-        ocean_age_to_depth_model=pybacktrack.age_to_depth.DEFAULT_MODEL,\
+        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         rifting_period=None,\
-        decompacted_columns=pybacktrack.backtrack.default_decompacted_columns,\
+        decompacted_columns=pybacktrack.BACKTRACK_DEFAULT_DECOMPACTED_COLUMNS,\
         well_location=None,\
         well_bottom_age_column=0,\
         well_bottom_depth_column=1,\
         well_lithology_column=2,\
         ammended_well_output_filename=None)
-    Same as :func:`pybacktrack.backtrack.backtrack` but also writes decompacted results to a text file.
+    Same as :func:`pybacktrack.backtrack_well` but also writes decompacted results to a text file.
     
     Also optionally write amended well data (ie, including extra stratigraphic base unit from well bottom to ocean basement)
     to ``ammended_well_output_filename`` if specified.
@@ -1232,7 +1246,7 @@ def backtrack_and_write_decompacted(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.age_to_depth.MODEL_GDH1, pybacktrack.age_to_depth.MODEL_CROSBY_2007}, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
     rifting_period : tuple, optional
@@ -1242,14 +1256,14 @@ def backtrack_and_write_decompacted(
         If specified then overrides value in well file.
         If well is on continental passive margin then at least rift end age should be specified
         either here or in well file.
-    decompacted_columns : list of {pybacktrack.backtrack.COLUMN_AGE, \
-                                   pybacktrack.backtrack.COLUMN_DECOMPACTED_THICKNESS, \
-                                   pybacktrack.backtrack.COLUMN_DECOMPACTED_DENSITY, \
-                                   pybacktrack.backtrack.COLUMN_TECTONIC_SUBSIDENCE, \
-                                   pybacktrack.backtrack.COLUMN_WATER_DEPTH, \
-                                   pybacktrack.backtrack.COLUMN_COMPACTED_THICKNESS, \
-                                   pybacktrack.backtrack.COLUMN_LITHOLOGY, \
-                                   pybacktrack.backtrack.COLUMN_COMPACTED_DEPTH}, optional
+    decompacted_columns : list of {pybacktrack.BACKTRACK_COLUMN_AGE, \
+                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, \
+                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, \
+                                   pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, \
+                                   pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, \
+                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, \
+                                   pybacktrack.BACKTRACK_COLUMN_LITHOLOGY, \
+                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH}, optional
         The decompacted columns (and their order) to output to ``decompacted_output_filename``.
     well_location : tuple, optional
         Optional location of well.
@@ -1285,7 +1299,7 @@ def backtrack_and_write_decompacted(
     """
     
     # Decompact the well.
-    well, decompacted_wells = backtrack(
+    well, decompacted_wells = backtrack_well(
         well_filename,
         lithologies_filename,
         age_grid_filename,
@@ -1319,13 +1333,21 @@ def backtrack_and_write_decompacted(
             well_attributes=well_attributes)
     
     # Write the decompactions of the well at the ages of its stratigraphic units.
-    write_decompacted_wells(
+    write_well(
         decompacted_wells,
         decompacted_output_filename,
         well,
         # Attributes of well object to write to file as metadata...
         well_attributes,
         decompacted_columns)
+
+
+#
+# For backward compatibility after renaming functions.
+#
+backtrack = backtrack_well
+write_decompacted_wells = write_well
+backtrack_and_write_decompacted = backtrack_and_write_well
 
 
 if __name__ == '__main__':
@@ -1459,7 +1481,7 @@ if __name__ == '__main__':
     For example...
 
     python %(prog)s ... -w well.xy -c 0 1 4 -d age decompacted_thickness -- decompacted_well.xy
-    """.format(''.join('        {0}\n'.format(column_name) for column_name in decompacted_column_names))
+    """.format(''.join('        {0}\n'.format(column_name) for column_name in _DECOMPACTED_COLUMN_NAMES))
     
         #
         # Gather command-line options.
@@ -1505,14 +1527,14 @@ if __name__ == '__main__':
                  'Defaults to 0 1 2.')
         
         parser.add_argument(
-            '-d', '--decompacted_columns', type=str, nargs='+', default=default_decompacted_column_names,
+            '-d', '--decompacted_columns', type=str, nargs='+', default=_DEFAULT_DECOMPACTED_COLUMN_NAMES,
             metavar='decompacted_column_name',
             help='The columns to output in the decompacted file. '
                  'Choices include {0}. '
                  'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
                  'Defaults to "{1}".'.format(
-                    ', '.join(decompacted_column_names),
-                    ' '.join(default_decompacted_column_names)))
+                    ', '.join(_DECOMPACTED_COLUMN_NAMES),
+                    ' '.join(_DEFAULT_DECOMPACTED_COLUMN_NAMES)))
         
         parser.add_argument(
             '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -1645,7 +1667,7 @@ if __name__ == '__main__':
         
         # Convert output column names to enumerations.
         try:
-            decompacted_columns = [decompacted_columns_dict[column_name] for column_name in args.decompacted_columns]
+            decompacted_columns = [_DECOMPACTED_COLUMNS_DICT[column_name] for column_name in args.decompacted_columns]
         except KeyError:
             raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
         
@@ -1682,7 +1704,7 @@ if __name__ == '__main__':
             sea_level_model = None
         
         # Backtrack and write output data.
-        backtrack_and_write_decompacted(
+        backtrack_and_write_well(
             args.output_filename,
             args.well_filename,
             args.lithologies_filename,
