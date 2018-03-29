@@ -18,9 +18,9 @@
 
 """Find decompacted total sediment thickness and tectonic subsidence through time.
 
-:func:`backstrip` finds decompacted total sediment thickness and tectonic subsidence for each age in a well.
+:func:`backstrip_well` finds decompacted total sediment thickness and tectonic subsidence for each age in a well.
 
-:func:`write_decompacted_wells` writes decompacted parameters as columns in a text file.
+:func:`write_well` writes decompacted parameters as columns in a text file.
 """
 
 
@@ -28,7 +28,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from pybacktrack.lithology import read_lithologies_file
+from pybacktrack.lithology import read_lithologies_file, DEFAULT_BASE_LITHOLOGY_NAME
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
 import pybacktrack.version
@@ -37,12 +37,7 @@ import math
 import sys
 
 
-# The name of the lithology of the stratigraphic unit at the base of the well to use by default
-# (if no 'base_lithology_name' parameter passed to function).
-DEFAULT_BASE_LITHOLOGY_NAME = 'Shale'
-
-
-def backstrip(
+def backstrip_well(
         well_filename,
         lithologies_filename,
         total_sediment_thickness_filename,
@@ -217,7 +212,7 @@ def sample_grid(longitude, latitude, grid_filename):
     return float(stdout_data.split()[2])
 
 
-# Enumerations for the 'decompacted_columns' argument in 'write_decompacted_wells()'.
+# Enumerations for the 'decompacted_columns' argument in 'write_well()'.
 COLUMN_AGE = 0
 COLUMN_DECOMPACTED_THICKNESS = 1
 COLUMN_DECOMPACTED_DENSITY = 2
@@ -251,7 +246,7 @@ default_decompacted_column_names = ['age', 'decompacted_thickness']
 default_decompacted_columns = [decompacted_columns_dict[column_name] for column_name in default_decompacted_column_names]
 
 
-def write_decompacted_wells(
+def write_well(
         decompacted_wells,
         decompacted_wells_filename,
         well,
@@ -380,6 +375,66 @@ def write_decompacted_wells(
                 file.write(column_str)
             
             file.write('\n')
+
+
+def backstrip_and_write_well(
+        decompacted_output_filename,
+        well_filename,
+        lithologies_filename,
+        total_sediment_thickness_filename,
+        sea_level_filename=None,
+        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        decompacted_columns=default_decompacted_columns,
+        well_location=None,
+        well_bottom_age_column=0,
+        well_bottom_depth_column=1,
+        well_min_water_depth_column=2,
+        well_max_water_depth_column=3,
+        well_lithology_column=4,
+        ammended_well_output_filename=None):
+    
+    # Decompact the well.
+    well, decompacted_wells = backstrip_well(
+        well_filename,
+        lithologies_filename,
+        total_sediment_thickness_filename,
+        sea_level_filename,
+        base_lithology_name,
+        well_location,
+        well_bottom_age_column,
+        well_bottom_depth_column,
+        well_min_water_depth_column,
+        well_max_water_depth_column,
+        well_lithology_column)
+    
+    # Attributes of well object to write to file as metadata.
+    well_attributes = {'longitude': 'SiteLongitude', 'latitude': 'SiteLatitude'}
+    
+    # Write out amended well data (ie, extra stratigraphic base unit) if requested.
+    if ammended_well_output_filename:
+        write_well_file(
+            well,
+            ammended_well_output_filename,
+            ['min_water_depth', 'max_water_depth'],
+            # Attributes of well object to write to file as metadata...
+            well_attributes=well_attributes)
+    
+    # Write the decompactions of the well at the ages of its stratigraphic units.
+    write_well(
+        decompacted_wells,
+        decompacted_output_filename,
+        well,
+        # Attributes of well object to write to file as metadata...
+        well_attributes,
+        decompacted_columns)
+
+
+#
+# For backward compatibility after renaming functions.
+#
+backstrip = backstrip_well
+write_decompacted_wells = write_well
+backstrip_and_write_decompacted = backstrip_and_write_well
 
 
 if __name__ == '__main__':
@@ -568,7 +623,7 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
         
         # Decompact the well.
-        well, decompacted_wells = backstrip(
+        well, decompacted_wells = backstrip_well(
             args.well_filename,
             args.lithologies_filename,
             args.total_sediment_thickness_filename,
@@ -594,7 +649,7 @@ if __name__ == '__main__':
                 well_attributes=well_attributes)
         
         # Write the decompactions of the well at the ages of its stratigraphic units.
-        write_decompacted_wells(
+        write_well(
             decompacted_wells,
             args.output_filename,
             well,
