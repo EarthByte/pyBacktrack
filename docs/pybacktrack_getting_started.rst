@@ -20,7 +20,7 @@ PyBacktrack depends on:
 - `Generic Mapping Tools (GMT) <http://gmt.soest.hawaii.edu/>`_ (>=5.0.0)
 - `PyGPlates <http://www.gplates.org/>`_
 
-`NumPy` and `SciPy` are automatically installed by `pip` (see :ref:`pyBacktrack installation <pybacktrack_installation>`), however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
+`NumPy` and `SciPy` are automatically installed by `pip` (see :ref:`installation <pybacktrack_installation>`), however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
 
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
 Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_bundle_data>` are in NetCDF4 format.
@@ -34,7 +34,15 @@ Installation instructions are available `here <http://www.gplates.org/docs/pygpl
 Installation
 ------------
 
-To install the latest development version (requires Git), run:
+To install the latest stable version, run:
+::
+
+  pip install pybacktrack
+
+.. note:: | This will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
+          | However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
+
+To install the latest development version (requires Git on local system), run:
 ::
 
   pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
@@ -46,11 +54,6 @@ To install the latest development version (requires Git), run:
 ::
 
   pip install <path-to-local-directory>
-
-This will automatically install the `NumPy` and `SciPy` requirements. However `GMT` and `pyGPlates` need to be manually installed (see :ref:`pyBacktrack requirements <pybacktrack_requirements>`).
-
-.. note:: A `PyPi <https://pypi.org/>`_ package, that can simply be installed as ``pip install pybacktrack``, will soon be provided.
-
 
 .. _pybacktrack_a_backtracking_example:
 
