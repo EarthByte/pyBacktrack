@@ -3,7 +3,7 @@
 Examples
 ========
 
-This document contains examples of how to use scripts inside the ``pytrackback`` package and how to import and use its functions.
+This document contains examples of how to use scripts inside the ``pybacktrack`` package and how to import and use its functions.
 
 .. contents::
    :local:
