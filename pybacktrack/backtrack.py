@@ -602,7 +602,7 @@ def _add_continental_tectonic_subsidence(
     to each decompacted well.
     """
     
-    # Get dynamic topography at rift start (if requested) and remove contribution of dynamic topography
+    # Get dynamic topography (if requested) at rift start and remove contribution of dynamic topography
     # to subsidence at present day so we can estimate subsidence due to stretching and thermal effects only.
     if dynamic_topography:
         dynamic_topography_at_present_day = dynamic_topography.sample(0.0)

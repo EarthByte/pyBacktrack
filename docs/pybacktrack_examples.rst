@@ -14,6 +14,9 @@ Scripts
 
 In all scripts use the ``--help`` option to see full details (eg, ``python -m pybacktrack.backtrack --help``).
 
+.. note:: | The input files used in the examples below are available from the ``tests/data/`` directory of the `pyBacktrack source code <https://github.com/EarthByte/pyBacktrack>`_.
+          | If you want to run these examples you can download that test data, or you can use your own input files (such as your own ocean drill site files).
+
 age_to_depth
 ^^^^^^^^^^^^
 
@@ -27,7 +30,7 @@ For example:
         -m GDH1 \
         -r \
         tests/data/test_ages.txt \
-        tests/data/test_depths_from_ages.txt
+        test_depths_from_ages.txt
 
 Currently supports two models:
 
@@ -49,7 +52,7 @@ For example, to read a file containing depths and write a file containing interp
         -r \
         -c tests/data/ODP-114-699_age-depth-model.txt \
         tests/data/ODP-114-699_strat_boundaries.txt \
-        tests/data/ODP-114-699_strat_boundaries_age_depth.txt
+        ODP-114-699_strat_boundaries_age_depth.txt
 
 .. note::This is a general interpolate script for piecewise linear ``y=f(x)``, so can be used for other types of data (hence the extra options).
 
@@ -64,13 +67,11 @@ For example:
 
     python -m pybacktrack.backstrip \
         -w tests/data/DSDP-36-327-Lithology.txt \
-        -l pybacktrack/bundle_data/lithologies/lithologies.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology \
-        -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc \
-        -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat \
-        -o tests/data/DSDP-36-327_backstrip_amended.txt \
+        -slm Haq87_SealevelCurve_Longterm \
+        -o DSDP-36-327_backstrip_amended.txt \
         -- \
-        tests/data/DSDP-36-327_backstrip_decompat.txt
+        DSDP-36-327_backstrip_decompat.txt
 
 backtrack
 ^^^^^^^^^
@@ -86,9 +87,9 @@ Ocean basin example:
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
-        -o tests/data/ODP-114-699_backtrack_amended.txt \
+        -o ODP-114-699_backtrack_amended.txt \
         -- \
-        tests/data/ODP-114-699_backtrack_decompat.txt
+        ODP-114-699_backtrack_decompat.txt
 
 Passive margin example:
 
@@ -100,53 +101,29 @@ Passive margin example:
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
-        -o tests/data/DSDP-36-327_backtrack_amended.txt \
+        -o DSDP-36-327_backtrack_amended.txt \
         -- \
-        tests/data/DSDP-36-327_backtrack_decompat.txt
+        DSDP-36-327_backtrack_decompat.txt
 
-And since the above examples default to using the internal :ref:`bundled data<pybacktrack_bundle_data>` they are equivalent to the following longer versions...
-
-Ocean basin example:
+There are more command-line options available for ``backstrip`` and ``backtrack``. The above examples just rely on default values for these extra options. To see a description of all options run:
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack \
-        -w tests/data/ODP-114-699-Lithology.txt \
-        -l pybacktrack/bundle_data/lithologies/lithologies.txt \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
-        -a pybacktrack/bundle_data/age/agegrid_6m.grd \
-        -t pybacktrack/bundle_data/topography/ETOPO1_0.1.grd \
-        -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc \
-        -k pybacktrack/bundle_data/crustal_thickness/crsthk.grd \
-        -y pybacktrack/bundle_data/dynamic_topography/models/M2.grids \
-           pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/static_polygons.shp \
-           pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/rotations.rot \
-        -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat \
-        -o tests/data/ODP-114-699_backtrack_amended.txt \
-        -- \
-        tests/data/ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backstrip --help
+    python -m pybacktrack.backtrack --help
 
-Passive margin example:
+For example, if you want to run the passive margin backtrack example with your own global topography/bathymetry grid (instead of the default :ref:`bundled topography grid<pybacktrack_bundle_data>`)
+then you could add the ``-t`` command-line option to specify your own GMT5-compatible topography grid ``my_topography.grd``:
 
 .. code-block:: python
 
     python -m pybacktrack.backtrack \
         -w tests/data/DSDP-36-327-Lithology.txt \
         -c 0 1 4 \
-        -l pybacktrack/bundle_data/lithologies/lithologies.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
-        -a pybacktrack/bundle_data/age/agegrid_6m.grd \
-        -t pybacktrack/bundle_data/topography/ETOPO1_0.1.grd \
-        -s pybacktrack/bundle_data/sediment_thickness/sedthick_world_v3_5min_epsg4326_cf.nc \
-        -k pybacktrack/bundle_data/crustal_thickness/crsthk.grd \
-        -y pybacktrack/bundle_data/dynamic_topography/models/M2.grids \
-           pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/static_polygons.shp \
-           pybacktrack/bundle_data/dynamic_topography/reconstructions/2013.2-r213/rotations.rot \
-        -sl pybacktrack/bundle_data/sea_level/Haq87_SealevelCurve_Longterm.dat \
-        -o tests/data/DSDP-36-327_backtrack_amended.txt \
+        -t my_topography.grd \
+        -ym M2 \
+        -slm Haq87_SealevelCurve_Longterm \
+        -o DSDP-36-327_backtrack_amended.txt \
         -- \
-        tests/data/DSDP-36-327_backtrack_decompat.txt
-
-...which demonstrates how you can use your own data instead of the bundled data (ie, by replacing files prefixed with ``pybacktrack/bundle_data/`` with your own).
-
-.. note:: Also note the use of ``-y`` and ``-sl`` options instead of the simpler ``-ym`` and ``-slm`` command-line options.
+        DSDP-36-327_backtrack_decompat.txt

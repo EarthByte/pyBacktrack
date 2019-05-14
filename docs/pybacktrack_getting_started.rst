@@ -68,13 +68,17 @@ Once :ref:`installed <pybacktrack_installation>` the ``pybacktrack`` Python pack
 The following example is used to demonstrate both approaches. It backtracks an ocean drill site and saves the output to a text file by:
 
 - reading the ocean drill site file ``tests/data/ODP-114-699-Lithology.txt``,
+
+  .. note:: | This example ocean drill site file is available in the ``tests/data/`` directory of the `pyBacktrack source code <https://github.com/EarthByte/pyBacktrack>`_.
+            | If you want to run this example you can download that file, or you can substitute your own ocean drill site file.
+
 - backtracking it using:
 
   * the ``M2`` dynamic topography model, and
   * the ``Haq87_SealevelCurve_Longterm`` sea-level model,
 
-- writing the amended drill site to ``tests/data/ODP-114-699_backtrack_amended.txt``, and
-- writing the following columns to ``tests/data/ODP-114-699_backtrack_decompat.txt``:
+- writing the amended drill site to ``ODP-114-699_backtrack_amended.txt``, and
+- writing the following columns to ``ODP-114-699_backtrack_decompat.txt``:
 
   * age
   * compacted_depth
@@ -84,9 +88,6 @@ The following example is used to demonstrate both approaches. It backtracks an o
   * water_depth
   * tectonic_subsidence
   * lithology
-
-.. note:: | The input and output filenames specified above are available in the ``tests/data/`` directory of the pyBacktrack source code.
-          | This example also uses the :ref:`bundled data<pybacktrack_bundle_data>` internally.
 
 .. _pybacktrack_use_a_builtin_module_script:
 
@@ -111,9 +112,9 @@ The backtracking example can now be demonstrated by running the script as:
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
-        -o tests/data/ODP-114-699_backtrack_amended.txt \
+        -o ODP-114-699_backtrack_amended.txt \
         -- \
-        tests/data/ODP-114-699_backtrack_decompat.txt
+        ODP-114-699_backtrack_decompat.txt
 
 .. _pybacktrack_import_into_your_own_script:
 
@@ -132,8 +133,8 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     
     # Input and output filenames (available in 'tests/data/' directory of pyBacktrack source code).
     input_well_filename = 'tests/data/ODP-114-699-Lithology.txt'
-    amended_well_output_filename = 'tests/data/ODP-114-699_backtrack_amended.txt'
-    decompacted_output_filename = 'tests/data/ODP-114-699_backtrack_decompat.txt'
+    amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
+    decompacted_output_filename = 'ODP-114-699_backtrack_decompat.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
     pybacktrack.backtrack_and_write_well(
