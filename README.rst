@@ -1,14 +1,10 @@
 PyBacktrack
 ===========
 
-|PyPI|
-
-.. |PyPI| image:: https://img.shields.io/pypi/v/pybacktrack.svg
+.. image:: https://img.shields.io/pypi/v/pybacktrack.svg
    :target: https://pypi.python.org/pypi/pybacktrack/
 
-|Docker|
-
-.. |Docker| image:: https://img.shields.io/docker/pulls/earthbyte/pybacktrack.svg
+.. image:: https://img.shields.io/docker/pulls/earthbyte/pybacktrack.svg
    :target: https://hub.docker.com/r/earthbyte/pybacktrack
 
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
@@ -26,5 +22,8 @@ of the total sedimentary section, and thus bathymetry, through time.
 
 Documentation
 -------------
+
+.. image:: https://readthedocs.org/projects/pybacktrack/badge
+   :target: http://pybacktrack.readthedocs.io
 
 Documentation can be found at http://pybacktrack.readthedocs.io and covers installation, examples and an API reference.
