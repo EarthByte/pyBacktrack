@@ -8,7 +8,7 @@ PyBacktrack
 
 |Docker|
 
-.. |Docker| image:: https://img.shields.io/docker/pulls/earthbyte/pybacktrack.svg   :alt: Docker Pulls
+.. |Docker| image:: https://img.shields.io/docker/pulls/earthbyte/pybacktrack.svg
    :target: https://hub.docker.com/r/earthbyte/pybacktrack
 
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
