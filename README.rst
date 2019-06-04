@@ -1,6 +1,16 @@
 PyBacktrack
 ===========
 
+|PyPI|
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/pybacktrack.svg
+   :target: https://pypi.python.org/pypi/pybacktrack/
+
+|Docker|
+
+.. |Docker| image:: https://img.shields.io/docker/automated/earthbyte/pybacktrack.svg   :alt: Docker Automated build
+   :target: https://hub.docker.com/r/earthbyte/pybacktrack
+
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
 
 PyBacktrack is a Python package that backtracks the paleo-water depth of ocean drill sites through time
