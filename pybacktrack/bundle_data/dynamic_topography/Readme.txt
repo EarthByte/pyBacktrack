@@ -29,3 +29,10 @@ Rubey et al., 2017
 Rubey, M., Brune, S., Heine, C., Davies, D. R., Williams, S. E., and Müller R. D.: Global patterns of Earth's dynamic topography since the Jurassic, Solid Earth Discuss., doi:10.5194/se-2017-26, in review, 2017.
 
 Models: terra.
+
+
+Müller et al., 2008
+-------------------
+Müller, R.D., Sdrolias, M., Gaina, C., Steinberger, B. and Heine, C., 2008. Long-term sea-level fluctuations driven by ocean basin dynamics. science, 319(5868), pp.1357-1362.
+
+Models: ngrand, s20rts, smean.

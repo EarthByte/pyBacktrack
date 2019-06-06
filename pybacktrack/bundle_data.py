@@ -68,7 +68,7 @@ The following module attributes are available:
 
   A list of bundled dynamic topography model *names* (keys in `BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS`).
   
-  Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6`` and ``M7``.
+  Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
 
 - **pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS**
 
@@ -161,6 +161,27 @@ BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS = {
         [
             os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_250-0Ma.rot'),
             os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '2015_v2', 'rotations_410-250Ma.rot')
+        ]
+    ),
+    'ngrand': (
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'ngrand.grids'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'static_polygons.gpmlz'),
+        [
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'rotations.rot')
+        ]
+    ),
+    's20rts': (
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 's20rts.grids'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'static_polygons.gpmlz'),
+        [
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'rotations.rot')
+        ]
+    ),
+    'smean': (
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'smean.grids'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'static_polygons.gpmlz'),
+        [
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'rotations.rot')
         ]
     )
 }

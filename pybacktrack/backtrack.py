@@ -116,7 +116,7 @@ def backtrack_well(
         
         * A string containing the name of a bundled dynamic topography model.
         
-          Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6`` and ``M7``.
+          Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
         * A tuple containing the three elements (dynamic topography list filename, static polygon filename, rotation filenames).
         
           The first tuple element is the filename of file containing list of dynamic topography grids (and associated times).
@@ -966,7 +966,7 @@ def backtrack_and_write_well(
         
         * A string containing the name of a bundled dynamic topography model.
         
-          Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6`` and ``M7``.
+          Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
         * A tuple containing the three elements (dynamic topography list filename, static polygon filename, rotation filenames).
         
           The first tuple element is the filename of file containing list of dynamic topography grids (and associated times).
