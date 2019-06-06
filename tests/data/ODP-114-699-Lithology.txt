@@ -7,7 +7,6 @@
 # SiteLatitude = -51.542
 # RiftEndAge = 125
 # SurfaceAge = 0 
-# WaterDepth = 3705.5
 
 ## bottom_age bottom_depth lithology
    18.7       85.7         Diatomite 0.7 Clay 0.3

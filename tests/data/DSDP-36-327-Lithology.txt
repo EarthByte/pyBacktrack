@@ -8,7 +8,6 @@
 # RiftStartAge = 160
 # RiftEndAge = 120
 # SurfaceAge = 0 
-# WaterDepth = 2400
 
 ## bottom_age bottom_depth min_water_depth max_water_depth lithology
    1.5        10.0         2350.0          2450.0          Shaley_sand 1

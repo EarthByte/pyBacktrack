@@ -613,7 +613,7 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
     
     well_attributes: Optional attributes in Well object to write to well file metadata.
                      If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}.
+                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
                      will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
                      Not that the attributes must exist in 'well' (but can be set to None).
     """
@@ -677,7 +677,7 @@ def write_well_metadata(well_file, well, well_attributes=None):
     
     well_attributes: Optional attributes in Well object to write to well file metadata.
                      If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}.
+                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
                      will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
                      Not that the attributes must exist in 'well' (but can be set to None).
     """

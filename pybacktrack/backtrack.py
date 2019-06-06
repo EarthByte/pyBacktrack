@@ -399,8 +399,7 @@ def load_well(
             'SiteLongitude': ('longitude', read_longitude),
             'SiteLatitude': ('latitude', read_latitude),
             'RiftStartAge': ('rift_start_age', read_age),
-            'RiftEndAge': ('rift_end_age', read_age),
-            'WaterDepth': ('water_depth', read_depth)})
+            'RiftEndAge': ('rift_end_age', read_age)})
     
     # If the well location was specified then override the location read from the well file (if a location was read).
     if well_location is not None:
@@ -1063,8 +1062,7 @@ def backtrack_and_write_well(
         'longitude': 'SiteLongitude',
         'latitude': 'SiteLatitude',
         'rift_start_age': 'RiftStartAge',
-        'rift_end_age': 'RiftEndAge',
-        'water_depth': 'WaterDepth'}
+        'rift_end_age': 'RiftEndAge'}
     
     # Write out amended well data (ie, extra stratigraphic base unit) if requested.
     if ammended_well_output_filename:
