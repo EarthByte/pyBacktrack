@@ -1,4 +1,3 @@
-# RiftEndAge = 125.0000
 # SiteLatitude = -51.5420
 # SiteLongitude = -30.6770
 # SurfaceAge = 0.0000

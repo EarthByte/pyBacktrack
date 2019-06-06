@@ -5,7 +5,6 @@
 
 # SiteLongitude = -30.677
 # SiteLatitude = -51.542
-# RiftEndAge = 125
 # SurfaceAge = 0 
 
 ## bottom_age bottom_depth lithology
