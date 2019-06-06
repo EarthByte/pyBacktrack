@@ -29,13 +29,13 @@ def test_backtrack_script(tmpdir):
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.backtrack
-    #         -w tests/data/ODP-114-699-Lithology.txt
+    #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o tests/data/ODP-114-699_backtrack_amended.txt
+    #         -o ODP-114-699_backtrack_amended.txt
     #         --
-    #         tests/data/ODP-114-699_backtrack_decompat.txt
+    #         ODP-114-699_backtrack_decompat.txt
     #
     backtrack_script_command_line = ['python', '-m', 'pybacktrack.backtrack',
                                      '-w', str(input_well_filename),
@@ -74,13 +74,13 @@ def test_backtrack_ODP(tmpdir):
     # This function call is the equivalent of:
     #
     #     python -m pybacktrack.backtrack
-    #         -w tests/data/ODP-114-699-Lithology.txt
+    #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o tests/data/ODP-114-699_backtrack_amended.txt
+    #         -o ODP-114-699_backtrack_amended.txt
     #         --
-    #         tests/data/ODP-114-699_backtrack_decompat.txt
+    #         ODP-114-699_backtrack_decompat.txt
     #
     pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),
@@ -116,14 +116,14 @@ def test_backtrack_DSDP(tmpdir):
     # This function call is the equivalent of:
     #
     #     python -m pybacktrack.backtrack
-    #         -w tests/data/DSDP-36-327-Lithology.txt
+    #         -w test_data/DSDP-36-327-Lithology.txt
     #         -c 0 1 4
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o tests/data/DSDP-36-327_backtrack_amended.txt
+    #         -o DSDP-36-327_backtrack_amended.txt
     #         --
-    #         tests/data/DSDP-36-327_backtrack_decompat.txt
+    #         DSDP-36-327_backtrack_decompat.txt
     #
     pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),

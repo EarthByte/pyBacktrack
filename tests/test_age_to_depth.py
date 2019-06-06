@@ -69,8 +69,8 @@ def test_age_to_depth_script(tmpdir):
     #     python -m pybacktrack.age_to_depth
     #        -m GDH1
     #        -r
-    #        tests/data/test_ages.txt
-    #        tests/data/test_depths_from_ages.txt
+    #        test_data/test_ages.txt
+    #        test_depths_from_ages.txt
     #
     age_to_depth_script_command_line = ['python', '-m', 'pybacktrack.age_to_depth',
                                         '-m', 'GDH1',

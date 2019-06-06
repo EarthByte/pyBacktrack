@@ -29,12 +29,12 @@ def test_backstrip_script(tmpdir):
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.backstrip
-    #         -w tests/data/DSDP-36-327-Lithology.txt
+    #         -w test_data/DSDP-36-327-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o tests/data/DSDP-36-327_backstrip_amended.txt
+    #         -o DSDP-36-327_backstrip_amended.txt
     #         --
-    #         tests/data/DSDP-36-327_backstrip_decompat.txt
+    #         DSDP-36-327_backstrip_decompat.txt
     #
     backstrip_script_command_line = ['python', '-m', 'pybacktrack.backstrip',
                                      '-w', str(input_well_filename),
@@ -72,12 +72,12 @@ def test_backstrip(tmpdir):
     # These function calls are the equivalent of:
     #
     #     python -m pybacktrack.backstrip
-    #         -w tests/data/DSDP-36-327-Lithology.txt
+    #         -w test_data/DSDP-36-327-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o tests/data/DSDP-36-327_backstrip_amended.txt
+    #         -o DSDP-36-327_backstrip_amended.txt
     #         --
-    #         tests/data/DSDP-36-327_backstrip_decompat.txt
+    #         DSDP-36-327_backstrip_decompat.txt
     #
     pybacktrack.backstrip_and_write_well(
         str(test_decompacted_output_filename),

@@ -29,7 +29,7 @@ For example:
     python -m pybacktrack.age_to_depth \
         -m GDH1 \
         -r \
-        tests/data/test_ages.txt \
+        pybacktrack_example_data/test_ages.txt \
         test_depths_from_ages.txt
 
 Currently supports two models:
@@ -50,8 +50,8 @@ For example, to read a file containing depths and write a file containing interp
         -cx 1 \
         -cy 0 \
         -r \
-        -c tests/data/ODP-114-699_age-depth-model.txt \
-        tests/data/ODP-114-699_strat_boundaries.txt \
+        -c pybacktrack_example_data/ODP-114-699_age-depth-model.txt \
+        pybacktrack_example_data/ODP-114-699_strat_boundaries.txt \
         ODP-114-699_strat_boundaries_age_depth.txt
 
 .. note::This is a general interpolate script for piecewise linear ``y=f(x)``, so can be used for other types of data (hence the extra options).
@@ -66,7 +66,7 @@ For example:
 .. code-block:: python
 
     python -m pybacktrack.backstrip \
-        -w tests/data/DSDP-36-327-Lithology.txt \
+        -w pybacktrack_example_data/DSDP-36-327-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology \
         -slm Haq87_SealevelCurve_Longterm \
         -o DSDP-36-327_backstrip_amended.txt \
@@ -83,7 +83,7 @@ Ocean basin example:
 .. code-block:: python
 
     python -m pybacktrack.backtrack \
-        -w tests/data/ODP-114-699-Lithology.txt \
+        -w pybacktrack_example_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
@@ -96,7 +96,7 @@ Passive margin example:
 .. code-block:: python
 
     python -m pybacktrack.backtrack \
-        -w tests/data/DSDP-36-327-Lithology.txt \
+        -w pybacktrack_example_data/DSDP-36-327-Lithology.txt \
         -c 0 1 4 \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
@@ -118,7 +118,7 @@ then you could add the ``-t`` command-line option to specify your own GMT5-compa
 .. code-block:: python
 
     python -m pybacktrack.backtrack \
-        -w tests/data/DSDP-36-327-Lithology.txt \
+        -w pybacktrack_example_data/DSDP-36-327-Lithology.txt \
         -c 0 1 4 \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -t my_topography.grd \

@@ -30,9 +30,9 @@ def test_interpolate_file(tmpdir):
     #     python -m pybacktrack.util.interpolate
     #         -cx 1 -cy 0
     #         -r
-    #         -c tests/data/ODP-114-699_age-depth-model.txt
-    #         tests/data/ODP-114-699_strat_boundaries.txt
-    #         tests/data/ODP-114-699_strat_boundaries_age_depth.txt
+    #         -c test_data/ODP-114-699_age-depth-model.txt
+    #         ODP-114-699_strat_boundaries.txt
+    #         ODP-114-699_strat_boundaries_age_depth.txt
     #
     
     curve_function, _, _ = pybacktrack.read_interpolate_function(
@@ -69,9 +69,9 @@ def test_interpolate_script(tmpdir):
     #     python -m pybacktrack.util.interpolate
     #         -cx 1 -cy 0
     #         -r
-    #         -c tests/data/ODP-114-699_age-depth-model.txt
-    #         tests/data/ODP-114-699_strat_boundaries.txt
-    #         tests/data/ODP-114-699_strat_boundaries_age_depth.txt
+    #         -c test_data/ODP-114-699_age-depth-model.txt
+    #         ODP-114-699_strat_boundaries.txt
+    #         ODP-114-699_strat_boundaries_age_depth.txt
     #
     interpolate_script_command_line = ['python', '-m', 'pybacktrack.util.interpolate',
                                        '-cx', '1', '-cy', '0',

@@ -29,7 +29,8 @@ def install_example_data(
     is chosen to make collision less likely / problematic.
     """
 
-    src_path = pkg_resources.resource_filename('pybacktrack', 'example_data')
+    # We're using the test data as example data.
+    src_path = pkg_resources.resource_filename('pybacktrack', 'test_data')
 
     # The distutils.dir_util.copy_tree function works very similarly to shutil.copytree except that
     # dir_util.copy_tree will just overwrite a directory that exists instead of raising an exception.
