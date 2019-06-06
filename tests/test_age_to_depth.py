@@ -8,6 +8,10 @@ from pybacktrack.util.call_system_command import call_system_command
 import py
 
 
+# Test data directory is inside the pybacktrack module.
+TEST_DATA_DIR = py.path.local(__file__).dirpath('..', 'pybacktrack', 'test_data')
+
+
 def test_convert_age_to_depth():
     """Test convert_age_to_depth function."""
     
@@ -23,13 +27,10 @@ def test_convert_age_to_depth():
 def test_convert_age_to_depth_files(tmpdir):
     """Test convert_age_to_depth_files function."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Original input/output age-to-depth test data.
-    input_filename = test_data_dir.join('test_ages.txt')
+    input_filename = TEST_DATA_DIR.join('test_ages.txt')
     output_base_filename = 'test_depths_from_ages.txt'
-    output_filename = test_data_dir.join(output_base_filename)
+    output_filename = TEST_DATA_DIR.join(output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_output_filename = tmpdir.join(output_base_filename)
@@ -48,13 +49,10 @@ def test_convert_age_to_depth_files(tmpdir):
 def test_age_to_depth_script(tmpdir):
     """Test the built-in age_to_depth script."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Original input/output age-to-depth test data.
-    input_filename = test_data_dir.join('test_ages.txt')
+    input_filename = TEST_DATA_DIR.join('test_ages.txt')
     output_base_filename = 'test_depths_from_ages.txt'
-    output_filename = test_data_dir.join(output_base_filename)
+    output_filename = TEST_DATA_DIR.join(output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_output_filename = tmpdir.join(output_base_filename)

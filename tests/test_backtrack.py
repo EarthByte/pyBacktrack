@@ -8,18 +8,19 @@ from pybacktrack.util.call_system_command import call_system_command
 import py
 
 
+# Test data directory is inside the pybacktrack module.
+TEST_DATA_DIR = py.path.local(__file__).dirpath('..', 'pybacktrack', 'test_data')
+
+
 def test_backtrack_script(tmpdir):
     """Test the built-in backtrack script."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Test data filenames.
-    input_well_filename = test_data_dir.join('ODP-114-699-Lithology.txt')
+    input_well_filename = TEST_DATA_DIR.join('ODP-114-699-Lithology.txt')
     ammended_well_output_base_filename = 'ODP-114-699_backtrack_amended.txt'
-    ammended_well_output_filename = test_data_dir.join(ammended_well_output_base_filename)
+    ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
     decompacted_output_base_filename = 'ODP-114-699_backtrack_decompat.txt'
-    decompacted_output_filename = test_data_dir.join(decompacted_output_base_filename)
+    decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_ammended_well_output_filename = tmpdir.join(ammended_well_output_base_filename)
@@ -58,15 +59,12 @@ def test_backtrack_script(tmpdir):
 def test_backtrack_ODP(tmpdir):
     """Test ODP well site using the pybacktrack.backtrack_and_write_well function."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Test data filenames.
-    input_well_filename = test_data_dir.join('ODP-114-699-Lithology.txt')
+    input_well_filename = TEST_DATA_DIR.join('ODP-114-699-Lithology.txt')
     ammended_well_output_base_filename = 'ODP-114-699_backtrack_amended.txt'
-    ammended_well_output_filename = test_data_dir.join(ammended_well_output_base_filename)
+    ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
     decompacted_output_base_filename = 'ODP-114-699_backtrack_decompat.txt'
-    decompacted_output_filename = test_data_dir.join(decompacted_output_base_filename)
+    decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_ammended_well_output_filename = tmpdir.join(ammended_well_output_base_filename)
@@ -103,15 +101,12 @@ def test_backtrack_ODP(tmpdir):
 def test_backtrack_DSDP(tmpdir):
     """Test DSDP well site using the pybacktrack.backtrack_and_write_well function."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Test data filenames.
-    input_well_filename = test_data_dir.join('DSDP-36-327-Lithology.txt')
+    input_well_filename = TEST_DATA_DIR.join('DSDP-36-327-Lithology.txt')
     ammended_well_output_base_filename = 'DSDP-36-327_backtrack_amended.txt'
-    ammended_well_output_filename = test_data_dir.join(ammended_well_output_base_filename)
+    ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
     decompacted_output_base_filename = 'DSDP-36-327_backtrack_decompat.txt'
-    decompacted_output_filename = test_data_dir.join(decompacted_output_base_filename)
+    decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_ammended_well_output_filename = tmpdir.join(ammended_well_output_base_filename)

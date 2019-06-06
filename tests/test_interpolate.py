@@ -8,17 +8,18 @@ from pybacktrack.util.call_system_command import call_system_command
 import py
 
 
+# Test data directory is inside the pybacktrack module.
+TEST_DATA_DIR = py.path.local(__file__).dirpath('..', 'pybacktrack', 'test_data')
+
+
 def test_interpolate_file(tmpdir):
     """Test pybacktrack.read_interpolate_function and pybacktrack.interpolate_file functions."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Original input/output age-to-depth test data.
-    curve_filename = test_data_dir.join('ODP-114-699_age-depth-model.txt')
-    input_filename = test_data_dir.join('ODP-114-699_strat_boundaries.txt')
+    curve_filename = TEST_DATA_DIR.join('ODP-114-699_age-depth-model.txt')
+    input_filename = TEST_DATA_DIR.join('ODP-114-699_strat_boundaries.txt')
     output_base_filename = 'ODP-114-699_strat_boundaries_age_depth.txt'
-    output_filename = test_data_dir.join(output_base_filename)
+    output_filename = TEST_DATA_DIR.join(output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_output_filename = tmpdir.join(output_base_filename)
@@ -54,14 +55,11 @@ def test_interpolate_file(tmpdir):
 def test_interpolate_script(tmpdir):
     """Test the built-in interpolate script."""
     
-    # Test data directory is in 'data' sub-directory of directory containing this test module.
-    test_data_dir = py.path.local(__file__).dirpath('data')
-    
     # Original input/output age-to-depth test data.
-    curve_filename = test_data_dir.join('ODP-114-699_age-depth-model.txt')
-    input_filename = test_data_dir.join('ODP-114-699_strat_boundaries.txt')
+    curve_filename = TEST_DATA_DIR.join('ODP-114-699_age-depth-model.txt')
+    input_filename = TEST_DATA_DIR.join('ODP-114-699_strat_boundaries.txt')
     output_base_filename = 'ODP-114-699_strat_boundaries_age_depth.txt'
-    output_filename = test_data_dir.join(output_base_filename)
+    output_filename = TEST_DATA_DIR.join(output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_output_filename = tmpdir.join(output_base_filename)
