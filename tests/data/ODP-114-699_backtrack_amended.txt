@@ -2,7 +2,6 @@
 # SiteLatitude = -51.5420
 # SiteLongitude = -30.6770
 # SurfaceAge = 0.0000
-# WaterDepth = 3705.5000
 #
 ## bottom_age bottom_depth lithology
    18.700     85.700       Diatomite       0.70       Clay            0.30      

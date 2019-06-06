@@ -3,7 +3,6 @@
 # SiteLatitude = -50.8713
 # SiteLongitude = -46.7837
 # SurfaceAge = 0.0000
-# WaterDepth = 2400.0000
 #
 # age       compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
   0.000     0.000           3038.991            3038.991              2152.776            2479.384    4027.735            Shaley_sand     1.00       

@@ -2,7 +2,6 @@
 # SiteLatitude = -51.5420
 # SiteLongitude = -30.6770
 # SurfaceAge = 0.0000
-# WaterDepth = 3705.5000
 #
 # age       compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology
   0.000     0.000           601.000             601.000               1726.994            3798.317    4134.284            Diatomite       0.70       Clay            0.30       
