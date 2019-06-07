@@ -1,4 +1,4 @@
-# Lithologies.
+# Deep sea lithologies.
 #
 # Columns:
 # name                            density   porosity      decay
