@@ -137,9 +137,10 @@ def backtrack_well(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
+        It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     rifting_period : tuple, optional
         Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
         If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
@@ -987,9 +988,10 @@ def backtrack_and_write_well(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
+        It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     rifting_period : tuple, optional
         Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
         If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
@@ -1285,12 +1287,13 @@ if __name__ == '__main__':
                  'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
         
         parser.add_argument(
-            '-m', '--ocean_age_to_depth_model', type=str, default=default_ocean_age_to_depth_model_name,
-            metavar='ocean_age_to_depth_model',
-            dest='ocean_age_to_depth_model_name',
+            '-m', '--ocean_age_to_depth_model', nargs='*', action=age_to_depth.ArgParseAgeModelAction,
+            metavar='model_parameter',
+            default=age_to_depth.DEFAULT_MODEL,
             help='The oceanic model used to convert age to depth. '
-                 'Choices include {0}. '
-                 'Defaults to {1}.'.format(
+                 'It can be the name of an in-built oceanic age model: {0} (defaults to {1}). '
+                 'Or it can be an age model filename followed by two integers representing the age and depth column indices, '
+                 'where the file should contain two columns (one containing the age and the other the depth).'.format(
                     ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
                     default_ocean_age_to_depth_model_name))
         
@@ -1411,12 +1414,6 @@ if __name__ == '__main__':
         except KeyError:
             raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
         
-        # Convert age-to-depth model name to enumeration.
-        try:
-            ocean_age_to_depth_model = ocean_age_to_depth_model_dict[args.ocean_age_to_depth_model_name]
-        except KeyError:
-            raise argparse.ArgumentTypeError("%s is not a valid ocean age-to-depth model" % args.ocean_age_to_depth_model_name)
-        
         # Get dynamic topography model info.
         if args.bundle_dynamic_topography_model is not None:
             try:
@@ -1455,7 +1452,7 @@ if __name__ == '__main__':
             dynamic_topography_model,
             sea_level_model,
             args.base_lithology_name,
-            ocean_age_to_depth_model,
+            args.ocean_age_to_depth_model,
             (args.rift_start_time, args.rift_end_time),
             decompacted_columns,
             args.well_location,

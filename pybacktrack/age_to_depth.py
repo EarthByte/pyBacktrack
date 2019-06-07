@@ -48,7 +48,7 @@ MODEL_CROSBY_2007 = 1
 # Only used by command-line script (at bottom of this file).
 ALL_MODELS = [
     (MODEL_GDH1, 'GDH1', 'Stein and Stein (1992) "Model for the global variation in oceanic depth and heat flow with lithospheric age"'),
-    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans".')]
+    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans"')]
 
 
 # The model to use by default (if no 'model' parameter passed to function).
@@ -65,8 +65,9 @@ def convert_age_to_depth(
     ----------
     age : float
         The age in Ma.
-    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
         The model to use when converting ocean age to basement depth.
+        It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     
     Returns
     -------
@@ -77,8 +78,8 @@ def convert_age_to_depth(
     ------
     ValueError
         If `age` is negative.
-    ValueError
-        If `model` is not a recognised model.
+    TypeError
+        If `model` is not a recognised model, or a function accepting a single parameter.
     """
     
     if age < 0:
@@ -88,8 +89,8 @@ def convert_age_to_depth(
         return _age_to_depth_GDH1(age)
     elif model == MODEL_CROSBY_2007:
         return _age_to_depth_CROSBY_2007(age)
-    
-    raise ValueError('Unexpected model.')
+    else:
+        return model(age)
 
 
 def convert_age_to_depth_files(
@@ -109,8 +110,9 @@ def convert_age_to_depth_files(
     output_filename : string
         Name of output text file containing `age` and `depth` values.
         Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
-    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007}, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
         The model to use when converting ocean age to basement depth.
+        It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     age_column_index : int, optional
         Determines which column of input file to read `age` values from.
     reverse_output_columns : bool, optional
@@ -251,9 +253,46 @@ def _CROSBY_2007_pert(age):
     return ptb
 
 
+import argparse
+from pybacktrack.util.interpolate import read_curve_function
+
+model_dict = dict((model_name, model) for model, model_name, _ in ALL_MODELS)
+model_name_dict = dict((model, model_name) for model, model_name, _ in ALL_MODELS)
+default_model_name = model_name_dict[DEFAULT_MODEL]
+
+# Action to parse an age model.
+class ArgParseAgeModelAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        model = None
+        
+        if len(values) == 1:
+            # Convert model name to enumeration.
+            try:
+                model = model_dict[values[0]]
+            except KeyError:
+                raise argparse.ArgumentTypeError("%s is not a valid model" % values[0])
+        elif len(values) == 3:
+            # Read 2-column text file to get a function of depth(age).
+            age_model_filename = values[0]
+            
+            try:
+                # Convert strings to float.
+                age_column_index = int(values[1])
+                depth_column_index = int(values[2])
+                if age_column_index < 0 or depth_column_index < 0:
+                    parser.error('age and depth column indices must be non-negative')
+            except ValueError:
+                raise argparse.ArgumentTypeError("encountered an age or depth column index that is not an integer")
+            
+            model, _, _ = read_curve_function(age_model_filename, age_column_index, depth_column_index)
+        else:
+            parser.error('age model must either be one of {0}, or an age model filename and age and depth column indices'.format(
+                ' '.join(model_name for _, model_name, _ in ALL_MODELS)))
+        
+        setattr(namespace, self.dest, model)
+
+
 if __name__ == '__main__':
-    
-    import argparse
     
     def argparse_unicode(value_string):
         try:
@@ -264,10 +303,6 @@ if __name__ == '__main__':
         
         return filename
     
-    model_dict = dict((model_name, model) for model, model_name, _ in ALL_MODELS)
-    model_name_dict = dict((model, model_name) for model, model_name, _ in ALL_MODELS)
-    default_model_name = model_name_dict[DEFAULT_MODEL]
-    
     __description__ = \
         """Converts rows containing age in input file to rows containing age and depth in output file.
         
@@ -275,8 +310,10 @@ if __name__ == '__main__':
         Writes text data to output file where each line contains age (in Ma) and depth (in metres), optionally reversed.
         
         The age-to-depth model can be chosen using the '-m' option.
-        Choices include:{0}
+        It can be the name of an in-built age model:{0}
         ...defaults to {1}.
+        Or it can be an age model filename followed by two integers representing the age and depth column indices,
+        where the file should contain two columns (one containing the age and the other the depth).
         
         
         NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
@@ -294,12 +331,13 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
     parser.add_argument(
-        '-m', '--model', type=str, default=default_model_name,
-        metavar='model',
-        dest='model_name',
+        '-m', '--model', nargs='*', action=ArgParseAgeModelAction,
+        metavar='model_parameter',
+        default=DEFAULT_MODEL,
         help='The model used to convert age to depth. '
-             'Choices include {0} (see above). '
-             'Defaults to {1}.'.format(
+             'It can be the name of an in-built age model: {0} (defaults to {1}). '
+             'Or it can be an age model filename followed by two integers representing the age and depth column indices, '
+             'where the file should contain two columns (one containing the age and the other the depth).'.format(
                 ', '.join(model_name for _, model_name, _ in ALL_MODELS),
                 default_model_name))
     
@@ -324,16 +362,10 @@ if __name__ == '__main__':
     # Parse command-line options.
     args = parser.parse_args()
     
-    # Convert model name to enumeration.
-    try:
-        model = model_dict[args.model_name]
-    except KeyError:
-        raise argparse.ArgumentTypeError("%s is not a valid model" % args.model_name)
-    
     convert_age_to_depth_files(
         args.input_filename,
         args.output_filename,
-        model,
+        args.model,
         args.age_column,
         args.reverse_output_columns)
     
