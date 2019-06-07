@@ -55,7 +55,7 @@ _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 100
 
 def backtrack_well(
         well_filename,
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
@@ -73,7 +73,7 @@ def backtrack_well(
     # the expanded values of the bundle filenames.
     """backtrack_well(\
         well_filename,\
-        lithologies_filename=pybacktrack.BUNDLE_LITHOLOGIES_FILENAME,\
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
@@ -93,8 +93,8 @@ def backtrack_well(
     ----------
     well_filename : string
         Name of well text file.
-    lithologies_filename : string, optional
-        Name of lithologies text file.
+    lithology_filenames: list of string, optional
+        One or more text files containing lithologies.
     age_grid_filename : string, optional
         Age grid filename.
         Used to obtain age of seafloor at well location.
@@ -194,8 +194,19 @@ def backtrack_well(
         sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES):
         sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model]
     
-    # Read the lithologies from a text file.
-    lithologies = read_lithologies_file(lithologies_filename)
+    # Read the lithologies from one or more text files.
+    #
+    # It used to be a single filename (instead of a list) so handle that case to be backward compatible.
+    if isinstance(lithology_filenames, str if sys.version_info[0] >= 3 else basestring): # Python 2 vs 3.
+        lithology_filename = lithology_filenames
+        lithologies = read_lithologies_file(lithology_filename)
+    else:
+        # Read all the lithology files and merge their dicts.
+        # Subsequently specified files override previous files in the list.
+        # So if the first and second files have the same lithology then the second lithology is used.
+        lithologies = {}
+        for lithology_filename in lithology_filenames:
+            lithologies.update(read_lithologies_file(lithology_filename))
     
     # Read the well from a file.
     well = load_well(
@@ -896,7 +907,7 @@ def write_well(
 def backtrack_and_write_well(
         decompacted_output_filename,
         well_filename,
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
@@ -917,7 +928,7 @@ def backtrack_and_write_well(
     """backtrack_and_write_well(\
         decompacted_output_filename,\
         well_filename,\
-        lithologies_filename=pybacktrack.BUNDLE_LITHOLOGIES_FILENAME,\
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
@@ -944,8 +955,8 @@ def backtrack_and_write_well(
         Name of text file to write decompacted results to.
     well_filename : string
         Name of well text file.
-    lithologies_filename : string, optional
-        Name of lithologies text file.
+    lithology_filenames: list of string, optional
+        One or more text files containing lithologies.
     age_grid_filename : string, optional
         Age grid filename.
         Used to obtain age of seafloor at well location.
@@ -1044,7 +1055,7 @@ def backtrack_and_write_well(
     # Decompact the well.
     well, decompacted_wells = backtrack_well(
         well_filename,
-        lithologies_filename,
+        lithology_filenames,
         age_grid_filename,
         topography_filename,
         total_sediment_thickness_filename,
@@ -1240,13 +1251,14 @@ if __name__ == '__main__':
             help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
                  'for each stratigraphic unit in a single well.')
         
-        # Allow user to override default lithologies filename (if they don't want the one in the bundled data).
+        # Allow user to override the default lithology filename.
         parser.add_argument(
-            '-l', '--lithologies_filename', type=argparse_unicode,
-            default=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
-            metavar='lithologies_filename',
-            help='Optional lithologies filename used to lookup density, surface porosity and porosity decay. '
-                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME))
+            '-l', '--lithology_filenames', type=argparse_unicode, nargs='+',
+            default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
+            metavar='lithology_filename',
+            help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
+                 'If more than one file provided then conflicting lithologies in latter files override those in former files. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME))
         
         parser.add_argument(
             '-x', '--well_location', nargs=2, action=ArgParseLocationAction,
@@ -1444,7 +1456,7 @@ if __name__ == '__main__':
         backtrack_and_write_well(
             args.output_filename,
             args.well_filename,
-            args.lithologies_filename,
+            args.lithology_filenames,
             args.age_grid_filename,
             args.topography_filename,
             args.total_sediment_thickness_filename,

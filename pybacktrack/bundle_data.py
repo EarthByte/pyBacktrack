@@ -37,9 +37,13 @@ The following module attributes are available:
   This is an absolute path so that scripts outside the pybacktrack package can also reference the bundled data.
   All bundle data paths are derived from this base path.
 
-- **pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME**
+- **pybacktrack.bundle_data.BUNDLE_LITHOLOGY_FILENAMES**
 
-  Bundled lithologies file.
+  A list of bundled lithology filenames.
+  
+  **pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME**
+  
+  The default lithology filename contains deep sea lithologies.
 
 - **pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME**
 
@@ -90,7 +94,12 @@ import os.path
 
 BUNDLE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundle_data')
 
-BUNDLE_LITHOLOGIES_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'lithologies.txt')
+BUNDLE_LITHOLOGY_FILENAMES = [
+    os.path.join(BUNDLE_PATH, 'lithologies', 'deep_sea.txt'),
+    os.path.join(BUNDLE_PATH, 'lithologies', 'shallow_water.txt')
+]
+# Make the default lithologies file the deep sea file (since it was the first file we started with anyway).
+DEFAULT_BUNDLE_LITHOLOGY_FILENAME = BUNDLE_LITHOLOGY_FILENAMES[0]
 
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
 

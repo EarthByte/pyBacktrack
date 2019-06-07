@@ -40,7 +40,7 @@ import sys
 
 def backstrip_well(
         well_filename,
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -55,7 +55,8 @@ def backstrip_well(
     
     well_filename: name of well text file.
     
-    lithologies_filename: name of lithologies text file.
+    lithology_filenames: list of string, optional
+        One or more text files containing lithologies.
     
     total_sediment_thickness_filename: Total sediment thickness filename.
                                        Used to obtain total sediment thickness at well location.
@@ -94,8 +95,19 @@ def backstrip_well(
         sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES):
         sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model]
     
-    # Read the lithologies from a text file.
-    lithologies = read_lithologies_file(lithologies_filename)
+    # Read the lithologies from one or more text files.
+    #
+    # It used to be a single filename (instead of a list) so handle that case to be backward compatible.
+    if isinstance(lithology_filenames, str if sys.version_info[0] >= 3 else basestring): # Python 2 vs 3.
+        lithology_filename = lithology_filenames
+        lithologies = read_lithologies_file(lithology_filename)
+    else:
+        # Read all the lithology files and merge their dicts.
+        # Subsequently specified files override previous files in the list.
+        # So if the first and second files have the same lithology then the second lithology is used.
+        lithologies = {}
+        for lithology_filename in lithology_filenames:
+            lithologies.update(read_lithologies_file(lithology_filename))
     
     def read_longitude(string):
         longitude = float(string)
@@ -388,7 +400,7 @@ def write_well(
 def backstrip_and_write_well(
         decompacted_output_filename,
         well_filename,
-        lithologies_filename=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -404,7 +416,7 @@ def backstrip_and_write_well(
     # Decompact the well.
     well, decompacted_wells = backstrip_well(
         well_filename,
-        lithologies_filename,
+        lithology_filenames,
         total_sediment_thickness_filename,
         sea_level_model,
         base_lithology_name,
@@ -521,14 +533,15 @@ if __name__ == '__main__':
             metavar='well_filename',
             help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
                  'for each stratigraphic unit in a single well.')
-         
-        # Allow user to override default lithologies filename (if they don't want the one in the bundled data).
+        
+        # Allow user to override the default lithology filename.
         parser.add_argument(
-            '-l', '--lithologies_filename', type=parse_unicode,
-            default=pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME,
-            metavar='lithologies_filename',
-            help='Optional lithologies filename used to lookup density, surface porosity and porosity decay. '
-                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_LITHOLOGIES_FILENAME))
+            '-l', '--lithology_filenames', type=parse_unicode, nargs='+',
+            default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
+            metavar='lithology_filename',
+            help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
+                 'If more than one file provided then conflicting lithologies in latter files override those in former files. '
+                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME))
         
         # Action to parse a longitude/latitude location.
         class LocationAction(argparse.Action):
@@ -661,7 +674,7 @@ if __name__ == '__main__':
         # Decompact the well.
         well, decompacted_wells = backstrip_well(
             args.well_filename,
-            args.lithologies_filename,
+            args.lithology_filenames,
             args.total_sediment_thickness_filename,
             sea_level_model,
             args.base_lithology_name,

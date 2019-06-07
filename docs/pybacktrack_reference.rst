@@ -190,8 +190,11 @@ The following attributes are available to access the bundled data:
   This is an absolute path so that scripts outside the ``pybacktrack`` package can also reference the bundled data.
   All bundle data paths are derived from this base path.
 
-``pybacktrack.BUNDLE_LITHOLOGIES_FILENAME``
-  Bundled lithologies file.
+``pybacktrack.BUNDLE_LITHOLOGY_FILENAMES``
+  A list of bundled lithology filenames.
+  
+``pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME``
+  The default lithology filename contains deep sea lithologies.
 
 ``pybacktrack.BUNDLE_AGE_GRID_FILENAME``
   Bundled age grid file.

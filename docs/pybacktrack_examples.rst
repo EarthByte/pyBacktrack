@@ -14,8 +14,8 @@ Scripts
 
 In all scripts use the ``--help`` option to see full details (eg, ``python -m pybacktrack.backtrack --help``).
 
-.. note:: | The input files used in the examples below are available from the ``tests/data/`` directory of the `pyBacktrack source code <https://github.com/EarthByte/pyBacktrack>`_.
-          | If you want to run these examples you can download that test data, or you can use your own input files (such as your own ocean drill site files).
+.. note:: | The input files used in the examples below are available in the example data.
+          | Please ensure you have :ref:`installed the example data <pybacktrack_install_example_data>` before running any of these examples.
 
 age_to_depth
 ^^^^^^^^^^^^
