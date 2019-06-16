@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
 import sys
 
 
@@ -28,6 +29,11 @@ def convert(
     """Convert a Geoscience Australia (GA) well file to a pyBacktrack well file.
     
     The output filename is determined from the name of the well inside the input GA filename."""
+    
+    # Regular expression for extracting the min/max water depths from the WATER_DEPTHS column string.
+    #
+    # Eg, "-50 (-200 to 0) metres above sea-level" should produce min/max water depths of -200 and 0.
+    re_water_depths = re.compile('.*\((.*) to (.*)\).*')
     
     # Read the input GA file.
     well_name = None
@@ -56,6 +62,7 @@ def convert(
                     base_depth_column_index = line_string_list.index('BASE DEPTH(m)')
                     top_age_column_index = line_string_list.index('TOP AGE(Ma)')
                     base_age_column_index = line_string_list.index('BASE AGE(Ma)')
+                    water_depths_column_index = line_string_list.index('WATER_DEPTHS')
                     environment_column_index = line_string_list.index('ENVIRONMENT')
                 except ValueError:
                     # Raise a more informative error message.
@@ -83,11 +90,17 @@ def convert(
                 top_age = float(line_string_list[top_age_column_index] if line_string_list[top_age_column_index] else 'nan')
                 base_age = float(line_string_list[base_age_column_index] if line_string_list[base_age_column_index] else 'nan')
                 
+                # Extract min/max water depths from WATER_DEPTHS column string.
+                water_depths = line_string_list[water_depths_column_index]
+                match_water_depths = re_water_depths.match(water_depths)
+                min_water_depth = float(match_water_depths.group(1))
+                max_water_depth = float(match_water_depths.group(2))
+                
                 environment = line_string_list[environment_column_index]
                 # Replace whitespaces with '_'.
                 environment = '_'.join(environment.split())
                 
-                well_data.append((top_depth, base_depth, top_age, base_age, environment))
+                well_data.append((top_depth, base_depth, top_age, base_age, min_water_depth, max_water_depth, environment))
             except (ValueError, IndexError):
                 # Raise a more informative error message.
                 raise ValueError('Cannot read well values at line {0} of input file {1}.'.format(line_number, input_filename))
@@ -101,8 +114,8 @@ def convert(
     # Write the output pyBacktrack file.
     with open(output_filename, 'w') as output_file:
         output_file.write('## bottom_age bottom_depth min_water_depth max_water_depth lithology\n')
-        for top_depth, base_depth, top_age, base_age, environment in well_data:
-            output_file.write('   {0:<10.3f} {1:<12.3f} {2:<15.3f} {3:<15.3f} {4:<15} {5:<10.2f}\n'.format(base_age, base_depth, 0.0, 0.0, environment, 1.0))
+        for top_depth, base_depth, top_age, base_age, min_water_depth, max_water_depth, environment in well_data:
+            output_file.write('   {0:<10.3f} {1:<12.3f} {2:<15.3f} {3:<15.3f} {4:<15} {5:<10.2f}\n'.format(base_age, base_depth, min_water_depth, max_water_depth, environment, 1.0))
 
 
 if __name__ == '__main__':
