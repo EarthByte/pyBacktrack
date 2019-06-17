@@ -461,6 +461,8 @@ if __name__ == '__main__':
     
     import argparse
     
+    from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
+    
     def main():
         
         __description__ = """Find decompacted total sediment thickness and tectonic subsidence through time.
@@ -534,14 +536,17 @@ if __name__ == '__main__':
             help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
                  'for each stratigraphic unit in a single well.')
         
-        # Allow user to override the default lithology filename.
+        # Allow user to override the default lithology filename, and also specify bundled lithologies.
         parser.add_argument(
-            '-l', '--lithology_filenames', type=parse_unicode, nargs='+',
-            default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
+            '-l', '--lithology_filenames', nargs='+', action=ArgParseLithologyAction,
             metavar='lithology_filename',
+            default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
             help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
                  'If more than one file provided then conflicting lithologies in latter files override those in former files. '
-                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME))
+                 'You can also choose built-in (bundled) lithologies (in any order) - choices include {0}. '
+                 'Defaults to "{1}" if nothing specified.'.format(
+                    ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
+                    DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
         
         # Action to parse a longitude/latitude location.
         class LocationAction(argparse.Action):

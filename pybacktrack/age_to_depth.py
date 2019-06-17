@@ -331,7 +331,7 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
     parser.add_argument(
-        '-m', '--model', nargs='*', action=ArgParseAgeModelAction,
+        '-m', '--model', nargs='+', action=ArgParseAgeModelAction,
         metavar='model_parameter',
         default=DEFAULT_MODEL,
         help='The model used to convert age to depth. '
