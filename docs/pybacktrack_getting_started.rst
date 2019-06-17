@@ -23,7 +23,7 @@ PyBacktrack depends on:
 `NumPy` and `SciPy` are automatically installed by `pip` (see :ref:`installation <pybacktrack_install_pybacktrack>`), however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
 
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
-Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_bundle_data>` are in NetCDF4 format.
+Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_reference_bundle_data>` are in NetCDF4 format.
 
 `pyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
@@ -60,7 +60,7 @@ To install the latest development version (requires Git on local system), run:
 Install example data
 --------------------
 
-Before running the example below, or any of the :ref:`other examples <pygplates_examples>`, you'll also need to install the example data (from the pybacktrack package itself).
+Before running the example below, or any :ref:`other examples <pygplates_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
 This assumes you've already :ref:`installed the pybacktrack package <pybacktrack_install_pybacktrack>`.
 
 The following command installs the example data to a new sub-directory of your *current working directory* called ``pybacktrack_example_data``:
@@ -81,10 +81,10 @@ The following command installs the example data to a new sub-directory of your *
 A Backtracking Example
 ----------------------
 
-Once :ref:`installed <pybacktrack_install_pybacktrack>` the ``pybacktrack`` Python package is available to:
+Once :ref:`installed <pybacktrack_install_pybacktrack>`, the ``pybacktrack`` Python package is available to:
 
-- use built-in module scripts (inside ``pybacktrack``), or
-- ``import pybacktrack`` into your own script.
+#. run built-in scripts (inside ``pybacktrack``), or
+#. ``import pybacktrack`` into your own script.
 
 The following example is used to demonstrate both approaches. It backtracks an ocean drill site and saves the output to a text file by:
 
@@ -117,6 +117,7 @@ Use a built-in module script
 
 Since there is a ``backtrack`` module inside ``pybacktrack`` that can be run as a script,
 we can invoke it on the command-line using ``python -m pybacktrack.backtrack`` followed by command line options that are specific to that module.
+This is the easiest way to run backtracking.
 
 To see its command-line options, run:
 
@@ -143,7 +144,7 @@ Import into your own script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An alternative to running a built-in script is to write your own script (using a text editor) that imports ``pybacktrack`` and
-calls its functions.
+calls its functions. You might do this if you want to combine pyBacktrack functionality with other research functionality into a single script.
 
 The following Python code does the same as the :ref:`built-in script<pybacktrack_use_a_builtin_module_script>` by calling the
 :func:`pybacktrack.backtrack_and_write_well` function:

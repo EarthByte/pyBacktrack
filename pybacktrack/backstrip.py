@@ -50,7 +50,20 @@ def backstrip_well(
         well_min_water_depth_column=2,
         well_max_water_depth_column=3,
         well_lithology_column=4):
-    """
+    # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
+    # the expanded values of the bundle filenames.
+    """backstrip_well(\
+        well_filename,\
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        sea_level_model=None,\
+        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        well_location=None,\
+        well_bottom_age_column=0,\
+        well_bottom_depth_column=1,\
+        well_min_water_depth_column=2,\
+        well_max_water_depth_column=3,\
+        well_lithology_column=4)
     Finds decompacted total sediment thickness and tectonic subsidence for each age in 'well'.
     
     well_filename: name of well text file.
@@ -412,6 +425,23 @@ def backstrip_and_write_well(
         well_max_water_depth_column=3,
         well_lithology_column=4,
         ammended_well_output_filename=None):
+    # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
+    # the expanded values of the bundle filenames.
+    """backstrip_and_write_well(\
+        decompacted_output_filename,\
+        well_filename,\
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        sea_level_model=None,\
+        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS,\
+        well_location=None,\
+        well_bottom_age_column=0,\
+        well_bottom_depth_column=1,\
+        well_min_water_depth_column=2,\
+        well_max_water_depth_column=3,\
+        well_lithology_column=4,\
+        ammended_well_output_filename=None)"""
     
     # Decompact the well.
     well, decompacted_wells = backstrip_well(

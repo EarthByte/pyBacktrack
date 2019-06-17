@@ -99,7 +99,7 @@ def convert_age_to_depth_files(
         model=DEFAULT_MODEL,
         age_column_index=0,
         reverse_output_columns=False):
-    """convert_age_to_depth_files(input_filename, output_filename, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL, age_column_index=0)
+    """convert_age_to_depth_files(input_filename, output_filename, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL, age_column_index=0,reverse_output_columns=False)
     Converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
     
     Parameters

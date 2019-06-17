@@ -16,6 +16,8 @@ The ``pybacktrack`` package has the ``__version__`` attribute:
     
     pybacktrack.__version__
 
+.. _pybacktrack_reference_backtracking:
+
 Backtracking
 ------------
 
@@ -43,6 +45,8 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS``
 - ``pybacktrack.BACKTRACK_COLUMN_LITHOLOGY``
 - ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH``
+
+.. _pybacktrack_reference_backstripping:
 
 Backstripping
 -------------
@@ -115,6 +119,8 @@ Decompacting well sites
 .. autoclass:: pybacktrack.DecompactedStratigraphicUnit
    :members:
 
+.. _pybacktrack_reference_converting_age_to_depth:
+
 Converting oceanic age to depth
 -------------------------------
 
@@ -157,6 +163,8 @@ Average sea level variations
 .. autoclass:: pybacktrack.SeaLevel
    :members:
 
+.. _pybacktrack_reference_utilities:
+
 Utilities
 ---------
 
@@ -164,7 +172,7 @@ Utilities
 
 .. autofunction:: pybacktrack.interpolate_file
 
-.. _pybacktrack_bundle_data:
+.. _pybacktrack_reference_bundle_data:
 
 Bundle data
 -----------
