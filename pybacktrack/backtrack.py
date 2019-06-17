@@ -1305,7 +1305,7 @@ if __name__ == '__main__':
             help='The oceanic model used to convert age to depth. '
                  'It can be the name of an in-built oceanic age model: {0} (defaults to {1}). '
                  'Or it can be an age model filename followed by two integers representing the age and depth column indices, '
-                 'where the file should contain two columns (one containing the age and the other the depth).'.format(
+                 'where the file should contain at least two columns (one containing the age and the other the depth).'.format(
                     ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
                     default_ocean_age_to_depth_model_name))
         

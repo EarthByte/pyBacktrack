@@ -313,7 +313,7 @@ if __name__ == '__main__':
         It can be the name of an in-built age model:{0}
         ...defaults to {1}.
         Or it can be an age model filename followed by two integers representing the age and depth column indices,
-        where the file should contain two columns (one containing the age and the other the depth).
+        where the file should contain at least two columns (one containing the age and the other the depth).
         
         
         NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
@@ -337,7 +337,7 @@ if __name__ == '__main__':
         help='The model used to convert age to depth. '
              'It can be the name of an in-built age model: {0} (defaults to {1}). '
              'Or it can be an age model filename followed by two integers representing the age and depth column indices, '
-             'where the file should contain two columns (one containing the age and the other the depth).'.format(
+             'where the file should contain at least two columns (one containing the age and the other the depth).'.format(
                 ', '.join(model_name for _, model_name, _ in ALL_MODELS),
                 default_model_name))
     

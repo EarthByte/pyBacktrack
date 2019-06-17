@@ -194,7 +194,12 @@ The following attributes are available to access the bundled data:
   A list of bundled lithology filenames.
   
 ``pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME``
-  The default lithology filename contains deep sea lithologies.
+  The default lithology filename contains the lithologies covered in Table 1 in the pyBacktrack paper:
+
+  * Müller, R. D., Cannon, J., Williams, S. and Dutkiewicz, A., 2018,
+    `PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_,
+    **Geochemistry, Geophysics, Geosystems,** 19, 1898-1909, doi: 10.1029/2017GC007313.
+
 
 ``pybacktrack.BUNDLE_AGE_GRID_FILENAME``
   Bundled age grid file.

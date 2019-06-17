@@ -1,3 +1,4 @@
+# coding=utf-8
 
 #
 # Copyright (C) 2017 The University of Sydney, Australia
@@ -43,7 +44,11 @@ The following module attributes are available:
   
   **pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME**
   
-  The default lithology filename contains deep sea lithologies.
+  The default lithology filename contains the lithologies covered in Table 1 in the pyBacktrack paper:
+
+  * Müller, R. D., Cannon, J., Williams, S. and Dutkiewicz, A., 2018,
+    `PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_,
+    **Geochemistry, Geophysics, Geosystems,** 19, 1898-1909, doi: 10.1029/2017GC007313.
 
 - **pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME**
 
@@ -95,10 +100,10 @@ import os.path
 BUNDLE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundle_data')
 
 BUNDLE_LITHOLOGY_FILENAMES = [
-    os.path.join(BUNDLE_PATH, 'lithologies', 'deep_sea.txt'),
-    os.path.join(BUNDLE_PATH, 'lithologies', 'shallow_water.txt')
+    os.path.join(BUNDLE_PATH, 'lithologies', 'primary.txt'),
+    os.path.join(BUNDLE_PATH, 'lithologies', 'extended.txt')
 ]
-# Make the default lithologies file the deep sea file (since it was the first file we started with anyway).
+# Default lithologies file is the primary lithologies file (these are the lithologies in the pyBacktrack paper).
 DEFAULT_BUNDLE_LITHOLOGY_FILENAME = BUNDLE_LITHOLOGY_FILENAMES[0]
 
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
