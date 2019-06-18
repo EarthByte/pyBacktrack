@@ -1,7 +1,8 @@
 include README.rst
 include LICENSE
 recursive-include pybacktrack/bundle_data *
-recursive-include pybacktrack/example_data *
+recursive-include pybacktrack/test_data *
+recursive-include pybacktrack/notebooks *
 recursive-include tests *
 recursive-include docs *
 prune docs/_build
