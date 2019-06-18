@@ -4,6 +4,5 @@ recursive-include pybacktrack/bundle_data *
 recursive-include pybacktrack/test_data *
 recursive-include pybacktrack/notebooks *
 recursive-include tests *
-recursive-include docs *
-prune docs/_build
+prune pybacktrack/notebooks/.ipynb_checkpoints
 prune tests/__pycache__
