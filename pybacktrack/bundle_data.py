@@ -44,12 +44,20 @@ The following module attributes are available:
   
   **pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME**
   
-  The default lithology filename contains the lithologies covered in Table 1 in the pyBacktrack paper:
+  Same as **pybacktrack.bundle_data.PRIMARY_BUNDLE_LITHOLOGY_FILENAME**.
+  
+  **pybacktrack.bundle_data.PRIMARY_BUNDLE_LITHOLOGY_FILENAME**
+  
+  The primary lithology filename contains the lithologies covered in Table 1 in the pyBacktrack paper:
 
   * Müller, R. D., Cannon, J., Williams, S. and Dutkiewicz, A., 2018,
     `PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_,
     **Geochemistry, Geophysics, Geosystems,** 19, 1898-1909, doi: 10.1029/2017GC007313.
 
+  **pybacktrack.bundle_data.EXTENDED_BUNDLE_LITHOLOGY_FILENAME**
+  
+  The optional extended lithology filename extends the primary lithologies, and mostly contains lithologies in shallow water.
+  
 - **pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME**
 
   Bundled age grid file.
@@ -99,12 +107,15 @@ import os.path
 
 BUNDLE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundle_data')
 
+# Primary lithologies file contains the lithologies in the pyBacktrack paper.
+PRIMARY_BUNDLE_LITHOLOGY_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'primary.txt')
+EXTENDED_BUNDLE_LITHOLOGY_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'extended.txt')
 BUNDLE_LITHOLOGY_FILENAMES = [
-    os.path.join(BUNDLE_PATH, 'lithologies', 'primary.txt'),
-    os.path.join(BUNDLE_PATH, 'lithologies', 'extended.txt')
+    PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
+    EXTENDED_BUNDLE_LITHOLOGY_FILENAME
 ]
-# Default lithologies file is the primary lithologies file (these are the lithologies in the pyBacktrack paper).
-DEFAULT_BUNDLE_LITHOLOGY_FILENAME = BUNDLE_LITHOLOGY_FILENAMES[0]
+# Default lithologies file is the primary lithologies file.
+DEFAULT_BUNDLE_LITHOLOGY_FILENAME = PRIMARY_BUNDLE_LITHOLOGY_FILENAME
 
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
 

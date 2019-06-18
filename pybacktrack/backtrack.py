@@ -73,7 +73,7 @@ def backtrack_well(
     # the expanded values of the bundle filenames.
     """backtrack_well(\
         well_filename,\
-        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
@@ -928,7 +928,7 @@ def backtrack_and_write_well(
     """backtrack_and_write_well(\
         decompacted_output_filename,\
         well_filename,\
-        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\

@@ -40,8 +40,8 @@ can be run as ``python -m pybacktrack.backstrip ...``, with ``...`` replaced by 
 
 The following sections give an introduction to each module.
 
-.. note:: | In each module you can use the ``--help`` option to see all available command-line options for that specific module.
-          | For example, ``python -m pybacktrack.backtrack --help`` describes all options available to the ``backtrack`` module.
+.. note:: In each module you can use the ``--help`` option to see all available command-line options for that specific module.
+          For example, ``python -m pybacktrack.backtrack --help`` describes all options available to the ``backtrack`` module.
 
 .. _pybacktrack_running_the_backtrack_script:
 

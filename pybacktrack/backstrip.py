@@ -54,7 +54,7 @@ def backstrip_well(
     # the expanded values of the bundle filenames.
     """backstrip_well(\
         well_filename,\
-        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
@@ -430,7 +430,7 @@ def backstrip_and_write_well(
     """backstrip_and_write_well(\
         decompacted_output_filename,\
         well_filename,\
-        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
