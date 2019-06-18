@@ -30,7 +30,7 @@ RUN pip install -U setuptools
 RUN pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
 
 # Install pybacktrack example data from the pybacktrack package.
-RUN python -c 'import pybacktrack.documentation; pybacktrack.documentation.install_example_data()'
+RUN python -c 'import pybacktrack; pybacktrack.install_examples()'
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
