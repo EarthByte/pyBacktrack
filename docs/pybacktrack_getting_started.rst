@@ -55,26 +55,26 @@ To install the latest development version (requires Git on local system), run:
 
   pip install <path-to-local-directory>
 
-.. _pybacktrack_install_example_data:
+.. _pybacktrack_install_examples:
 
-Install example data
---------------------
+Install examples
+----------------
 
 Before running the example below, or any :ref:`other examples <pygplates_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
 This assumes you've already :ref:`installed the pybacktrack package <pybacktrack_install_pybacktrack>`.
 
-The following command installs the example data to a new sub-directory of your *current working directory* called ``pybacktrack_example_data``:
+The following command installs the examples (example data and notebooks) to a new sub-directory of your *current working directory* called ``pybacktrack_examples``:
 
 .. code-block:: python
 
-    python -c "import pybacktrack.documentation; pybacktrack.documentation.install_example_data()"
+    python -c "import pybacktrack; pybacktrack.install_examples()"
 
 .. note:: The *current working directory* is whatever directory you are in when you run the above command.
 
-.. note:: | Alternatively you can choose a different sub-directory by providing an argument to the ``install_example_data()`` function above.
-          | For example, ``python -c "import pybacktrack.documentation; pybacktrack.documentation.install_example_data('pybacktrack/example/data')"``
-            creates a new sub-directory of your *current working directory* called ``pybacktrack/example/data``.
-          | However the example below assumes the default directory (``pybacktrack_example_data``).
+.. note:: | Alternatively you can choose a different sub-directory by providing an argument to the ``install_examples()`` function above.
+          | For example, ``python -c "import pybacktrack; pybacktrack.install_examples('pybacktrack_examples')"``
+            creates a new sub-directory of your *current working directory* called ``pybacktrack_examples``.
+          | However the example below assumes the default directory (``pybacktrack_examples``).
 
 .. _pybacktrack_a_backtracking_example:
 
@@ -88,9 +88,9 @@ Once :ref:`installed <pybacktrack_install_pybacktrack>`, the ``pybacktrack`` Pyt
 
 The following example is used to demonstrate both approaches. It backtracks an ocean drill site and saves the output to a text file by:
 
-- reading the ocean drill site file ``pybacktrack_example_data/ODP-114-699-Lithology.txt``,
+- reading the ocean drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``,
 
-  .. note:: | This file is part of the :ref:`example data <pybacktrack_install_example_data>`.
+  .. note:: | This file is part of the :ref:`example data <pybacktrack_install_examples>`.
             | However if you have your own ocean drill site file then you can substitute it in the example below if you want.
 
 - backtracking it using:
@@ -130,7 +130,7 @@ The backtracking example can now be demonstrated by running the script as:
 .. code-block:: python
 
     python -m pybacktrack.backtrack \
-        -w pybacktrack_example_data/ODP-114-699-Lithology.txt \
+        -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
@@ -154,7 +154,7 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     import pybacktrack
     
     # Input and output filenames.
-    input_well_filename = 'pybacktrack_example_data/ODP-114-699-Lithology.txt'
+    input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
     amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
     decompacted_output_filename = 'ODP-114-699_backtrack_decompat.txt'
     

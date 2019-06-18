@@ -82,6 +82,9 @@ from pybacktrack.util.interpolate import \
 # Importing all since there are only module variables prefixed with 'BUNDLE_' in 'bundle_data' module.
 from pybacktrack.bundle_data import *
 
+# Installing examples from pybacktrack package.
+from pybacktrack.install_examples import install as install_examples
+
 from pybacktrack.version import __version__, VERSION
 
 
