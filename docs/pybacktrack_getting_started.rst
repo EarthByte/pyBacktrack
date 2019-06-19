@@ -5,13 +5,33 @@ Getting Started
 
 .. contents::
    :local:
-   :depth: 2
+   :depth: 3
 
+
+.. _pybacktrack_installation:
+
+Installation
+++++++++++++
+
+You can install ``pybacktrack`` either:
+
+#. using the `pip package manager <https://pypi.org/project/pip/>`_, or
+#. using `Docker <https://www.docker.com/>`_.
+
+Docker is typically more straightforward since all the dependencies of ``pybacktrack`` have been pre-installed.
+
+.. _pybacktrack_install_using_pip:
+
+Install using pip
+-----------------
+
+Python packages installed using pip will typically also have their dependency packages automatically installed also.
+However ``pybacktrack`` requires manual installation of some of its dependencies (as covered in the next section).
 
 .. _pybacktrack_requirements:
 
 Requirements
-------------
+^^^^^^^^^^^^
 
 PyBacktrack depends on:
 
@@ -20,7 +40,7 @@ PyBacktrack depends on:
 - `Generic Mapping Tools (GMT) <http://gmt.soest.hawaii.edu/>`_ (>=5.0.0)
 - `PyGPlates <http://www.gplates.org/>`_
 
-`NumPy` and `SciPy` are automatically installed by `pip` (see :ref:`installation <pybacktrack_install_pybacktrack>`), however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
+`NumPy` and `SciPy` are automatically installed by `pip` when :ref:`pybacktrack is installed <pybacktrack_install_pybacktrack>`, however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
 
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
 Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_reference_bundle_data>` are in NetCDF4 format.
@@ -31,8 +51,8 @@ Installation instructions are available `here <http://www.gplates.org/docs/pygpl
 
 .. _pybacktrack_install_pybacktrack:
 
-Install pyBacktrack
--------------------
+Install pybacktrack
+^^^^^^^^^^^^^^^^^^^
 
 To install the latest stable version, run:
 ::
@@ -57,8 +77,8 @@ To install the latest development version (requires Git on local system), run:
 
 .. _pybacktrack_install_examples:
 
-Install examples
-----------------
+Install the examples
+^^^^^^^^^^^^^^^^^^^^
 
 Before running the example below, or any :ref:`other examples <pygplates_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
 This assumes you've already :ref:`installed the pybacktrack package <pybacktrack_install_pybacktrack>`.
@@ -72,16 +92,68 @@ The following command installs the examples (example data and notebooks) to a ne
 .. note:: The *current working directory* is whatever directory you are in when you run the above command.
 
 .. note:: | Alternatively you can choose a different sub-directory by providing an argument to the ``install_examples()`` function above.
-          | For example, ``python -c "import pybacktrack; pybacktrack.install_examples('pybacktrack_examples')"``
-            creates a new sub-directory of your *current working directory* called ``pybacktrack_examples``.
+          | For example, ``python -c "import pybacktrack; pybacktrack.install_examples('pybacktrack/examples')"``
+            creates a new sub-directory of your *current working directory* called ``pybacktrack/examples``.
           | However the example below assumes the default directory (``pybacktrack_examples``).
+
+.. _pybacktrack_install_using_docker:
+
+Install using Docker
+--------------------
+
+This method of running ``pybacktrack`` relies on `Docker <https://www.docker.com/>`_.
+
+To install the ``pybacktrack`` docker image:
+
+.. code-block:: none
+
+    docker pull earthbyte/pybacktrack
+
+To run the docker image:
+
+.. code-block:: none
+
+    docker run -it --rm -p 18888:8888 -w /usr/src/pybacktrack earthbyte/pybacktrack
+
+| This should bring up a command prompt inside the running docker container.
+| The current working directory should be ``/usr/src/pybacktrack/``.
+| It should have a ``pybacktrack_examples`` sub-directory containing test data.
+
+From the current working directory you can run the :ref:`backtracking example <pybacktrack_a_backtracking_example>` below,
+or any :ref:`other examples <pygplates_overview>` in this documentation. For example, you could run:
+
+.. code-block:: python
+
+    python -m pybacktrack.backtrack -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+
+If you wish to run the `example notebooks <https://github.com/EarthByte/pyBacktrack/tree/master/pybacktrack/notebooks>`_
+then there is a ``notebook.sh`` script to start a Jupyter notebook server in the running docker container:
+
+.. code-block:: none
+
+    ./notebook.sh
+
+Then you can start a web browser on your local machine and type the following in the URL field:
+
+.. code-block:: none
+
+    http://localhost:18888/tree/notebooks
+
+.. note:: | If you are running *Docker Toolbox on Windows* then use the Docker Machine IP instead of ``localhost``.
+          | For example ``http://192.168.99.100:18888/tree/notebooks``.
+          | To find the IP address use the command ``docker-machine ip``.
+
+| This will display the current working directory in the docker container.
+| In the web browser, navigate to ``pybacktrack_examples`` and then ``notebooks``.
+| Then click on a notebook (such as `backtrack.ipynb <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/backtrack.ipynb>`_).
+| You should be able to run the notebook, or modify it and then run it.
 
 .. _pybacktrack_a_backtracking_example:
 
 A Backtracking Example
-----------------------
+++++++++++++++++++++++
 
-Once :ref:`installed <pybacktrack_install_pybacktrack>`, the ``pybacktrack`` Python package is available to:
+Once :ref:`installed <pybacktrack_installation>`, ``pybacktrack`` is available to:
 
 #. run built-in scripts (inside ``pybacktrack``), or
 #. ``import pybacktrack`` into your own script.
@@ -113,7 +185,7 @@ The following example is used to demonstrate both approaches. It backtracks an o
 .. _pybacktrack_use_a_builtin_module_script:
 
 Use a built-in module script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 
 Since there is a ``backtrack`` module inside ``pybacktrack`` that can be run as a script,
 we can invoke it on the command-line using ``python -m pybacktrack.backtrack`` followed by command line options that are specific to that module.
@@ -141,7 +213,7 @@ The backtracking example can now be demonstrated by running the script as:
 .. _pybacktrack_import_into_your_own_script:
 
 Import into your own script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 An alternative to running a built-in script is to write your own script (using a text editor) that imports ``pybacktrack`` and
 calls its functions. You might do this if you want to combine pyBacktrack functionality with other research functionality into a single script.

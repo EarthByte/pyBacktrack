@@ -12,7 +12,7 @@ This document gives a brief overview of the scripts inside the ``pybacktrack`` p
 Running pyBacktrack
 -------------------
 
-Once :ref:`installed <pybacktrack_install_pybacktrack>`, the ``pybacktrack`` Python package is available to:
+Once :ref:`installed <pybacktrack_installation>`, the ``pybacktrack`` Python package is available to:
 
 #. :ref:`run built-in scripts <pybacktrack_running_the_scripts_built_into_pybacktrack>` (inside ``pybacktrack``), or
 #. ``import pybacktrack`` :ref:`into your own script <pybacktrack_running_your_own_script_that_imports_pybacktrack>`.
