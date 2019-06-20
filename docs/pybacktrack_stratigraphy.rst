@@ -45,7 +45,7 @@ along with sediment decompaction, to reveal the complex tectonic subsidence of r
 Alternatively, the paleo-water depths in the drill site could be ignored (perhaps they weren't recorded in the drill site
 and instead were inserted from another simulation). In this case :ref:`backtracking <pygplates_backtrack>` can provide
 tectonic subsidence via its built-in model of continental rift stretching. In this case the ``RiftStartAge`` and ``RiftEndAge``
-(in the site file) parameters specify when rifting started and when it ended.
+parameters (in the site file) specify when rifting started and when it ended.
 
 .. seealso:: :ref:`Backtrack <pygplates_backtrack>` for more details.
 
