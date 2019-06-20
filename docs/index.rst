@@ -10,6 +10,10 @@ PyBacktrack documentation
 
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
 
+* Müller, R. D., Cannon, J., Williams, S. and Dutkiewicz, A., 2018,
+  `PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_,
+  **Geochemistry, Geophysics, Geosystems,** 19, 1898-1909, doi: 10.1029/2017GC007313
+
 PyBacktrack is a Python package that backtracks the paleo-water depth of ocean drill sites through time
 by combining a model of tectonic subsidence with decompaction of the site stratigraphic lithologies.
 PyBacktrack can also include the effects of mantle-convection driven dynamic topography on paleo-water depth,
@@ -26,6 +30,7 @@ of the total sedimentary section, and thus bathymetry, through time.
 
    pybacktrack_getting_started
    pybacktrack_overview
+   pybacktrack_lithologies
    pybacktrack_reference
 
 

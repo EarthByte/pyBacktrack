@@ -63,6 +63,8 @@ the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-
 There are other command-line options available to the ``backtrack`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
+.. note:: The ``backtrack`` module is covered in more detail :ref:`here <pygplates_backtrack>`.
+
 .. _pybacktrack_running_the_backstrip_script:
 
 backstrip
@@ -79,11 +81,13 @@ This example takes a passive margin site as input and outputs a file containing 
 ...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
 the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file, and ``DSDP-36-327_backstrip_decompat.txt`` is the output file.
 
+.. note:: ``average_tectonic_subsidence`` is an *average* of the minimum and maximum tectonic subsidences, that are in turn a result
+          of the minimum and maximum water depths specified in the drill site file.
+
 There are other command-line options available to the ``backstrip`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. note:: ``average_tectonic_subsidence`` is an *average* of the minimum and maximum tectonic subsidences, that are in turn a result
-          of the minimum and maximum water depths specified in the drill site file.
+.. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
 
 .. _pybacktrack_running_the_age_to_depth_script:
 
@@ -184,6 +188,8 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     python -m pybacktrack.backtrack -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
+.. note:: The ``backtrack`` module is covered in more detail :ref:`here <pygplates_backtrack>`.
+
 backstrip
 ^^^^^^^^^
 
@@ -204,6 +210,8 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 .. code-block:: python
 
     python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/DSDP-36-327-Lithology.txt -d age average_tectonic_subsidence -- DSDP-36-327_backstrip_decompat.txt
+
+.. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
 
 age_to_depth
 ^^^^^^^^^^^^
