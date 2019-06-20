@@ -14,32 +14,47 @@ This document covers drill site stratigraphy, and lithology names that reference
 Drill site
 ----------
 
-The main input file for backtracking and backstripping is an ocean drill site.
+The main input file for backtracking and backstripping is a drill site.
 It provides a record of the present-day lithostratigraphy of the sedimentation sitting on top
 of the submerged oceanic or continental crust.
+
+.. _pygplates_oceanic_versus_continental_sites:
+
+Oceanic versus continental sites
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ODP drill site 699 is located on deeper *ocean* crust (as opposed to shallower continental crust):
+
+.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+   :literal:
+
+This site is more suitable for :ref:`backtracking <pygplates_backtrack>` since oceanic subsidence
+is somewhat simpler and more accurately modelled (due to no lithospheric stretching).
+Backtracking will then find the unknown paleo-water depths.
+
+In contrast, DSDP drill site 327 is located on shallower *continental* crust (as opposed to deeper ocean crust):
+
+.. include:: ../pybacktrack/test_data/DSDP-36-327-Lithology.txt
+   :literal:
+
+This site is a candidate for :ref:`backstripping <pygplates_backstrip>` since continental subsidence
+due to rift stretching is somewhat more complex and less accurately modelled. Note that this site contains two extra
+columns, for the minimum and maximum water depths. Backstripping will then use these paleo-water depths,
+along with sediment decompaction, to reveal the complex tectonic subsidence of rift stretching at the site location.
+
+Alternatively, the paleo-water depths in the drill site could be ignored (perhaps they weren't recorded in the drill site
+and instead were inserted from another simulation). In this case :ref:`backtracking <pygplates_backtrack>` can provide
+tectonic subsidence via its built-in model of continental rift stretching. In this case the ``RiftStartAge`` and ``RiftEndAge``
+(in the site file) parameters specify when rifting started and when it ended.
+
+.. seealso:: :ref:`Backtrack <pygplates_backtrack>` for more details.
 
 Drill site file format
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The following is the content of the drill site file associated with ODP site 699:
-::
-
-  # SiteLongitude = -30.677
-  # SiteLatitude = -51.542
-  # SurfaceAge = 0 
-  
-  ## bottom_age bottom_depth lithology
-     18.7       85.7         Diatomite 0.7 Clay 0.3
-     25.0       142.0        Coccolith_ooze 0.3 Diatomite 0.5 Mud 0.2
-     31.3       233.6        Coccolith_ooze 0.3 Diatomite 0.7
-     31.9       243.1        Sand 1
-     36.7       335.4        Coccolith_ooze 0.8 Diatomite 0.2
-     40.8       382.6        Chalk 1
-     54.5       496.6        Chalk 1
-     55.3       516.3        Chalk 0.5 Clay 0.5
-
-It consists of two main sections. The top section specifies the *attributes* of the drill site,
-and the bottom section specifies the *stratigraphic layers*.
+As seen in the :ref:`oceanic and continental sites <pygplates_oceanic_versus_continental_sites>`,
+the file format of drill sites consist of two main sections. The top section specifies the *attributes*
+of the drill site, and the bottom section specifies the *stratigraphic layers*.
 
 The attributes ``SiteLongitude`` and ``SiteLatitude`` specify the drill site location (in degrees).
 
@@ -141,6 +156,9 @@ With this option you can specify one or more lithologies files including the :re
 lithologies. To specify the bundled *primary* and *extended* lithologies you specify ``primary`` or ``extended``.
 And to specify your own lithology files you provide the entire filename as usual. If you don't specify the ``-l`` option
 then it defaults to using only the *primary* lithologies.
+
+.. note:: | If you use the ``-l`` option but do not specify ``primary`` then the primary lithologies will not be included.
+          | However if you don't use the ``-l`` option then *only* the ``primary`` lithologies will be included (they are the default).
 
 Conflicting definitions
 ^^^^^^^^^^^^^^^^^^^^^^^
