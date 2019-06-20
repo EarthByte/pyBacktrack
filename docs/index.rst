@@ -30,7 +30,7 @@ of the total sedimentary section, and thus bathymetry, through time.
 
    pybacktrack_getting_started
    pybacktrack_overview
-   pybacktrack_lithologies
+   pybacktrack_stratigraphy
    pybacktrack_reference
 
 

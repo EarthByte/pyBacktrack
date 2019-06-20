@@ -1,6 +1,3 @@
-# Shallow water lithologies.
-#
-# Columns:
 # name                            density   porosity      decay
 #                                   kg/m3    (%/100)          m
 #
