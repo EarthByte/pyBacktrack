@@ -104,7 +104,10 @@ def convert(
             except (ValueError, IndexError):
                 # Raise a more informative error message.
                 raise ValueError('Cannot read well values at line {0} of input file {1}.'.format(line_number, input_filename))
-            
+    
+    # Sort the well layers by their base depth.
+    well_data.sort(key = lambda well_row: well_row[1])
+    
     if not well_name:
         raise ValueError('Cannot find well data in input file {0}.'.format(input_filename))
     
