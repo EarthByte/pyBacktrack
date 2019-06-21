@@ -139,14 +139,14 @@ Then you can start a web browser on your local machine and type the following in
 
     http://localhost:18888/tree
 
-.. note:: | If you are running *Docker Toolbox on Windows* then use the Docker Machine IP instead of ``localhost``.
-          | For example ``http://192.168.99.100:18888/tree``.
-          | To find the IP address use the command ``docker-machine ip``.
-
 | This will display the current working directory in the docker container.
 | In the web browser, navigate to ``pybacktrack_examples`` and then ``notebooks``.
 | Then click on a notebook (such as `backtrack.ipynb <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/backtrack.ipynb>`_).
 | You should be able to run the notebook, or modify it and then run it.
+
+.. note:: | If you are running *Docker Toolbox on Windows* then use the Docker Machine IP instead of ``localhost``.
+          | For example ``http://192.168.99.100:18888/tree``.
+          | To find the IP address use the command ``docker-machine ip``.
 
 .. _pybacktrack_a_backtracking_example:
 

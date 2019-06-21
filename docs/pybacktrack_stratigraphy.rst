@@ -18,7 +18,7 @@ The main input file for backtracking and backstripping is a drill site.
 It provides a record of the present-day lithostratigraphy of the sedimentation sitting on top
 of the submerged oceanic or continental crust.
 
-.. _pygplates_oceanic_versus_continental_sites:
+.. _pygplates_stratigraphy_oceanic_versus_continental_sites:
 
 Oceanic versus continental sites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -52,7 +52,7 @@ parameters (in the site file) specify when rifting started and when it ended.
 Drill site file format
 ^^^^^^^^^^^^^^^^^^^^^^
 
-As seen in the :ref:`oceanic and continental sites <pygplates_oceanic_versus_continental_sites>`,
+As seen in the :ref:`oceanic and continental sites <pygplates_stratigraphy_oceanic_versus_continental_sites>`,
 the file format of drill sites consist of two main sections. The top section specifies the *attributes*
 of the drill site, and the bottom section specifies the *stratigraphic layers*.
 
