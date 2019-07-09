@@ -8,9 +8,7 @@ Dolostone                            2700       0.48       3500
 Grainstone                           2700       0.48       3500
 Mafic                                2500       0.2        2700
 Marl                                 1500       0.82       2243
-Micrite                              2700       0.65       1000
 OrganicMud                           1730       0.82         25
 Reef                                 2700       0.10       3500
 Rhyolite                             2820       0.20       2700
 Salt                                 2160       0.20        750
-ShaleySand                           2680       0.56       2564
