@@ -14,45 +14,48 @@ This document covers drill site stratigraphy, and lithology names that reference
 Drill site
 ----------
 
-The main input file for backtracking and backstripping is a drill site.
-It provides a record of the present-day lithostratigraphy of the sedimentation sitting on top
+Both backtracking and backstripping involve sediment decompaction over time.
+So the main input file for backtracking and backstripping is a drill site.
+It provides a record of the present-day litho-stratigraphy of the sediment sitting on top
 of the submerged oceanic or continental crust.
 
-.. _pygplates_stratigraphy_oceanic_versus_continental_sites:
+The difference between backtracking and backstripping is whether recorded paleo-water depths are
+recorded in the drill site file. When there are no recorded paleo-water depths, :ref:`backtracking <pygplates_backtrack>`
+uses a known model of tectonic subsidence (oceanic or continental) to determine the unknown paleo-water depths.
+Conversely, when there is a record of paleo-water depths, :ref:`backstripping <pygplates_backstrip>`
+uses these known paleo-water depths to determine the unknown history of tectonic subsidence.
 
-Oceanic versus continental sites
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _pygplates_stratigraphy_backtracking_versus_backstripping_sites:
 
-ODP drill site 699 is located on deeper *ocean* crust (as opposed to shallower continental crust):
+Backtracking versus backstripping sites
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ODP drill site 699 is located on deep *ocean* crust and has no recorded paleo-water depths:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
    :literal:
 
-This site is more suitable for :ref:`backtracking <pygplates_backtrack>` since oceanic subsidence
-is somewhat simpler and more accurately modelled (due to no lithospheric stretching).
-Backtracking will then find the unknown paleo-water depths.
+So it is suitable for :ref:`backtracking <pygplates_backtrack>`, to find the unknown paleo-water depths.
 
-In contrast, DSDP drill site 327 is located on shallower *continental* crust (as opposed to deeper ocean crust):
+In contrast, the sunrise drill site is located on shallower *continental* crust and has a record of paleo-water depths:
 
-.. include:: ../pybacktrack/test_data/DSDP-36-327-Lithology.txt
+.. include:: ../pybacktrack/test_data/sunrise_lithology.txt
    :literal:
 
-This site is a candidate for :ref:`backstripping <pygplates_backstrip>` since continental subsidence
-due to rift stretching is somewhat more complex and less accurately modelled. Note that this site contains two extra
-columns, for the minimum and maximum water depths. Backstripping will then use these paleo-water depths,
-along with sediment decompaction, to reveal the complex tectonic subsidence of rift stretching at the site location.
+So it is suitable for :ref:`backstripping <pygplates_backstrip>`, to find the unknown history of tectonic subsidence.
+Note that this site records the paleo-water depths as two extra columns, for the minimum and maximum water depths.
+Backstripping will then use these paleo-water depths, along with sediment decompaction, to reveal the complex tectonic subsidence
+of rift stretching at the site location.
 
-Alternatively, the paleo-water depths in the drill site could be ignored (perhaps they weren't recorded in the drill site
-and instead were inserted from another simulation). In this case :ref:`backtracking <pygplates_backtrack>` can provide
-tectonic subsidence via its built-in model of continental rift stretching. In this case the ``RiftStartAge`` and ``RiftEndAge``
-parameters (in the site file) specify when rifting started and when it ended.
-
-.. seealso:: :ref:`Backtrack <pygplates_backtrack>` for more details.
+.. note:: It is possible, although perhaps not desirable, to backtrack (instead of backstrip) the sunrise drill site
+          to provide simulated paleo-water depths via a built-in model of continental rift stretching.
+          This would involve ignoring the recorded paleo-water depth columns (using the ``-c`` option of :ref:`backtrack <pygplates_backtrack>`)
+          and supplying the start and end times of rifting (using the ``-rs`` and ``-re`` options of :ref:`backtrack <pygplates_backtrack>`).
 
 Drill site file format
 ^^^^^^^^^^^^^^^^^^^^^^
 
-As seen in the :ref:`oceanic and continental sites <pygplates_stratigraphy_oceanic_versus_continental_sites>`,
+As seen in the :ref:`pygplates_stratigraphy_backtracking_versus_backstripping_sites`,
 the file format of drill sites consist of two main sections. The top section specifies the *attributes*
 of the drill site, and the bottom section specifies the *stratigraphic layers*.
 
@@ -60,7 +63,8 @@ The attributes ``SiteLongitude`` and ``SiteLatitude`` specify the drill site loc
 
 .. note:: If ``SiteLongitude`` and ``SiteLatitude`` are not specified then they must be specified
           directly in the :ref:`backtrack <pygplates_backtrack>` or :ref:`backstrip <pygplates_backstrip>`
-          module using the ``-w`` command-line option.
+          module using the ``-w`` command-line option, or the *well_location* argument of the
+          :func:`pybacktrack.backtrack_and_write_well` or :func:`pybacktrack.backstrip_and_write_well` function.
 
 For each stratigraphic layer in the drill site there is a mixture of lithologies representing the
 stratigraphic composition of that layer. Each lithology (in a layer) is identified by a lithology name
@@ -84,8 +88,8 @@ It is also possible that the sediment thickness recorded at the drill site is le
 thickness. This happens when the drill site does not penetrate all the way to the basement depth of oceanic or contintal crust.
 In this situation a base stratigraphic layer is automatically added during backtracking and backstripping
 to represent sediment from the bottom of the drill site down to the basement depth of oceanic or continental crust.
-For backtracking, the bottom age of this new base layer is the age of oceanic crust if drill site is on ocean crust,
-or the age that rifting starts if drill site is on continental crust (since it is assumed that deposition began when
+For backtracking, the bottom age of this new base layer is the age of oceanic crust if the drill site is on ocean crust,
+or the age that rifting starts if the drill site is on continental crust (since it is assumed that deposition began when
 continental stretching started) - see :ref:`backtrack <pygplates_backtrack>` for more details.
 For backstripping, the bottom age of this new base layer is simply set to the age at the bottom of the drill site
 (ie, bottom age of deepest stratigraphic layer).
@@ -113,8 +117,10 @@ lithology *definitions*. Each lithology definition contains a density, a surface
 
 These definitions are stored in lithology files. 
 
-Bundled definitions
-^^^^^^^^^^^^^^^^^^^
+.. _pygplates_bundled_lithology_definitions:
+
+Bundled lithology definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are two lithology files currently :ref:`bundled <pybacktrack_reference_bundle_data>`
 inside ``pybacktrack``, one containing *primary* lithologies and the other *extended* lithologies.
@@ -133,7 +139,7 @@ And the *extended* lithologies (inside ``pybacktrack``) mostly contains shallow-
 .. include:: ../pybacktrack/bundle_data/lithologies/extended.txt
    :literal:
 
-.. _pygplates_bundled_lithology_definitions:
+.. _pygplates_lithology_file_format:
 
 Lithology file format
 ^^^^^^^^^^^^^^^^^^^^^
@@ -147,27 +153,30 @@ The third column is the surface porosity as a fraction, and fourth column is por
 Porosity is the contribution of water to the sediment volume and decays exponentially with depth according to the decay constant
 (since sediment compaction increases with depth and squeezes out more water from between the sediment grains).
 
-Specifying definitions
-^^^^^^^^^^^^^^^^^^^^^^
+.. _pygplates_specifying_lithology_definititions:
+
+Specifying lithology definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Any number of lithology files can be specified. In the :ref:`backtrack <pygplates_backtrack>` and
 :ref:`backstrip <pygplates_backstrip>` modules these are specified using the ``-l`` command-line option.
 With this option you can specify one or more lithologies files including the :ref:`bundled <pybacktrack_reference_bundle_data>`
-lithologies. To specify the bundled *primary* and *extended* lithologies you specify ``primary`` or ``extended``.
+lithologies. To specify the bundled *primary* and *extended* lithologies you specify ``primary`` and ``extended``.
 And to specify your own lithology files you provide the entire filename as usual. If you don't specify the ``-l`` option
-then it defaults to using only the *primary* lithologies.
+then it defaults to using only the *primary* lithologies (*extended* lithologies are not included by default).
 
-.. note:: | If you use the ``-l`` option but do not specify ``primary`` then the primary lithologies will not be included.
-          | However if you don't use the ``-l`` option then *only* the ``primary`` lithologies will be included (they are the default).
+.. note:: | If you don't use the ``-l`` option then *only* the ``primary`` lithologies will be included (they are the default).
+          | However if you use the ``-l`` option but do not specify ``primary`` then the primary lithologies will **not** be included.
 
-Conflicting definitions
-^^^^^^^^^^^^^^^^^^^^^^^
+.. _pygplates_conflicting_lithology_definititions:
+
+Conflicting lithology definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When specifying more than one lithology file it is possible to have conflicting definitions.
 This occurs when two or more lithology files contain the same lithology *name* but have different values for its
-density, surface porosity or porosity decay. You can actually see this in the :ref:`primary and
-extended definitions <pygplates_bundled_lithology_definitions>` (for example the *Basalt* lithology).
+density, surface porosity or porosity decay.
 When there is a conflict, the lithology *definition* is taken from the last conflicting lithology file specified.
 For example, if you specify ``-l primary my_conflicting_lithologies.txt`` then conflicting lithologies in
-``my_conflicting_lithologies.txt`` override those in ``primary``. However, specifying
+``my_conflicting_lithologies.txt`` override those in ``primary``. However, specifying the reverse order with
 ``-l my_conflicting_lithologies.txt primary`` will result in ``primary`` overriding those in ``my_conflicting_lithologies.txt``.
