@@ -17,7 +17,7 @@
    90.0       1620.0       20.0            200.0           Shale 0.7  Limestone 0.15                          Sand   0.15
    95.0       1890.0       20.0            200.0           Shale 0.7  Limestone 0.15                          Sand   0.15
    100.0      2036.0       20.0            200.0           Shale 0.7  Limestone 0.15                          Sand   0.15
-   107.0      2062.0       20.0            200.0           Shale 0.7  Limestone 0.2                           Sand   0.2
+   107.0      2062.0       20.0            200.0           Shale 0.7  Limestone 0.15                          Sand   0.15
    125.0      2066.0       0.0             100.0           Shale 0.4                 Chalk 0.1                Sand   0.5
    160.0      2068.0       0.0             100.0           Shale 0.4  Limestone 0.3                           Sand   0.3
    165.0      2130.0       0.0             100.0           Shale 0.4  Limestone 0.3                           Sand   0.3
