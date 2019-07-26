@@ -36,6 +36,7 @@ import pybacktrack.version
 from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import math
 import sys
+import warnings
 
 
 def backstrip_well(
@@ -203,8 +204,8 @@ def backstrip_well(
     elif well_sediment_thickness - total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
-        print('WARNING: Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}).'.format(
-              well_sediment_thickness, total_sediment_thickness, well.longitude, well.latitude), file=sys.stderr)
+        warnings.warn('Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}).'.format(
+                      well_sediment_thickness, total_sediment_thickness, well.longitude, well.latitude))
     
     # Each decompacted well (in returned list) represents decompaction at the age of a stratigraphic unit in the well.
     decompacted_wells = well.decompact()
@@ -489,8 +490,15 @@ backstrip_and_write_decompacted = backstrip_and_write_well
 
 if __name__ == '__main__':
     
-    import argparse
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}'.format(category.__name__, message)
     
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    import argparse
     from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
     
     def main():

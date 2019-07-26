@@ -6,6 +6,7 @@ import pytest
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
+import warnings
 
 
 # Test data directory is inside the pybacktrack module.
@@ -82,17 +83,21 @@ def test_backstrip(tmpdir):
     #         --
     #         sunrise_backstrip_decompat.txt
     #
-    pybacktrack.backstrip_and_write_well(
-        str(test_decompacted_output_filename),
-        str(input_well_filename),
-        lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
-                             pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
-        sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
-        decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
-                             pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
-                             pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
-                             pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
-        ammended_well_output_filename=str(test_ammended_well_output_filename))
+    with warnings.catch_warnings():
+        # Ignore user warnings about well thickness being larger than total sediment thickness.
+        warnings.simplefilter("ignore", UserWarning)
+        
+        pybacktrack.backstrip_and_write_well(
+            str(test_decompacted_output_filename),
+            str(input_well_filename),
+            lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
+                                 pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
+            sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
+            decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
+                                 pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
+                                 pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
+                                 pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
+            ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
     assert test_ammended_well_output_filename.read() == ammended_well_output_filename.read()

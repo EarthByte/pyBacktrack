@@ -32,7 +32,7 @@ from __future__ import print_function
 import pybacktrack.util.interpolate
 import math
 import scipy.integrate
-import sys
+import warnings
 
 
 # Warn the user if the inaccuracy of average sea level exceeds this amount (in metres)...
@@ -81,9 +81,8 @@ class SeaLevel(object):
         # Warn the user if average sea level is inaccurate.
         average_sea_level_error = sea_level_integral_error / time_interval
         if math.fabs(average_sea_level_error) > _MAX_SEA_LEVEL_ERROR:
-            print('WARNING: Unable to accurately integrate sea level curve over time period [{0}, {1}]. '
-                  'Average sea level will be inaccurate on the order of {2} metres. '.format(
-                      begin_time, end_time, math.fabs(average_sea_level_error)),
-                  file=sys.stderr)
+            warnings.warn('Unable to accurately integrate sea level curve over time period [{0}, {1}]. '
+                          'Average sea level will be inaccurate on the order of {2} metres. '.format(
+                              begin_time, end_time, math.fabs(average_sea_level_error)))
         
         return average_sea_level

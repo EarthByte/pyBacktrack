@@ -30,7 +30,7 @@ from __future__ import print_function
 
 import math
 from pybacktrack.lithology import create_lithology_from_components
-import sys
+import warnings
 
 
 # Density in kg/m3.
@@ -503,8 +503,8 @@ def read_well_file(
                         try:
                             attributes[attribute_name] = attribute_conversion(value)
                         except Exception as exc:
-                            print('WARNING: Line {0} of "{1}": Ignoring {2}: {3}.' .format(
-                                  line_number, well_filename, name, exc), file=sys.stderr)
+                            warnings.warn('Line {0} of "{1}": Ignoring {2}: {3}.' .format(
+                                          line_number, well_filename, name, exc))
                     
                     # else read 'SurfaceAge'...
                     elif name == 'SurfaceAge':
@@ -514,25 +514,22 @@ def read_well_file(
                                 raise ValueError
                             surface_age = age
                         except ValueError:
-                            print('WARNING: Line {0} of "{1}": Ignoring SurfaceAge: '
-                                  '{2} is not a number >= 0.' .format(line_number, well_filename, value),
-                                  file=sys.stderr)
+                            warnings.warn('Line {0} of "{1}": Ignoring SurfaceAge: '
+                                          '{2} is not a number >= 0.' .format(line_number, well_filename, value))
                 
                 continue
             
             # The number of columns must include the lithology name and fraction
             # (starting with lithology column - extra strings if more than one lithology component).
             if num_strings < lithology_column + 2:
-                print('WARNING: Line {0} of "{1}": Ignoring lithology: line does not have at least '
-                      '{2} white-space separated strings.'.format(line_number, well_filename, lithology_column + 2),
-                      file=sys.stderr)
+                warnings.warn('Line {0} of "{1}": Ignoring lithology: line does not have at least '
+                              '{2} white-space separated strings.'.format(line_number, well_filename, lithology_column + 2))
                 continue
             
             # Need an odd number of strings per line (each lithology component is 2 strings).
             if ((num_strings - lithology_column) % 2) == 1:
-                print('WARNING: Line {0} of "{1}": Ignoring lithology: each extra lithology must have two '
-                      'strings (name and fraction).'.format(line_number, well_filename),
-                      file=sys.stderr)
+                warnings.warn('Line {0} of "{1}": Ignoring lithology: each extra lithology must have two '
+                              'strings (name and fraction).'.format(line_number, well_filename))
                 continue
             
             # Attempt to read/convert the column strings.
@@ -548,9 +545,8 @@ def read_well_file(
                     fraction = float(line_string_list[lithology_column + 2 * index + 1])
                     lithology_components.append((name, fraction))
             except ValueError:
-                print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot '
-                      'read age/depth/lithology values.' .format(line_number, well_filename),
-                      file=sys.stderr)
+                warnings.warn('Line {0} of "{1}": Ignoring stratigraphic unit: cannot '
+                              'read age/depth/lithology values.' .format(line_number, well_filename))
                 continue
             
             # Read any extra columns if requested.
@@ -562,9 +558,8 @@ def read_well_file(
                         column_value = float(line_string_list[column])
                         other_attributes[column_name] = column_value
                 except ValueError:
-                    print('WARNING: Line {0} of "{1}": Ignoring stratigraphic unit: cannot read {2} '
-                          'value at column index {3}.' .format(line_number, well_filename, column_name, column),
-                          file=sys.stderr)
+                    warnings.warn('Line {0} of "{1}": Ignoring stratigraphic unit: cannot read {2} '
+                                  'value at column index {3}.' .format(line_number, well_filename, column_name, column))
                     continue
             
             stratigraphic_units.append((bottom_age, bottom_depth, lithology_components, other_attributes))

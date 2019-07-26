@@ -41,6 +41,7 @@ from pybacktrack.util.call_system_command import call_system_command
 import pybacktrack.version
 from pybacktrack.well import read_well_file, write_well_file, write_well_metadata
 import sys
+import warnings
 
 
 # Density in kg/m3.
@@ -482,10 +483,9 @@ def _add_stratigraphic_unit_to_basement(
     elif well_sediment_thickness - present_day_total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
-        print('WARNING: Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}). '
-              'Ignoring total sediment thickness grid. '.format(
-                  well_sediment_thickness, present_day_total_sediment_thickness, well.longitude, well.latitude),
-              file=sys.stderr)
+        warnings.warn('Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}). '
+                      'Ignoring total sediment thickness grid. '.format(
+                          well_sediment_thickness, present_day_total_sediment_thickness, well.longitude, well.latitude))
 
 
 def _add_sea_level(
@@ -553,10 +553,9 @@ def _add_oceanic_tectonic_subsidence(
         if math.isnan(dynamic_topography_at_present_day):
             # Warn the user if the dynamic topography model does not provide a value at present day.
             # This shouldn't happen since mantle-frame grids should provide global coverage.
-            print(u'WARNING: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                  'Ignoring dynamic topography.'.format(
-                      dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
-                  file=sys.stderr)
+            warnings.warn(u'Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
+                          'Ignoring dynamic topography.'.format(
+                              dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
             
             # Stop using dynamic topography.
             dynamic_topography = None
@@ -589,12 +588,11 @@ def _add_oceanic_tectonic_subsidence(
                         dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the current decompaction time.
-                print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                      'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                          dynamic_topography.grids.grid_list_filename,
-                          well.longitude, well.latitude,
-                          decompaction_time, dynamic_topography_age),
-                      file=sys.stderr)
+                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
+                              'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
+                                  dynamic_topography.grids.grid_list_filename,
+                                  well.longitude, well.latitude,
+                                  decompaction_time, dynamic_topography_age))
             
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
@@ -620,10 +618,9 @@ def _add_continental_tectonic_subsidence(
         if math.isnan(dynamic_topography_at_present_day):
             # Warn the user if the dynamic topography model does not provide a value at present day.
             # This shouldn't happen since mantle-frame grids should provide global coverage.
-            print(u'WARNING: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                  'Ignoring dynamic topography.'.format(
-                      dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude),
-                  file=sys.stderr)
+            warnings.warn(u'Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
+                          'Ignoring dynamic topography.'.format(
+                              dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
             
             # Stop using dynamic topography.
             dynamic_topography = None
@@ -644,12 +641,11 @@ def _add_continental_tectonic_subsidence(
                         dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the rift start time.
-                print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                      'rift start time {3}. Using dynamic topography grid at {4}.'.format(
-                          dynamic_topography.grids.grid_list_filename,
-                          well.longitude, well.latitude,
-                          rift_start_age, rift_start_dynamic_topography_age),
-                      file=sys.stderr)
+                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
+                              'rift start time {3}. Using dynamic topography grid at {4}.'.format(
+                                  dynamic_topography.grids.grid_list_filename,
+                                  well.longitude, well.latitude,
+                                  rift_start_age, rift_start_dynamic_topography_age))
             
             # Estimate how much of present-day subsidence is due to dynamic topography.
             # We crudely remove the relative difference of dynamic topography between rift start and present day
@@ -675,14 +671,13 @@ def _add_continental_tectonic_subsidence(
     # In this case the beta factor is clamped to avoid this but, as a result, the calculated subsidence
     # is not as deep as the actual subsidence.
     if math.fabs(subsidence_residual) > _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
-        print('WARNING: Unable to accurately estimate rifting stretching factor (beta) at well location ({0}, {1}) '
-              'where unloaded subsidence is {2}, crustal thickness is {3} and rift end time is {4}. '
-              'Tectonic subsidence estimates will be inaccurate on the order of {5} metres. '
-              '.'.format(
-                  well.longitude, well.latitude,
-                  present_day_tectonic_subsidence, present_day_crustal_thickness, well.rift_end_age,
-                  math.fabs(subsidence_residual)),
-              file=sys.stderr)
+        warnings.warn('Unable to accurately estimate rifting stretching factor (beta) at well location ({0}, {1}) '
+                      'where unloaded subsidence is {2}, crustal thickness is {3} and rift end time is {4}. '
+                      'Tectonic subsidence estimates will be inaccurate on the order of {5} metres. '
+                      '.'.format(
+                          well.longitude, well.latitude,
+                          present_day_tectonic_subsidence, present_day_crustal_thickness, well.rift_end_age,
+                          math.fabs(subsidence_residual)))
     
     for decompacted_well in decompacted_wells:
         # The current decompaction time (age of the surface of the current decompacted column of the well).
@@ -705,12 +700,11 @@ def _add_continental_tectonic_subsidence(
                         dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
                 
                 # Warn the user if the dynamic topography model does not include the current decompaction time.
-                print(u'WARNING: Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                      'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                          dynamic_topography.grids.grid_list_filename,
-                          well.longitude, well.latitude,
-                          decompaction_time, dynamic_topography_age),
-                      file=sys.stderr)
+                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
+                              'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
+                                  dynamic_topography.grids.grid_list_filename,
+                                  well.longitude, well.latitude,
+                                  decompaction_time, dynamic_topography_age))
             
             # Account for any change in dynamic topography between rift start and current decompaction time.
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
@@ -1109,8 +1103,15 @@ if __name__ == '__main__':
     # Command-line parsing #
     ########################
     
-    import argparse
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}'.format(category.__name__, message)
     
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    import argparse
     from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
     
     def argparse_unicode(value_string):

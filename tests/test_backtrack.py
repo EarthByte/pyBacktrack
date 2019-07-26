@@ -6,6 +6,7 @@ import pytest
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
+import warnings
 
 
 # Test data directory is inside the pybacktrack module.
@@ -124,16 +125,20 @@ def test_backtrack_DSDP(tmpdir):
     #         --
     #         DSDP-36-327_backtrack_decompat.txt
     #
-    pybacktrack.backtrack_and_write_well(
-        str(test_decompacted_output_filename),
-        str(input_well_filename),
-        dynamic_topography_model='M2',
-        sea_level_model='Haq87_SealevelCurve_Longterm',
-        decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
-                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
-                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
-                             pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
-        ammended_well_output_filename=str(test_ammended_well_output_filename))
+    with warnings.catch_warnings():
+        # Ignore user warnings related to dynamic topography.
+        warnings.simplefilter("ignore", UserWarning)
+        
+        pybacktrack.backtrack_and_write_well(
+            str(test_decompacted_output_filename),
+            str(input_well_filename),
+            dynamic_topography_model='M2',
+            sea_level_model='Haq87_SealevelCurve_Longterm',
+            decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
+                                 pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
+                                 pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
+                                 pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
+            ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
     assert test_ammended_well_output_filename.read() == ammended_well_output_filename.read()
