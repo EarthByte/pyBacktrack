@@ -28,8 +28,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import pybacktrack.version
+import argparse
 import math
+import pybacktrack.version
+from pybacktrack.util.interpolate import read_curve_function
 import sys
 
 
@@ -253,12 +255,10 @@ def _CROSBY_2007_pert(age):
     return ptb
 
 
-import argparse
-from pybacktrack.util.interpolate import read_curve_function
-
 model_dict = dict((model_name, model) for model, model_name, _ in ALL_MODELS)
 model_name_dict = dict((model, model_name) for model, model_name, _ in ALL_MODELS)
 default_model_name = model_name_dict[DEFAULT_MODEL]
+
 
 # Action to parse an age model.
 class ArgParseAgeModelAction(argparse.Action):

@@ -197,7 +197,7 @@ def backtrack_well(
     # Read the lithologies from one or more text files.
     #
     # It used to be a single filename (instead of a list) so handle that case to be backward compatible.
-    if isinstance(lithology_filenames, str if sys.version_info[0] >= 3 else basestring): # Python 2 vs 3.
+    if isinstance(lithology_filenames, str if sys.version_info[0] >= 3 else basestring):  # Python 2 vs 3.
         lithology_filename = lithology_filenames
         lithologies = read_lithologies_file(lithology_filename)
     else:

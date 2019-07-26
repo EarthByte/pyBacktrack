@@ -34,6 +34,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import argparse
+import pybacktrack.bundle_data
+import os.path
 import sys
 
 
@@ -162,14 +165,10 @@ def create_lithology_from_components(components, lithologies):
 # For command-line parsing in "backtrack.py" and "backstrip.py" #
 #################################################################
 
-import argparse
-import os.path
-
-import pybacktrack.bundle_data
-
 # Bundled short lithology names are the bundled filenames with directory and extension removed, and lower case.
 def _convert_bundled_lithology_to_short_name(bundled_lithology_filename):
     return os.path.basename(os.path.splitext(bundled_lithology_filename)[0]).lower()
+
 
 DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME = _convert_bundled_lithology_to_short_name(pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME)
 BUNDLED_LITHOLOGY_SHORT_NAMES = [
@@ -178,6 +177,7 @@ BUNDLED_LITHOLOGY_SHORT_NAMES = [
 # Create a dict mapping these short names to the actual filenames in the bundle.
 bundled_lithology_filenames_dict = dict(
     (_convert_bundled_lithology_to_short_name(filename), filename) for filename in pybacktrack.bundle_data.BUNDLE_LITHOLOGY_FILENAMES)
+
 
 # Action to parse lithology files (bundled and user-specified).
 class ArgParseLithologyAction(argparse.Action):
