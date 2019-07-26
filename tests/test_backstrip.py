@@ -16,10 +16,10 @@ def test_backstrip_script(tmpdir):
     """Test the built-in backstrip script."""
     
     # Test data filenames.
-    input_well_filename = TEST_DATA_DIR.join('DSDP-36-327-Lithology.txt')
-    ammended_well_output_base_filename = 'DSDP-36-327_backstrip_amended.txt'
+    input_well_filename = TEST_DATA_DIR.join('sunrise_lithology.txt')
+    ammended_well_output_base_filename = 'sunrise_backstrip_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'DSDP-36-327_backstrip_decompat.txt'
+    decompacted_output_base_filename = 'sunrise_backstrip_decompat.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -29,15 +29,17 @@ def test_backstrip_script(tmpdir):
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.backstrip
-    #         -w test_data/DSDP-36-327-Lithology.txt
+    #         -w test_data/sunrise_lithology.txt
+    #         -l primary extended
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o DSDP-36-327_backstrip_amended.txt
+    #         -o sunrise_backstrip_amended.txt
     #         --
-    #         DSDP-36-327_backstrip_decompat.txt
+    #         sunrise_backstrip_decompat.txt
     #
     backstrip_script_command_line = ['python', '-m', 'pybacktrack.backstrip',
                                      '-w', str(input_well_filename),
+                                     '-l', 'primary', 'extended',
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness',
                                      'decompacted_thickness', 'decompacted_density',
                                      'average_tectonic_subsidence', 'average_water_depth', 'lithology',
@@ -58,10 +60,10 @@ def test_backstrip(tmpdir):
     """Test backstrip_and_write_decompacted function."""
     
     # Test data filenames.
-    input_well_filename = TEST_DATA_DIR.join('DSDP-36-327-Lithology.txt')
-    ammended_well_output_base_filename = 'DSDP-36-327_backstrip_amended.txt'
+    input_well_filename = TEST_DATA_DIR.join('sunrise_lithology.txt')
+    ammended_well_output_base_filename = 'sunrise_backstrip_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'DSDP-36-327_backstrip_decompat.txt'
+    decompacted_output_base_filename = 'sunrise_backstrip_decompat.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -72,16 +74,19 @@ def test_backstrip(tmpdir):
     # These function calls are the equivalent of:
     #
     #     python -m pybacktrack.backstrip
-    #         -w test_data/DSDP-36-327-Lithology.txt
+    #         -w test_data/sunrise_lithology.txt
+    #         -l primary extended
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
-    #         -o DSDP-36-327_backstrip_amended.txt
+    #         -o sunrise_backstrip_amended.txt
     #         --
-    #         DSDP-36-327_backstrip_decompat.txt
+    #         sunrise_backstrip_decompat.txt
     #
     pybacktrack.backstrip_and_write_well(
         str(test_decompacted_output_filename),
         str(input_well_filename),
+        lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
+                             pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
         sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
         decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
                              pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
