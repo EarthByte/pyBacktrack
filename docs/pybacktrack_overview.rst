@@ -76,10 +76,10 @@ This example takes a passive margin site as input and outputs a file containing 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/DSDP-36-327-Lithology.txt -d age average_tectonic_subsidence -- DSDP-36-327_backstrip_decompat.txt
+    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/sunrise_lithology.txt -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
-...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
-the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file, and ``DSDP-36-327_backstrip_decompat.txt`` is the output file.
+...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt``, the ``-d`` option specifies
+the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file, and ``sunrise_backstrip_decompat.txt`` is the output file.
 
 .. note:: ``average_tectonic_subsidence`` is an *average* of the minimum and maximum tectonic subsidences, that are in turn a result
           of the minimum and maximum water depths specified in the drill site file.
@@ -200,8 +200,8 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     import pybacktrack
     
     pybacktrack.backstrip_and_write_well(
-        'DSDP-36-327_backstrip_decompat.txt',
-        'pybacktrack_examples/test_data/DSDP-36-327-Lithology.txt',
+        'sunrise_backstrip_decompat.txt',
+        'pybacktrack_examples/test_data/sunrise_lithology.txt',
         decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE,
                              pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE])
 
@@ -209,7 +209,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/DSDP-36-327-Lithology.txt -d age average_tectonic_subsidence -- DSDP-36-327_backstrip_decompat.txt
+    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/sunrise_lithology.txt -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
 .. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
 
