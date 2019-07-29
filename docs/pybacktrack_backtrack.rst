@@ -46,10 +46,10 @@ Oceanic versus continental tectonic subsidence
 
 Tectonic subsidence is modelled separately for ocean basins and continental passive margins.
 The subsidence model chosen by the ``backtrack`` module depends on whether the drill site is on oceanic or continental crust.
-An oceanic age grid is used to determine this. Since the age grid captures only oceanic crust, a drill site inside this region
+This is determined by an oceanic age grid. Since the age grid captures only oceanic crust, a drill site inside this region
 will automatically use the oceanic subsidence model whereas a drill site outside this region uses the continental subsidence model.
 
-The default age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``pybacktrack`` is a
+The default age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution grid of the age of the world's ocean crust:
 
 * Müller, R.D., Seton, M., Zahirovic, S., Williams, S.E., Matthews, K.J., Wright, N.M., Shephard, G.E., Maloney, K.T., Barnett-Moore, N., Hosseinpour, M., Bower, D.J. & Cannon, J. 2016,
@@ -79,7 +79,8 @@ In contrast, DSDP drill site 327 is located on shallower *continental* crust (as
    :literal:
 
 So it will use the *continental* subsidence model. Since continental subsidence involves rifting, it requires a rift start and end time.
-These extra rift parameters can be specified at the top of the as ``RiftStartAge`` and ``RiftEndAge`` attributes (see :ref:`pygplates_continental_subsidence`).
+These extra rift parameters can be specified at the top of the drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes
+(see :ref:`pygplates_continental_subsidence`).
 
 .. note:: If ``RiftStartAge`` and ``RiftEndAge`` are not specified in the drill site file then they must be specified
           directly on the ``backtrack`` command-line using the ``-rs`` and ``-re`` options respectively
@@ -90,8 +91,31 @@ These extra rift parameters can be specified at the top of the as ``RiftStartAge
 
 If you are not sure whether your drill site lies on oceanic or continental crust then first prepare your drill site assuming it's on
 oceanic crust (since this does not need rift start and end ages). If an error message is generated when
-:ref:`running backtrack <pygplates_running_backtrack>` then you'll need to determine the rift start and end age, and
-add ``RiftStartAge`` and ``RiftEndAge`` attributes to your drill site file and then run backtrack again.
+:ref:`running backtrack <pygplates_running_backtrack>` then you'll need to determine the rift start and end age, then
+add these to your drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes, and then run backtrack again.
+
+.. _pygplates_present_day_tectonic_subsidence:
+
+Present-day tectonic subsidence
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The tectonic subsidence at present day is used in both the oceanic and continental subsidence models.
+Tectonic subsidence is depth with sediment removed.
+So to obtain an accurate value, ``backtrack`` starts with a bathymetry grid to obtain the present-day water depth (the depth of the sediment surface).
+Then an isostatic correction to the present-day sediment thickness (at the drill site) takes into account the removal of sediment to reveal
+the present-day tectonic subsidence. The isostatic correction uses the average sediment density of the drill site stratigraphy.
+
+The default bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
+6-minute resolution global grid of the land topography and ocean bathymetry (although only the ocean bathymetry is actually needed):
+
+* Amante, C. and B. W. Eakins, `ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis <http://dx.doi.org/10.7289/V5C8276M>`_.
+  NOAA Technical Memorandum NESDIS NGDC-24, 19 pp, March 2009
+
+.. note:: You can optionally specify your own bathymetry grid using the ``-t`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *topography_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+.. note:: If you specify your own bathymetry grid, ensure that its ocean water depths are negative.
+          It is assumed that elevations in the grid above/below sea level are positive/negative.
 
 .. _pygplates_oceanic_subsidence:
 
