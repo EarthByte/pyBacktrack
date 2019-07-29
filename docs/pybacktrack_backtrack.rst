@@ -39,10 +39,44 @@ The following sections cover the available parameters (where ``...`` is specifie
 .. note:: You can run ``python -m pybacktrack.backtrack --help`` to see a description of all command-line options available, or
           see the :ref:`backtracking reference section <pybacktrack_reference_backtracking>` for documentation on the function parameters.
 
-.. _pygplates_backtrack_oceanic_versus_continental_subsidence:
+.. _pygplates_backtrack_output:
 
-Oceanic versus continental tectonic subsidence
-----------------------------------------------
+Backtrack output
+----------------
+
+For each stratigraphic layer in the input drill site file, ``backtrack`` can write one or more parameters to an output file.
+
+For example, ODP drill site 699:
+
+.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+   :literal:
+
+...generates the following output (if all available parameters are specified):
+
+.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompat.txt
+   :literal:
+
+.. note:: The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*,
+          *bottom_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
+
+The *compacted_thickness* column is the total sediment thickness (:ref:`601 metres <pygplates_base_sediment_layer>` for ODP drill site 699 above) minus *compacted_depth*.
+The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
+another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
+(or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density
+integrated over the decompacted thickness of the drill site (each stratigraphic layer contains a mixture of water and sediment according
+to its porosity at the decompacted depth of the layer).
+
+Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pygplates_backtrack_oceanic_and_continental_subsidence>`,
+and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.
+
+.. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *decompacted_columns* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+          By default, only *age* and *decompacted_thickness* are output.
+
+.. _pygplates_backtrack_oceanic_and_continental_subsidence:
+
+Oceanic and continental tectonic subsidence
+-------------------------------------------
 
 Tectonic subsidence is modelled separately for ocean basins and continental passive margins.
 The subsidence model chosen by the ``backtrack`` module depends on whether the drill site is on oceanic or continental crust.
@@ -100,9 +134,9 @@ Present-day tectonic subsidence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The tectonic subsidence at present day is used in both the oceanic and continental subsidence models.
-Tectonic subsidence is depth with sediment removed.
+Tectonic subsidence is unloaded water depth, that is with sediment removed.
 So to obtain an accurate value, ``backtrack`` starts with a bathymetry grid to obtain the present-day water depth (the depth of the sediment surface).
-Then an isostatic correction to the present-day sediment thickness (at the drill site) takes into account the removal of sediment to reveal
+Then an isostatic correction of the present-day sediment thickness (at the drill site) takes into account the removal of sediment to reveal
 the present-day tectonic subsidence. The isostatic correction uses the average sediment density of the drill site stratigraphy.
 
 The default bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
@@ -120,13 +154,32 @@ The default bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` i
 .. _pygplates_oceanic_subsidence:
 
 Oceanic subsidence
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Oceanic subsidence is somewhat simpler and more accurately modelled than continental subsidence (due to *no* lithospheric stretching).
+
+The age of oceanic crust at the drill site (sampled from the oceanic age grid) can be converted to tectonic subsidence (depth with sediment removed)
+by using an age-to-depth model. There are two models built into ``backtrack``:
+
+* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+
+* ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
+
+.. note:: These oceanic subsidence models can be specified using the ``-m`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *ocean_age_to_depth_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+          The default model is ``GDH1``.
+
+.. note:: It is also possible to specify your own age-to-depth model. This can be done by providing your own text file containing a column of ages and a
+          corresponding column of depths, and specifying the name of this file along with two integers representing the age and depth column indices to the
+          ``-m`` command-line option. Or you can pass your own function as the *ocean_age_to_depth_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function,
+          where your function should accept a single age (Ma) argument and return the corresponding depth (m).
+
+Since the drill site might be located on anomalously thick or thin ocean crust, a constant offset is added to the age-to-depth model to ensure the model subsidence matches
+the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day.
 
 .. _pygplates_continental_subsidence:
 
 Continental subsidence
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 Continental subsidence is somewhat more complex and less accurately modelled than oceanic subsidence (due to lithospheric stretching).
