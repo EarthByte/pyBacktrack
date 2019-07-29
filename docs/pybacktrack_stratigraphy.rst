@@ -81,11 +81,13 @@ In other words, it represents the age of the total sediment surface.
 
 .. note:: The ``SurfaceAge`` attribute is optional, and defaults to 0Ma if not specified.
 
+.. _pygplates_base_sediment_layer:
+
 Base sediment layer
 ^^^^^^^^^^^^^^^^^^^
 
 It is also possible that the sediment thickness recorded at the drill site is less than the total sediment
-thickness. This happens when the drill site does not penetrate all the way to the basement depth of oceanic or contintal crust.
+thickness. This happens when the drill site does not penetrate all the way to the basement depth of oceanic or continental crust.
 In this situation a base stratigraphic layer is automatically added during backtracking and backstripping
 to represent sediment from the bottom of the drill site down to the basement depth of oceanic or continental crust.
 For backtracking, the bottom age of this new base layer is the age of oceanic crust if the drill site is on ocean crust,
@@ -106,6 +108,25 @@ own grid by using the ``-s`` command-line option in the :ref:`backtrack <pygplat
 
 .. note:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
           and a warning is emitted to standard error on the console.
+
+You can optionally write out an amended drill site file that adds this base sediment layer.
+This is useful when you want to know the basement depth at the drill site location.
+
+For example, backtracking the ODP drill site 699 (located on *ocean* crust):
+
+.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+   :literal:
+
+...generates the following amended drill site file:
+
+.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
+   :literal:
+
+...containing the extra base shale layer with a bottom age equal to the age grid sampled at the drill site
+and a bottom depth equal to the total sediment thickness.
+
+.. note:: To output an amended drill site file, specify the amended output filename using the ``-o`` command-line option
+          in the :ref:`backtrack <pygplates_backtrack>` or :ref:`backstrip <pygplates_backstrip>` module.
 
 .. _pygplates_lithology_definitions:
 
