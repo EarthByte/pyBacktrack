@@ -109,7 +109,7 @@ The default total sediment thickness grid is:
   PANGAEA, doi:10.1594/PANGAEA.835589
 
 .. note:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
-          and a warning is emitted to standard error on the console.
+          and a warning is emitted to ``standard error`` on the console.
 
 You can optionally write out an amended drill site file that adds this base sediment layer.
 This is useful when you want to know the basement depth at the drill site location.

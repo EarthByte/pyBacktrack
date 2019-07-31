@@ -63,7 +63,7 @@ the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-
 There are other command-line options available to the ``backtrack`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. note:: The ``backtrack`` module is covered in more detail :ref:`here <pygplates_backtrack>`.
+.. seealso:: :ref:`pygplates_backtrack`
 
 .. _pybacktrack_running_the_backstrip_script:
 
@@ -93,7 +93,7 @@ and ``sunrise_backstrip_decompat.txt`` is the output file.
 There are other command-line options available to the ``backstrip`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
+.. seealso:: :ref:`pygplates_backstrip`
 
 .. _pybacktrack_running_the_age_to_depth_script:
 
@@ -114,11 +114,16 @@ If they had been in another column, for example if there were other unused colum
 The output file ``test_ages_and_depths.txt`` contains ages in the first column and depths in the second column.
 To reverse this order you can use the ``-r`` option.
 
-Here the conversion was performed using the *default* age-to-depth ocean model ``GDH1``
-(Stein and Stein 1992, "Model for the global variation in oceanic depth and heat flow with lithospheric age")
-since the ``-m`` command-line option was not specified. However you can specify the alternate model ``CROSBY_2007``
-(Crosby et al. 2006, "The relationship between depth, age and gravity in the oceans") using ``-m CROSBY_2007``.
-Or you can specify your own age-to-depth model by specifying a file containing an age column and a depth column
+There are two built-in age-to-depth ocean models:
+
+* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+
+* ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
+
+Here the conversion was performed using the *default* model ``GDH1`` since the ``-m`` command-line option was not specified.
+However you can specify the alternate ``CROSBY_2007`` model using ``-m CROSBY_2007``.
+
+Or you can use your own age-to-depth model by specifying a file containing an age column and a depth column
 followed by two integers representing the age and depth column indices. For example, if you have your own age-to-depth file
 called ``age-depth-model.txt`` where age is in the first column and depth is in the second column then you can specify this
 using ``-w age-depth-model.txt 0 1``.

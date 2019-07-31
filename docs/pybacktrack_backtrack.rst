@@ -34,10 +34,52 @@ You can either run ``backtrack`` as a built-in script, specifying parameters as 
     
     pybacktrack.backtrack_and_write_well(...)
 
-The following sections cover the available parameters (where ``...`` is specified above).
-
 .. note:: You can run ``python -m pybacktrack.backtrack --help`` to see a description of all command-line options available, or
           see the :ref:`backtracking reference section <pybacktrack_reference_backtracking>` for documentation on the function parameters.
+
+For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracking_example>`, we can run it from the command-line as:
+
+.. code-block:: python
+
+    python -m pybacktrack.backtrack \
+        -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
+        -ym M2 \
+        -slm Haq87_SealevelCurve_Longterm \
+        -o ODP-114-699_backtrack_amended.txt \
+        -- \
+        ODP-114-699_backtrack_decompat.txt
+
+...or write some Python code to do the same thing:
+
+.. code-block:: python
+
+    import pybacktrack
+    
+    # Input and output filenames.
+    input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
+    amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
+    decompacted_output_filename = 'ODP-114-699_backtrack_decompat.txt'
+    
+    # Read input well file, and write amended well and decompacted results to output files.
+    pybacktrack.backtrack_and_write_well(
+        decompacted_output_filename,
+        input_well_filename,
+        dynamic_topography_model='M2',
+        sea_level_model='Haq87_SealevelCurve_Longterm',
+        # The columns in decompacted output file...
+        decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
+                             pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
+                             pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
+        # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
+        ammended_well_output_filename=amended_well_output_filename)
+
+.. note:: The drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
 
 .. _pygplates_backtrack_output:
 
@@ -105,7 +147,7 @@ ODP drill site 699 is located on deeper *ocean* crust (as opposed to shallower c
 
 So it will use the *oceanic* subsidence model.
 
-.. seealso:: :ref:`pygplates_oceanic_subsidence`.
+.. seealso:: :ref:`pygplates_oceanic_subsidence`
 
 In contrast, DSDP drill site 327 is located on shallower *continental* crust (as opposed to deeper ocean crust):
 
@@ -116,7 +158,7 @@ So it will use the *continental* subsidence model. Since continental subsidence 
 These extra rift parameters can be specified at the top of the drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes
 (see :ref:`pygplates_continental_subsidence`).
 
-.. seealso:: :ref:`pygplates_continental_subsidence`.
+.. seealso:: :ref:`pygplates_continental_subsidence`
 
 If you are not sure whether your drill site lies on oceanic or continental crust then first prepare your drill site assuming it's on
 oceanic crust (since this does not need rift start and end ages). If an error message is generated when
