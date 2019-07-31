@@ -83,7 +83,7 @@ The subsidence model chosen by the ``backtrack`` module depends on whether the d
 This is determined by an oceanic age grid. Since the age grid captures only oceanic crust, a drill site inside this region
 will automatically use the oceanic subsidence model whereas a drill site outside this region uses the continental subsidence model.
 
-The default age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
+The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution grid of the age of the world's ocean crust:
 
 * Müller, R.D., Seton, M., Zahirovic, S., Williams, S.E., Matthews, K.J., Wright, N.M., Shephard, G.E., Maloney, K.T., Barnett-Moore, N., Hosseinpour, M., Bower, D.J. & Cannon, J. 2016,
@@ -116,11 +116,6 @@ So it will use the *continental* subsidence model. Since continental subsidence 
 These extra rift parameters can be specified at the top of the drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes
 (see :ref:`pygplates_continental_subsidence`).
 
-.. note:: If ``RiftStartAge`` and ``RiftEndAge`` are not specified in the drill site file then they must be specified
-          directly on the ``backtrack`` command-line using the ``-rs`` and ``-re`` options respectively
-          (run ``python -m pybacktrack.backtrack --help`` to see all options), or using the *rifting_period* argument
-          of the :func:`pybacktrack.backtrack_and_write_well` function.
-
 .. seealso:: :ref:`pygplates_continental_subsidence`.
 
 If you are not sure whether your drill site lies on oceanic or continental crust then first prepare your drill site assuming it's on
@@ -139,7 +134,7 @@ So to obtain an accurate value, ``backtrack`` starts with a bathymetry grid to o
 Then an isostatic correction of the present-day sediment thickness (at the drill site) takes into account the removal of sediment to reveal
 the present-day tectonic subsidence. The isostatic correction uses the average sediment density of the drill site stratigraphy.
 
-The default bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
+The default present-day bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution global grid of the land topography and ocean bathymetry (although only the ocean bathymetry is actually needed):
 
 * Amante, C. and B. W. Eakins, `ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis <http://dx.doi.org/10.7289/V5C8276M>`_.
@@ -183,3 +178,39 @@ Continental subsidence
 ----------------------
 
 Continental subsidence is somewhat more complex and less accurately modelled than oceanic subsidence (due to lithospheric stretching).
+
+The continental subsidence model has two components of rifting as described in
+`PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_.
+The first contribution is *initial* subsidence due to lithospheric thinning where low-density crust is thinned and hot asthenosphere rises underneath.
+In our model the crust and lithospheric mantle are identically stretched (uniform extension).
+The second contribution is thermal subsidence where the lithosphere thickens as it cools due to conductive heat loss.
+In our model thermal subsidence only takes place once the stretching stage has ended.
+In this way, there is instantaneous stretching from a thermal perspective (in the sense that, although stretching happens over a finite period of time,
+the model assumes no cooling during the stretching stage).
+
+.. note:: The tectonic subsidence at the start of rifting is zero. This is because it is assumed that rifting begins at sea level, and begins with a
+          sediment thickness of zero (since sediments are yet to be deposited on newly forming ocean crust).
+
+For drill sites on continental crust, the rift *end* time must be provided. However the rift *start* time is optional. If it is not specified then
+it is assumed to be equal to the rift *end* time. In other words, lithospheric stretching is assumed to happen immediately at the rift *end* time
+(as opposed to happening over a period of time). This is fine for stratigraphic layers deposited after rifting has ended, since the subsidence will be
+the same regardless of whether a rift *start* time was specified or not.
+
+.. note:: The rift start and end times can be specified in the drill site file using the ``RiftStartAge`` and ``RiftEndAge`` attributes.
+          Or they can be specified directly on the ``backtrack`` command-line using the ``-rs`` and ``-re`` options respectively
+          (run ``python -m pybacktrack.backtrack --help`` to see all options). Or using the *rifting_period* argument
+          of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+If a rift *start* time is specified, then the stretching factor varies exponentially between the rift *start* and *end* times (assuming a constant strain rate).
+The stretching factor at the rift *start* time is ``1.0`` (since the lithosphere has not yet stretched). The stretching factor at the rift *end* time is
+calculated such that our model produces a subsidence matching the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day, while
+also thinning the crust to match the actual crustal thickness at present day.
+
+The default present-day crustal thickness grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
+1-degree resolution grid of the thickness of the crustal part of the lithosphere:
+
+* Laske, G., Masters., G., Ma, Z. and Pasyanos, M., `Update on CRUST1.0 - A 1-degree Global Model of Earth's Crust <http://igppweb.ucsd.edu/~gabi/crust1.html#download>`_,
+  Geophys. Res. Abstracts, 15, Abstract EGU2013-2658, 2013
+
+.. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *crustal_thickness_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.

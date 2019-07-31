@@ -100,7 +100,9 @@ the :ref:`backtrack <pygplates_backtrack>` and :ref:`backstrip <pygplates_backst
 total sediment thickness, a grid is sampled at the drill site location. The default grid is
 :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``pybacktrack``. However, you can override this with your
 own grid by using the ``-s`` command-line option in the :ref:`backtrack <pygplates_backtrack>` and
-:ref:`backstrip <pygplates_backstrip>` modules. The default total sediment thickness grid is:
+:ref:`backstrip <pygplates_backstrip>` modules.
+
+The default total sediment thickness grid is:
 
 * Wobbe, Florian; Lindeque, Ansa; Gohl, Karsten (2014):
   `Total sediment thickness grid of the Southern Pacific Ocean off West Antarctica, links to NetCDF files <https://doi.org/10.1594/PANGAEA.835589>`_,
