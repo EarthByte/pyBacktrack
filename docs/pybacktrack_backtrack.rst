@@ -313,17 +313,32 @@ The effects of dynamic topography can be included in the models of tectonic subs
 
 A dynamic topography model is optional. If one is not specified then dynamic topography is assumed to be zero.
 
-In the oceanic subsidence model, we adjust the subsidence to account for the change in dynamic topography since present day.
+All dynamic topography models consist of a sequence of time-dependent global grids (where each grid is associated with a past geological time).
+The grids are in the *mantle* reference frame (instead of the *plate* reference frame) and hence the drill site location must be reconstructed
+(back in time) before sampling these grids. To enable this, a dynamic topography model also includes an associated static-polygons
+file to assign a reconstruction plate ID to the drill site, and associated rotation file(s) to reconstruct the drill site location.
+
+.. warning:: If the drill site is reconstructed to a time that is older than the age of the crust it is located on, then a warning is emitted
+             (to ``standard error`` on the console) stating that the dynamic topography model does not cover, or cannot interpolate, the drill site location.
+             This is because it does not make sense to reconstruct a parcel of crust prior to the time at which that parcel appeared.
+             This can happen when interpolating between the two dynamic topography grids that surround the reconstruction time because the older of the two grids
+             could be arbitrarily old. In this case the younger of the two grids is sampled.
+             This same warning is also emitted if the dynamic topography model does not go back far enough in time.
+             In this case the oldest dynamic topography grid in the model is sampled.
+
+Dynamic topography is included in the oceanic subsidence model by adjusting the subsidence to account for the change in
+dynamic topography at the drill site since present day.
 
 .. seealso:: :ref:`pygplates_oceanic_subsidence`
 
-In the continental subsidence model, we first remove the effects of dynamic topography (between the start of rifting and present day) before estimating the rift stretching factor.
-This is because estimation of the stretching factor only considers subsidence due to lithospheric thinning (stretching) and subsequent thickening (thermal cooling).
-Once the optimal stretching factor has been estimated, we then adjust the tectonic subsidence to account for the change in dynamic topography since the start of rifting.
+Dynamic topography is included in the continental subsidence model by first removing the effects of dynamic topography (between the start of rifting and present day)
+prior to estimating the rift stretching factor. This is because estimation of the stretching factor only considers subsidence due to lithospheric thinning (stretching)
+and subsequent thickening (thermal cooling). Once the optimal stretching factor has been estimated, the continental subsidence is adjusted to account for the change in
+dynamic topography since the start of rifting.
 
 .. seealso:: :ref:`pygplates_continental_subsidence`
 
-There are built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
+These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
 * *Müller et al., 2017* - `Dynamic topography of passive continental margins and their hinterlands since the Cretaceous <https://doi.org/10.1016/j.gr.2017.04.028>`_
 
