@@ -1169,9 +1169,9 @@ if __name__ == '__main__':
     # Action to parse dynamic topography model information.
     class ArgParseDynamicTopographyAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            if len(values) != 3:
-                parser.error('Dynamic topography model info must have three parameters '
-                             '(grid list filename, static polygons filename, rotation filename).')
+            if len(values) < 3:
+                parser.error('Dynamic topography model info must have three or more parameters '
+                             '(grid list filename, static polygons filename, rotation filename1 [, rotation filename2 [, ...]]).')
             
             grid_list_filename = values[0]
             static_polygons_filename = values[1]
@@ -1376,24 +1376,24 @@ if __name__ == '__main__':
             '-ym', '--bundle_dynamic_topography_model', type=str,
             metavar='bundle_dynamic_topography_model',
             help='Optional dynamic topography through time at well location. '
-                 'If no model (or filenames) specified then dynamic topography is ignored. '
+                 'If no model specified then dynamic topography is ignored. '
                  'Can be used both for oceanic floor and continental passive margin '
                  '(ie, well location inside or outside age grid). '
                  'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
         dynamic_topography_argument_group.add_argument(
-            '-y', '--dynamic_topography_model', nargs=3, action=ArgParseDynamicTopographyAction,
-            metavar=('dynamic_topography_grid_list_filename', 'static_polygon_filename', 'rotation_filename'),
+            '-y', '--dynamic_topography_model', nargs='+', action=ArgParseDynamicTopographyAction,
+            metavar='dynamic_topography_filename',
             help='Optional dynamic topography through time (sampled at reconstructed well locations). '
-                 'If no filenames (or model) specified then dynamic topography is ignored. '
+                 'If no filenames specified then dynamic topography is ignored. '
                  'Can be used both for oceanic floor and continental passive margin '
                  '(ie, well location inside or outside age grid). '
                  'First filename contains a list of dynamic topography grids (and associated times). '
                  'Second filename contains static polygons associated with dynamic topography model '
                  '(used to assign plate ID to well location so it can be reconstructed). '
-                 'Third filename is the rotation file associated with model '
-                 '(only the rotation file for static continents/oceans is needed - ie, deformation rotations not needed). '
+                 'Third filename (and optional fourth, etc) are the rotation files associated with model '
+                 '(only the rotation files for static continents/oceans are needed - ie, deformation rotations not needed). '
                  'Each row in the grid list file should contain two columns. First column containing '
-                 'filename (relative to list file) of a dynamic topography grid at a particular time. '
+                 'filename (relative to directory of list file) of a dynamic topography grid at a particular time. '
                  'Second column containing associated time (in Ma).')
         
         # Can optionally specify sea level as a filename or  model name (if using bundled data) but not both.
