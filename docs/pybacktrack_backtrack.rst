@@ -128,6 +128,29 @@ and *water_depth* is obtained from tectonic subsidence by subtracting an isostat
           using the *decompacted_columns* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
           By default, only *age* and *decompacted_thickness* are output.
 
+.. _pygplates_backtrack_sealevel_variation:
+
+Sea level variation
+-------------------
+
+A model of the variation of sea level relative to present day can optionally be used when backtracking.
+This adjusts the isostatic correction of the decompacted sediment thickness to take into account sea-level variations.
+
+There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
+
+* ``Haq87_SealevelCurve`` - `The Phanerozoic Record of Global Sea-Level Change <https://doi.org/10.1126/science.1116412>`_
+
+* ``Haq87_SealevelCurve_Longterm`` - Normalised to start at zero at present-day.
+
+A sea-level model is optional. If one is not specified then sea-level variation is assumed to be zero.
+
+.. note:: A built-in sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *sea_level_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+.. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a
+          corresponding column of sea levels (m), and specifying the name of this file to the ``-sl`` command-line option or to the *sea_level_model* argument
+          of the :func:`pybacktrack.backtrack_and_write_well` function.
+
 .. _pygplates_backtrack_oceanic_and_continental_subsidence:
 
 Oceanic and continental tectonic subsidence
@@ -192,7 +215,7 @@ the present-day tectonic subsidence. The isostatic correction uses the average s
 The default present-day bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution global grid of the land topography and ocean bathymetry (although only the ocean bathymetry is actually needed):
 
-* Amante, C. and B. W. Eakins, `ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis <http://dx.doi.org/10.7289/V5C8276M>`_.
+* Amante, C. and B. W. Eakins, `ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis <https://dx.doi.org/10.7289/V5C8276M>`_.
   NOAA Technical Memorandum NESDIS NGDC-24, 19 pp, March 2009
 
 .. note:: You can optionally specify your own bathymetry grid using the ``-t`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
@@ -215,9 +238,10 @@ by using an age-to-depth model. There are two models built into ``backtrack``:
 
 * ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
 
+The default model is ``GDH1``.
+
 .. note:: These oceanic subsidence models can be specified using the ``-m`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
           using the *ocean_age_to_depth_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
-          The default model is ``GDH1``.
 
 .. note:: It is also possible to specify your own age-to-depth model. This can be done by providing your own text file containing a column of ages and a
           corresponding column of depths, and specifying the name of this file along with two integers representing the age and depth column indices to the
@@ -280,21 +304,60 @@ The default present-day crustal thickness grid :ref:`bundled <pybacktrack_refere
 .. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
           using the *crustal_thickness_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
-Sea level variation
--------------------
+.. _pygplates_dynamic_topography:
 
-A model of the variation of sea level relative to present day can optionally be used when backtracking.
-This adjusts the isostatic correction of the decompacted sediment thickness to take into account sea-level variations.
+Dynamic topography
+------------------
 
-There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
+The effects of dynamic topography can be included in the models of tectonic subsidence (both oceanic and continental).
 
-* ``Haq87_SealevelCurve`` - `The Phanerozoic Record of Global Sea-Level Change <https://doi.org/10.1126/science.1116412>`_
+A dynamic topography model is optional. If one is not specified then dynamic topography is assumed to be zero.
 
-* ``Haq87_SealevelCurve_Longterm`` - Normalised to start at zero at present-day.
+In the oceanic subsidence model, we adjust the subsidence to account for the change in dynamic topography since present day.
 
-.. note:: A bundled sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
-          using the *sea_level_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+.. seealso:: :ref:`pygplates_oceanic_subsidence`
 
-.. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a
-          corresponding column of sea levels (m), and specifying the name of this file to the ``-sl`` command-line option or to the *sea_level_model* argument
+In the continental subsidence model, we first remove the effects of dynamic topography (between the start of rifting and present day) before estimating the rift stretching factor.
+This is because estimation of the stretching factor only considers subsidence due to lithospheric thinning (stretching) and subsequent thickening (thermal cooling).
+Once the optimal stretching factor has been estimated, we then adjust the tectonic subsidence to account for the change in dynamic topography since the start of rifting.
+
+.. seealso:: :ref:`pygplates_continental_subsidence`
+
+There are built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
+
+* *Müller et al., 2017* - `Dynamic topography of passive continental margins and their hinterlands since the Cretaceous <https://doi.org/10.1016/j.gr.2017.04.028>`_
+
+  * `M1 <http://portal.gplates.org/dynamic_topography_cesium/?model=M1&name=M1>`_
+  * `M2 <http://portal.gplates.org/dynamic_topography_cesium/?model=M2&name=M2>`_
+  * `M3 <http://portal.gplates.org/dynamic_topography_cesium/?model=M3&name=M3>`_
+  * `M4 <http://portal.gplates.org/dynamic_topography_cesium/?model=M4&name=M4>`_
+  * `M5 <http://portal.gplates.org/dynamic_topography_cesium/?model=M5&name=M5>`_
+  * `M6 <http://portal.gplates.org/dynamic_topography_cesium/?model=M6&name=M6>`_
+  * `M7 <http://portal.gplates.org/dynamic_topography_cesium/?model=M7&name=M7>`_
+
+* *Rubey et al., 2017* - `Global patterns of Earth's dynamic topography since the Jurassic <https://doi.org/10.5194/se-2017-26>`_
+
+  * `terra <http://portal.gplates.org/dynamic_topography_cesium/?model=terra&name=Terra>`_
+
+* *Müller et al., 2008* - `Long-term sea-level fluctuations driven by ocean basin dynamics <https://doi.org/10.1126/science.1151540>`_
+
+  * `ngrand <http://portal.gplates.org/dynamic_topography_cesium/?model=ngrand&name=dynto_ngrand>`_
+  * `s20rts <http://portal.gplates.org/dynamic_topography_cesium/?model=s20rts&name=dynto_s20rts>`_
+  * `smean <http://portal.gplates.org/dynamic_topography_cesium/?model=smean&name=dynto_smean>`_
+
+.. note:: The above model links reference dynamic topography models that can be visualized in the `GPlates Web Portal <http://portal.gplates.org>`_.
+
+The ``M1`` model is a combined forward/reverse geodynamic model, while models ``M2``-``M7`` are forward models.
+Models ``ngrand``, ``s20rts`` and ``smean`` are backward-advection models.
+The backward-advection models are generally good for the recent geological past (up to last 70 million years).
+While the ``M1``-``M7`` models are most useful when it is necessary to look at times older than 70 Ma
+because their oceanic paleo-depths lack the regional detail at more recent times that the backward-advection models capture
+(because of their assimilation of seismic tomography).
+``M1`` also assimilates seismic tomography but suffers from other shortcomings.
+
+.. note:: A built-in dynamic topography model can be specified using the ``-ym`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+.. note:: It is also possible to specify your own dynamic topography model. This can be done by providing your own text file containing a column of ages (Ma) and a
+          corresponding column of sea levels (m), and specifying the name of this file to the ``-y`` command-line option or to the *dynamic_topography_model* argument
           of the :func:`pybacktrack.backtrack_and_write_well` function.
