@@ -108,8 +108,9 @@ The default total sediment thickness grid is:
   `Total sediment thickness grid of the Southern Pacific Ocean off West Antarctica, links to NetCDF files <https://doi.org/10.1594/PANGAEA.835589>`_,
   PANGAEA, doi:10.1594/PANGAEA.835589
 
-.. note:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
-          and a warning is emitted to ``standard error`` on the console.
+.. warning:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
+             and a warning is emitted to ``standard error`` on the console.
+             This can happen as a result of uncertainties in the sediment thickness grid.
 
 You can optionally write out an amended drill site file that adds this base sediment layer.
 This is useful when you want to know the basement depth at the drill site location.

@@ -37,6 +37,11 @@ You can either run ``backtrack`` as a built-in script, specifying parameters as 
 .. note:: You can run ``python -m pybacktrack.backtrack --help`` to see a description of all command-line options available, or
           see the :ref:`backtracking reference section <pybacktrack_reference_backtracking>` for documentation on the function parameters.
 
+.. _pygplates_backtrack_example:
+
+Example
+^^^^^^^
+
 For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracking_example>`, we can run it from the command-line as:
 
 .. code-block:: python
@@ -88,12 +93,19 @@ Backtrack output
 
 For each stratigraphic layer in the input drill site file, ``backtrack`` can write one or more parameters to an output file.
 
-For example, ODP drill site 699:
+For example, if we run the :ref:`above example <pygplates_backtrack_example>` on ODP drill site 699:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
    :literal:
 
-...generates the following output (if all available parameters are specified):
+...then we will get the following amended drill site output file:
+
+.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
+   :literal:
+
+.. note:: The extra :ref:`base sediment layer <pygplates_base_sediment_layer>`.
+
+...as well as the following decompacted output file:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompat.txt
    :literal:
@@ -101,7 +113,8 @@ For example, ODP drill site 699:
 .. note:: The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*,
           *bottom_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
 
-The *compacted_thickness* column is the total sediment thickness (:ref:`601 metres <pygplates_base_sediment_layer>` for ODP drill site 699 above) minus *compacted_depth*.
+The *compacted_thickness* column is the total sediment thickness (601 metres - see :ref:`base sediment layer <pygplates_base_sediment_layer>`
+of amended drill site above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
 (or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density
@@ -245,8 +258,18 @@ the same regardless of whether a rift *start* time was specified or not.
 
 If a rift *start* time is specified, then the stretching factor varies exponentially between the rift *start* and *end* times (assuming a constant strain rate).
 The stretching factor at the rift *start* time is ``1.0`` (since the lithosphere has not yet stretched). The stretching factor at the rift *end* time is
-calculated such that our model produces a subsidence matching the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day, while
+estimated such that our model produces a subsidence matching the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day, while
 also thinning the crust to match the actual crustal thickness at present day.
+
+.. note:: The crustal thickness at the end of rifting and at present day are assumed to be the same.
+
+.. warning:: If the estimated rift stretching factor (at the rift *end* time) results in a tectonic subsidence inaccuracy
+             (at present day) of more than 100 metres, then a warning is emitted to ``standard error`` on the console.
+             This can happen if the actual present-day subsidence is quite deep and the stretching factor required to achieve
+             this subsidence would be unrealistically large and result in a pre-rift crustal thickness
+             (equal to the stretching factor multiplied by the actual present-day crustal thickness) that exceeds
+             typical lithospheric thicknesses. In this case the stretching factor is clamped to avoid this but,
+             as a result, the modeled subsidence is not as deep as the actual subsidence.
 
 The default present-day crustal thickness grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 1-degree resolution grid of the thickness of the crustal part of the lithosphere:
