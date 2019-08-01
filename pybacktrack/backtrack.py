@@ -1384,7 +1384,6 @@ if __name__ == '__main__':
             '-y', '--dynamic_topography_model', nargs='+', action=ArgParseDynamicTopographyAction,
             metavar='dynamic_topography_filename',
             help='Optional dynamic topography through time (sampled at reconstructed well locations). '
-                 'If no filenames specified then dynamic topography is ignored. '
                  'Can be used both for oceanic floor and continental passive margin '
                  '(ie, well location inside or outside age grid). '
                  'First filename contains a list of dynamic topography grids (and associated times). '

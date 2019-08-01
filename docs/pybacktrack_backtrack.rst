@@ -373,6 +373,10 @@ because their oceanic paleo-depths lack the regional detail at more recent times
 .. note:: A built-in dynamic topography model can be specified using the ``-ym`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
           using the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
-.. note:: It is also possible to specify your own dynamic topography model. This can be done by providing your own text file containing a column of ages (Ma) and a
-          corresponding column of sea levels (m), and specifying the name of this file to the ``-y`` command-line option or to the *dynamic_topography_model* argument
-          of the :func:`pybacktrack.backtrack_and_write_well` function.
+.. note:: It is also possible to specify your own dynamic topography model.
+          This can be done by providing your own grid list text file with the first column containing a list of the dynamic topography grid filenames
+          (where each filename should be relative to the directory on the list file) and the second column containing the associated grid times (in Ma).
+          You'll also need the associated static-polygons file, and one or more associated rotation files.
+          The grid list filename, static-polygons filename and one or more rotation filenames are then specified using the
+          ``-y`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options),
+          or to the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
