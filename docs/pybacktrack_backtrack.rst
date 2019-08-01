@@ -268,7 +268,7 @@ also thinning the crust to match the actual crustal thickness at present day.
              This can happen if the actual present-day subsidence is quite deep and the stretching factor required to achieve
              this subsidence would be unrealistically large and result in a pre-rift crustal thickness
              (equal to the stretching factor multiplied by the actual present-day crustal thickness) that exceeds
-             typical lithospheric thicknesses. In this case the stretching factor is clamped to avoid this but,
+             typical lithospheric thicknesses (125km). In this case the stretching factor is clamped to avoid this but,
              as a result, the modeled subsidence is not as deep as the actual subsidence.
 
 The default present-day crustal thickness grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
@@ -279,3 +279,22 @@ The default present-day crustal thickness grid :ref:`bundled <pybacktrack_refere
 
 .. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
           using the *crustal_thickness_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+Sea level variation
+-------------------
+
+A model of the variation of sea level relative to present day can optionally be used when backtracking.
+This adjusts the isostatic correction of the decompacted sediment thickness to take into account sea-level variations.
+
+There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
+
+* ``Haq87_SealevelCurve`` - `The Phanerozoic Record of Global Sea-Level Change <https://doi.org/10.1126/science.1116412>`_
+
+* ``Haq87_SealevelCurve_Longterm`` - Normalised to start at zero at present-day.
+
+.. note:: A bundled sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+          using the *sea_level_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+.. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a
+          corresponding column of sea levels (m), and specifying the name of this file to the ``-sl`` command-line option or to the *sea_level_model* argument
+          of the :func:`pybacktrack.backtrack_and_write_well` function.
