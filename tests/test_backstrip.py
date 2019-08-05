@@ -32,7 +32,7 @@ def test_backstrip_script(tmpdir):
     #     python -m pybacktrack.backstrip
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o sunrise_backstrip_amended.txt
     #         --
@@ -43,7 +43,9 @@ def test_backstrip_script(tmpdir):
                                      '-l', 'primary', 'extended',
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness',
                                      'decompacted_thickness', 'decompacted_density',
-                                     'average_tectonic_subsidence', 'average_water_depth', 'lithology',
+                                     'min_tectonic_subsidence', 'max_tectonic_subsidence', 'average_tectonic_subsidence',
+                                     'min_water_depth', 'max_water_depth', 'average_water_depth',
+                                     'lithology',
                                      '-slm', 'Haq87_SealevelCurve_Longterm',
                                      '-o', str(test_ammended_well_output_filename),
                                      '--',
@@ -77,7 +79,7 @@ def test_backstrip(tmpdir):
     #     python -m pybacktrack.backstrip
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density average_tectonic_subsidence average_water_depth lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o sunrise_backstrip_amended.txt
     #         --
@@ -94,9 +96,10 @@ def test_backstrip(tmpdir):
                                  pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
             sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
             decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
-                                 pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
-                                 pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
-                                 pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
+                                 pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY,
+                                 pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
+                                 pybacktrack.BACKSTRIP_COLUMN_MIN_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_MAX_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH,
+                                 pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
             ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.
