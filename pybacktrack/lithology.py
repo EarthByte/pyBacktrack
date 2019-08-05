@@ -46,10 +46,23 @@ DEFAULT_BASE_LITHOLOGY_NAME = 'Shale'
 
 class Lithology(object):
     """
-    Class to specify lithology data.
+    Class containing lithology data.
     """
     
     def __init__(self, density, surface_porosity, porosity_decay):
+        """
+        Create a lithology from density, surface porosity and porosity decay.
+        
+        Parameters
+        ----------
+        density : float
+            Density (in kg/m3).
+        surface_porosity : float
+            Surface porosity (unit-less).
+        porosity_decay : float
+            Porosity decay (in metres).
+        """
+        
         self.density = density
         self.surface_porosity = surface_porosity
         self.porosity_decay = porosity_decay
@@ -59,13 +72,23 @@ def read_lithologies_file(lithologies_filename):
     """
     Reads a text file with each row representing lithology parameters.
     
-    The parameter columns are: name density surface_porosity porosity_decay
+    Parameters
+    ----------
+    lithologies_filename : str
+        Filename of the lithologies text file.
     
-    Units of density are kg/m3 and units of porosity decay are m.
+    Returns
+    -------
+    dict
+        Dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
     
-    lithologies_filename: name of lithologies text file.
+    Notes
+    -----
+    The three parameter columns in the lithologies text file should contain:
     
-    Returns: Dictionary mapping lithology names to Lithology objects.
+    #. name density
+    #. surface_porosity
+    #. porosity_decay
     """
     
     lithologies = {}
@@ -110,15 +133,24 @@ def read_lithologies_file(lithologies_filename):
 
 def create_lithology(lithology_name, lithologies):
     """
-    Looks up a lithology in 'lithologies' using a lithology name.
+    Looks up a lithology using a name.
     
-    lithology_name: Lithology name (string).
+    Parameters
+    ----------
+    lithology_name : str
+        The name of the lithology to look up.
+    lithologies : dict
+        A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
     
-    lithologies: a dict mapping lithology names to Lithology objects.
+    Returns
+    -------
+    :class:`pybacktrack.Lithology`
+        The lithology matching ``lithology_name``.
     
-    Returns: Lithology.
-    
-    Raises KeyError if 'lithology_name' is not found in 'lithologies'.
+    Raises
+    ------
+    KeyError
+        If ``lithology_name`` is not found in ``lithologies``.
     """
     
     return lithologies[lithology_name]
@@ -128,14 +160,24 @@ def create_lithology_from_components(components, lithologies):
     """
     Creates a combined lithology (if necessary) from multiple weighted lithologies.
     
-    components: Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
+    Parameters
+    ----------
+    components : sequence of tuples
+        A sequence (eg, ``list``) of tuples (str, float) containing a lithology name and its fraction of contribution.
+    lithologies : dict
+        A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
     
-    lithologies: a dict mapping lithology names to Lithology objects.
+    Returns
+    -------
+    :class:`pybacktrack.Lithology`
+        The combined lithology.
     
-    Returns: Lithology.
-    
-    Raises ValueError if all fractions do not add up to 1.0.
-    Raises KeyError if a lithology name is not found in 'lithologies'.
+    Raises
+    ------
+    ValueError
+        If all fractions do not add up to 1.0.
+    KeyError
+        If a lithology name is not found in ``lithologies``.
     """
     
     density = 0

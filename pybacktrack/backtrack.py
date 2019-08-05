@@ -802,22 +802,26 @@ def write_well(
         For example, ``{'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}``.
         will write ``well.longitude`` (if not None) to metadata 'SiteLongitude', etc.
         Not that the attributes must exist in ``well`` (but can be set to None).
-    decompacted_columns : list of {pybacktrack.BACKTRACK_COLUMN_AGE, \
-                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, \
-                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, \
-                                   pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, \
-                                   pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, \
-                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, \
-                                   pybacktrack.BACKTRACK_COLUMN_LITHOLOGY, \
-                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH}, optional
+    decompacted_columns : list of columns, optional
         The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
+        
+        Available columns are:
+        
+        * pybacktrack.BACKTRACK_COLUMN_AGE
+        * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS
+        * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS
+        * pybacktrack.BACKTRACK_COLUMN_LITHOLOGY
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH
     
     Raises
     ------
     ValueError
         If an unrecognised value is encountered in ``decompacted_columns``.
     ValueError
-        If ``COLUMN_LITHOLOGY`` is specified in ``decompacted_columns`` but is not the last column.
+        If ``pybacktrack.BACKTRACK_COLUMN_LITHOLOGY`` is specified in ``decompacted_columns`` but is not the last column.
     """
     
     # If 'COLUMN_LITHOLOGY' is specified then it must be the last column.
@@ -1004,15 +1008,20 @@ def backtrack_and_write_well(
         If specified then overrides value in well file.
         If well is on continental passive margin then at least rift end age should be specified
         either here or in well file.
-    decompacted_columns : list of {pybacktrack.BACKTRACK_COLUMN_AGE, \
-                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, \
-                                   pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY, \
-                                   pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE, \
-                                   pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, \
-                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS, \
-                                   pybacktrack.BACKTRACK_COLUMN_LITHOLOGY, \
-                                   pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH}, optional
-        The decompacted columns (and their order) to output to ``decompacted_output_filename``.
+    decompacted_columns : list of columns, optional
+        The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
+        
+        Available columns are:
+        
+        * pybacktrack.BACKTRACK_COLUMN_AGE
+        * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS
+        * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS
+        * pybacktrack.BACKTRACK_COLUMN_LITHOLOGY
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH
+    
     well_location : tuple, optional
         Optional location of well.
         If not provided then is extracted from the ``well_filename`` file.

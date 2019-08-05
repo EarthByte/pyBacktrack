@@ -36,14 +36,37 @@ import sys
 
 class DynamicTopography(object):
     """
-    Class to reconstruct point location and sample the time-dependent dynamic topography *mantle* frame grid files.
+    Class to reconstruct ocean point location and sample the time-dependent dynamic topography *mantle* frame grid files.
     """
     
     def __init__(self, grid_list_filename, static_polygon_filename, rotation_filenames, longitude, latitude, age=None):
         """
         Load dynamic topography grid filenames and associated ages from grid list file 'grid_list_filename'.
         
-        The present day location ('longitude' / 'latitude' in degrees) is also assigned a plate ID using the static polygons.
+        Parameters
+        ----------
+        grid_list_filename : str
+            The filename of the grid list file.
+        static_polygon_filename : str
+            The filename of the static polygons file.
+        rotation_filenames : list of str
+            The list of rotation filenames.
+        longitude : float
+            Longitude of the ocean point location.
+        latitude : float
+            Latitude of the ocean point location.
+        age : float, optional
+            The age of the crust that the point location is on.
+            If not specified then the appearance age of the static polygon containing the point is used.
+        
+        Notes
+        -----
+        Each row in the grid list file should contain two columns. First column containing
+        filename (relative to directory of list file) of a dynamic topography grid at a particular time.
+        Second column containing associated time (in Ma).
+        
+        The present day location ('longitude' / 'latitude' in degrees) is also assigned a plate ID using the static polygons,
+        and the rotations are used to reconstruct the location when sampling the grids at a reconstructed time.
         """
         
         self.location = pygplates.PointOnSphere((latitude, longitude))
@@ -71,12 +94,25 @@ class DynamicTopography(object):
         """
         Samples the time-dependent grid files at 'time' at the internal location.
         
+        Parameters
+        ----------
+        time : float
+            Time to sample dynamic topography.
+        
+        Returns
+        -------
+        float
+            The sampled dynamic topography value.
+            
+            This will be ``float('NaN`)`` if:
+            
+            - ``time`` is outside age range of grids, or
+            - the age of either (of two) interpolated grids is older than age of the ocean point location.
+        
+        Notes
+        -----
         The location is first reconstructed to the two grid ages bounding 'time' before sampling
         the two grids (and interpolating between them).
-        
-        Returns NaN if:
-        - 'time' is outside age range of grids, or
-        - the age of either (of two) interpolated grids is older than age of the internal location.
         """
         
         # Search for the two grids bounding 'time'.
@@ -113,12 +149,19 @@ class DynamicTopography(object):
     
     def sample_oldest(self):
         """
-        Samples the oldest grid file that is younger than the age-of-appearance of the internal location.
+        Samples the oldest grid file that is younger than the age-of-appearance of the ocean point location.
         
-        This function is useful when 'sample()' has already been called but returns NaN due to the specific time having
-        bounding grid times older than the ocean floor at that location.
+        Returns
+        -------
+        grid_value : float
+            The sampled dynamic topography value.
+        grid_age : float
+            The age of the oldest grid file that is younger than the age-of-appearance of the ocean point location.
         
-        Returns 2-tuple (grid_value, grid_age).
+        Notes
+        -----
+        This function is useful when :meth:`pybacktrack.DynamicTopography.sample` has already been called but returns ``float('NaN')``
+        due to the specific time having bounding grid times older than the ocean floor at that location.
         """
         
         # Search backward until we find a grid age younger than the age of the internal location.

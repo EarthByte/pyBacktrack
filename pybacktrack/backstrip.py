@@ -65,43 +65,64 @@ def backstrip_well(
         well_min_water_depth_column=2,\
         well_max_water_depth_column=3,\
         well_lithology_column=4)
-    Finds decompacted total sediment thickness and tectonic subsidence for each age in 'well'.
+    Finds decompacted total sediment thickness and tectonic subsidence for each age in well.
     
-    well_filename: name of well text file.
-    
-    lithology_filenames: list of string, optional
+    Parameters
+    ----------
+    well_filename : str
+        Name of well text file.
+    lithology_filenames : list of string, optional
         One or more text files containing lithologies.
-    
-    total_sediment_thickness_filename: Total sediment thickness filename.
-                                       Used to obtain total sediment thickness at well location.
-    
+    total_sediment_thickness_filename : str
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at well location.
     sea_level_model : string, optional
         Used to obtain sea levels relative to present day.
         Can be either the name of a bundled sea level model, or a sea level filename.
         Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
+    base_lithology_name : string, optional
+        Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
+        The stratigraphic units in the well might not record the full depth of sedimentation.
+        The base unit covers the remaining depth from bottom of well to the total sediment thickness.
+        Defaults to ``Shale``.
+    well_location : tuple, optional
+        Optional location of well.
+        If not provided then is extracted from the ``well_filename`` file.
+        If specified then overrides value in well file.
+        If specified then must be a 2-tuple (longitude, latitude) in degrees.
+    well_bottom_age_column : int, optional
+        The column of well file containing bottom age. Defaults to 0.
+    well_bottom_depth_column : int, optional
+        The column of well file containing bottom depth. Defaults to 1.
+    well_min_water_depth_column : int, optional
+        The column of well file containing minimum water depth. Defaults to 2.
+    well_max_water_depth_column : int, optional
+        The column of well file containing maximum water depth. Defaults to 3.
+    well_lithology_column : int, optional
+        The column of well file containing lithology(s). Defaults to 4.
     
-    base_lithology_name: Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
-                         The stratigraphic units in the well might not record the full depth of sedimentation.
-                         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
+    Returns
+    -------
+    :class:`pybacktrack.Well`
+        The well read from ``well_filename``.
+        It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
+    list of :class:`pybacktrack.DecompactedWell`
+        The decompacted wells associated with the well.
     
-    well_location: Optional location of well. If not provided then is extracted from 'well_filename' file.
-                   If specified then overrides value in well file.
-                   If specified then must be a 2-tuple (longitude, latitude) in degrees.
+    Raises
+    ------
+    ValueError
+        If ``well_lithology_column`` is not the largest column number (must be last column).
+    ValueError
+        If ``well_location`` is not specified *and* the well location was not extracted from the well file.
     
-    <well columns>: Each column attribute to read from well file (bottom_age, bottom_depth,
-                    min_water_depth, max_water_depth and lithology(s))
-                    has a column index to direct which column it should be read from.
-    
-    Returns: 2-tuple (Well, list of well.DecompactedWell)
-    
-    The min/max paleo water depths at each age (of decompacted wells) is added as
-    'min_water_depth' and 'max_water_depth' attributes to each decompacted well returned.
-    
-    Each attribute to read from well file (eg, bottom_age, bottom_depth, etc) has a column index to direct
+    Notes
+    -----
+    Each attribute to read from well file (eg, *bottom_age*, *bottom_depth*, etc) has a column index to direct
     which column it should be read from.
     
-    Raises ValueError if 'lithology_column' is not the largest column number (must be last column).
-    Raises ValueError if 'well_location' is not specified *and* the well location was not extracted from the well file.
+    The min/max paleo water depths at each age (of decompacted wells) are added as
+    *min_water_depth* and *max_water_depth* attributes to each decompacted well returned.
     """
     
     # If a sea level *model name* was specified then convert it to a bundled sea level filename.
@@ -286,26 +307,52 @@ def write_well(
         well,
         well_attributes=None,
         decompacted_columns=DEFAULT_DECOMPACTED_COLUMNS):
-    """
+    """write_backstrip_well(\
+        decompacted_wells,\
+        decompacted_wells_filename,\
+        well,\
+        well_attributes=None,\
+        decompacted_columns=pybacktrack.BACKTRACK_DEFAULT_DECOMPACTED_COLUMNS):
     Write decompacted parameters as columns in a text file.
     
-    decompacted_wells: a sequence of well.DecompactedWell.
+    Parameters
+    ----------
+    decompacted_wells : sequence of :class:`pybacktrack.DecompactedWell`
+        The decompacted wells returned by :func:`pybacktrack.backstrip_well`.
+    decompacted_wells_filename : string
+        Name of output text file.
+    well : :class:`pybacktrack.Well`
+        The well to extract metadata from.
+    well_attributes : dict, optional
+        Optional attributes in :class:`pybacktrack.Well` object to write to well file metadata.
+        If specified then must be a dictionary mapping each attribute name to a metadata name.
+        For example, ``{'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}``.
+        will write ``well.longitude`` (if not None) to metadata 'SiteLongitude', etc.
+        Not that the attributes must exist in ``well`` (but can be set to None).
+    decompacted_columns : list of columns, optional
+        The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
+        
+        Available columns are:
+        
+        * pybacktrack.BACKSTRIP_COLUMN_AGE
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_MIN_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_MAX_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS
+        * pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY
+        * pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH
     
-    decompacted_wells_filename: name of output text file.
-    
-    well: The well to extract metadata from.
-    
-    well_attributes: Optional attributes in Well object to write to well file metadata.
-                     If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}.
-                     will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
-                     Not that the attributes must exist in 'well' (but can be set to None).
-    
-    decompacted_columns: Sequence of enumerations specifying which decompacted parameters to write.
-                         The sequence is ordered by output column.
-    
-    Raises ValueError if an unrecognised value is encountered in 'decompacted_columns'.
-    Raises ValueError if 'COLUMN_LITHOLOGY' is specified in 'decompacted_columns' but is not the last column.
+    Raises
+    ------
+    ValueError
+        If an unrecognised value is encountered in ``decompacted_columns``.
+    ValueError
+        If ``pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY`` is specified in ``decompacted_columns`` but is not the last column.
     """
     
     # If 'COLUMN_LITHOLOGY' is specified then it must be the last column.
@@ -442,7 +489,91 @@ def backstrip_and_write_well(
         well_min_water_depth_column=2,\
         well_max_water_depth_column=3,\
         well_lithology_column=4,\
-        ammended_well_output_filename=None)"""
+        ammended_well_output_filename=None)
+    Same as :func:`pybacktrack.backstrip_well` but also writes decompacted results to a text file.
+    
+    Also optionally write amended well data (ie, including extra stratigraphic base unit from well bottom to ocean basement)
+    to ``ammended_well_output_filename`` if specified.
+    
+    Parameters
+    ----------
+    decompacted_output_filename : string
+        Name of text file to write decompacted results to.
+    well_filename : string
+        Name of well text file.
+    lithology_filenames: list of string, optional
+        One or more text files containing lithologies.
+    total_sediment_thickness_filename : string, optional
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at well location.
+    sea_level_model : string, optional
+        Used to obtain sea levels relative to present day.
+        Can be either the name of a bundled sea level model, or a sea level filename.
+        Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
+    base_lithology_name : string, optional
+        Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file).
+        The stratigraphic units in the well might not record the full depth of sedimentation.
+        The base unit covers the remaining depth from bottom of well to the total sediment thickness.
+        Defaults to ``Shale``.
+    decompacted_columns : list of columns, optional
+        The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
+        
+        Available columns are:
+        
+        * pybacktrack.BACKSTRIP_COLUMN_AGE
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE
+        * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_MIN_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_MAX_WATER_DEPTH
+        * pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS
+        * pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY
+        * pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH
+    
+    well_location : tuple, optional
+        Optional location of well.
+        If not provided then is extracted from the ``well_filename`` file.
+        If specified then overrides value in well file.
+        If specified then must be a 2-tuple (longitude, latitude) in degrees.
+    well_bottom_age_column : int, optional
+        The column of well file containing bottom age. Defaults to 0.
+    well_bottom_depth_column : int, optional
+        The column of well file containing bottom depth. Defaults to 1.
+    well_min_water_depth_column : int, optional
+        The column of well file containing minimum water depth. Defaults to 2.
+    well_max_water_depth_column : int, optional
+        The column of well file containing maximum water depth. Defaults to 3.
+    well_lithology_column : int, optional
+        The column of well file containing lithology(s). Defaults to 4.
+    ammended_well_output_filename: string, optional
+        Amended well data filename. Useful if an extra stratigraphic base unit is added from well bottom to ocean basement.
+    
+    Returns
+    -------
+    :class:`pybacktrack.Well`
+        The well read from ``well_filename``.
+        It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
+    list of :class:`pybacktrack.DecompactedWell`
+        The decompacted wells associated with the well.
+    
+    Raises
+    ------
+    ValueError
+        If ``well_lithology_column`` is not the largest column number (must be last column).
+    ValueError
+        If ``well_location`` is not specified *and* the well location was not extracted from the well file.
+    
+    Notes
+    -----
+    Each attribute to read from well file (eg, *bottom_age*, *bottom_depth*, etc) has a column index to direct
+    which column it should be read from.
+    
+    The min/max paleo water depths at each age (of decompacted wells) are added as
+    *min_water_depth* and *max_water_depth* attributes to each decompacted well returned.
+    """
     
     # Decompact the well.
     well, decompacted_wells = backstrip_well(

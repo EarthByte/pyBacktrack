@@ -47,15 +47,35 @@ class SeaLevel(object):
     def __init__(self, sea_level_filename):
         """
         Load sea level curve (linear segments) from file.
+        
+        Parameters
+        ----------
+        sea_level_filename : str
+            Text file with first column containing ages (Ma) and a corresponding second column of sea levels (m).
         """
         
         # Read the sea level curve sea_level=function(age) from sea level file.
         self.sea_level_function, self.sea_level_times, _ = pybacktrack.util.interpolate.read_curve_function(sea_level_filename)
 
     def get_average_level(self, begin_time, end_time):
-        """
-        The average sea level is obtained by integrating sea level curve over the specified time period
-        and dividing by time period.
+        """get_average_level(begin_time, end_time)
+        Return the average sea level over the specified time period.
+        
+        Parameters
+        ----------
+        begin_time : float
+            The begin time (in Ma). Should be larger than *end_time*.
+        end_time : float
+            The end time (in Ma). Should be smaller than *begin_time*.
+        
+        Returns
+        -------
+        float
+            Average sea level (in metres).
+        
+        Notes
+        -----
+        The average sea level is obtained by integrating sea level curve over the specified time period and then dividing by time period.
         """
         
         time_interval = begin_time - end_time

@@ -51,9 +51,17 @@ def syn_rift_subsidence(
     """
     Initial subsidence (in metres) due to continental stretching.
     
-    beta: Stretching factor.
+    Parameters
+    ----------
+    beta : float
+        Stretching factor.
+    pre_rift_crustal_thickness : float
+        Initial crustal thickness prior to rifting (in metres).
     
-    pre_rift_crustal_thickness: Initial crustal thickness prior to rifting (in metres).
+    Returns
+    -------
+    float
+        Initial subsidence (in metres) due to continental stretching.
     """
     
     # Assuming subsidence filled with water (no sediment).
@@ -72,9 +80,17 @@ def post_rift_subsidence(
     """
     Thermal subsidence (in metres) as a function of time.
     
-    beta: Stretching factor.
+    Parameters
+    ----------
+    beta : float
+        Stretching factor.
+    time : float
+        The amount of time that has passed after rifting/stretching has ended.
     
-    time: Time since end of rifting (in My).
+    Returns
+    -------
+    float
+        Thermal subsidence (in metres).
     """
     
     E0 = 4 * _y_l * _rhoM * _alpha_v * _Tm / ((np.pi ** 2) * (_rhoM - _rhoW))
@@ -93,20 +109,27 @@ def total_subsidence(
         rift_end_time,
         rift_start_time=None):
     """
-    Total subsidence  as syn-rift plus post-rift.
+    Total subsidence as syn-rift plus post-rift.
     
-    beta: Stretching factor.
+    Parameters
+    ----------
+    beta : float
+        Stretching factor.
+    pre_rift_crustal_thickness : float
+        Initial crustal thickness prior to rifting (in metres).
+    time : float
+        Time to calculate subsidence (in My).
+    rift_end_time : float
+        Time at which rifting ended (in My).
+    rift_start_time : float, optional
+        Time at which rifting started (in My).
+        If not specified then assumes initial (non-thermal) subsidence happens instantaneously at ``rift_end_time``.
+        Defaults to ``rift_end_time``.
     
-    pre_rift_crustal_thickness: Initial crustal thickness prior to rifting (in metres).
-    
-    time: Time to calculate subsidence (in My).
-    
-    rift_end_time: Time at which rifting ended (in My).
-    
-    rift_start_time: Time at which rifting started (in My).
-                     If not specified then assumes initial (non-thermal) subsidence happens
-                     instantaneously at 'rift_end_time'.
-                     Defaults to None.
+    Returns
+    -------
+    float
+        Total subsidence (in metres).
     """
     
     if time < rift_end_time:
@@ -154,14 +177,28 @@ def estimate_beta(
         present_day_crustal_thickness,
         rift_end_time):
     """
-    Calculate stretching factor (beta) by minimizing difference between actual subsidence and
+    Estimate the stretching factor (beta).
+    
+    Parameters
+    ----------
+    present_day_subsidence : float
+        The (sediment-free) subsidence at present day (in metres).
+    present_day_crustal_thickness : float
+        The crustal thickness at present day (in metres).
+    rift_end_time : float
+        The time that rifting ended (in My).
+    
+    Returns
+    -------
+    beta : float
+        The estimated stretching factor.
+    residual : float
+        The inaccuracy between present day subsidence and subsidence calculated using the estimated stretching factor (beta).
+    
+    Notes
+    -----
+    Stretching factor (beta) is calculated by minimizing difference between actual subsidence and
     subsidence calculated from beta (both at present day).
-    
-    present_day_subsidence: The (sediment-free) subsidence at present day (in metres).
-    
-    present_day_crustal_thickness: The crustal thickness at present day (in metres).
-    
-    rift_end_time: The time that rifting ended (in My).
     """
     
     # Objective function for SciPy minimization.

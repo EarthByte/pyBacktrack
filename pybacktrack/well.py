@@ -41,18 +41,41 @@ _DENSITY_MANTLE = 3330.0
 class StratigraphicUnit(object):
     """
     Class to hold data for a stratigraphic unit.
+    
+    Attributes
+    ----------
+    top_age : float
+        Age of top of stratigraphic unit (in Ma).
+    bottom_age : float
+        Age of bottom of stratigraphic unit (in Ma).
+    top_depth : float
+        Depth of top of stratigraphic unit (in metres).
+    bottom_depth : float
+        Depth of bottom of stratigraphic unit (in metres).
+    lithology_components : sequence of tuples (str, float)
+        Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
     """
     
     def __init__(self, top_age, bottom_age, top_depth, bottom_depth, lithology_components, lithologies, other_attributes=None):
         """
+        Create a stratigraphic unit from top and bottom age, top and bottom depth and lithology components.
         
-        lithology_components: Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
-        
-        lithologies: A dict mapping lithology names to lithology.Lithology objects.
-        
-        other_attributes: Optional dict of attribute name/value pairs to set on stratigraphic unit object (using 'setattr').
-        
-        The type of 'lithology' is lithology.Lithology.
+        Parameters
+        ----------
+        top_age : float
+            Age of top of stratigraphic unit (in Ma).
+        bottom_age : float
+            Age of bottom of stratigraphic unit (in Ma).
+        top_depth : float
+            Depth of top of stratigraphic unit (in metres).
+        bottom_depth : float
+            Depth of bottom of stratigraphic unit (in metres).
+        lithology_components : sequence of tuples (str, float)
+            Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
+        lithologies : dict
+            A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
+        other_attributes : dict, optional
+            A dictionary of attribute name/value pairs to set on stratigraphic unit object (using ``setattr``).
         """
         
         self.top_age = top_age
@@ -71,7 +94,17 @@ class StratigraphicUnit(object):
     
     def calc_decompacted_thickness(self, decompacted_depth_to_top):
         """
-        Calculate decompacted thickness when top of this stratigraphic unit is at depth 'decompacted_depth_to_top'.
+        Calculate decompacted thickness when top of this stratigraphic unit is at depth a decompacted depth.
+        
+        Parameters
+        ----------
+        decompacted_depth_to_top : float
+            Decompacted depth of the top of this stratigraphic unit.
+        
+        Returns
+        -------
+        float
+            Decompacted thickness.
         """
         
         present_day_thickness = self.bottom_depth - self.top_depth
@@ -140,8 +173,20 @@ class StratigraphicUnit(object):
     
     def calc_decompacted_density(self, decompacted_thickness, decompacted_depth_to_top):
         """
-        Calculate average decompacted density when top of this stratigraphic unit is at depth 'decompacted_depth_to_top'
-        and decompacted thickness is 'decompacted_thickness' (see 'calc_decompacted_thickness()').
+        Calculate average decompacted density when top of this stratigraphic unit is at a decompacted depth.
+        
+        Parameters
+        ----------
+        decompacted_thickness : float
+            Decompacted thickness of this stratigraphic unit as returned by
+            :meth:`pybacktrack.StratigraphicUnit.calc_decompacted_thickness`.
+        decompacted_depth_to_top : float
+            Decompacted depth of the top of this stratigraphic unit.
+        
+        Returns
+        -------
+        float
+            Decompacted density.
         """
         
         density = self.lithology.density
@@ -178,21 +223,35 @@ class StratigraphicUnit(object):
 class Well(object):
     """
     Class containing all the stratigraphic units in a well sorted by age (from youngest to oldest).
+    
+    Attributes
+    ----------
+    stratigraphic_units : list of :class:`pybacktrack.StratigraphicUnit`
+        List of stratigraphic units in this well.
     """
     
     def __init__(self, attributes=None, stratigraphic_units=None):
         """
-        attributes: Optional well attributes to store on well object.
-                    If specified then must be a dictionary mapping attribute names to values.
-    
-        stratigraphic_units: Optional sequence of StratigraphicUnit objects.
-                             They can be unsorted (by age) but will be added in sorted order.
+        Create a well from stratigraphic units.
         
-        Raises ValueError if:
-        (1) youngest unit does not have zero depth, or
-        (2) adjacent units do not have matching top and bottom ages and depths.
+        Parameters
+        ----------
+        attributes : dict, optional
+            Attributes to store on this well object.
+            If specified then must be a dictionary mapping attribute names to values.
+        stratigraphic_units : sequence of :class:`pybacktrack.StratigraphicUnit`, optional
+            Sequence of StratigraphicUnit objects.
+            They can be unsorted (by age) but will be added in sorted order.
         
-        ...this ensures the units are contiguous in depth from the surface (ie, no gaps).
+        Raises
+        ------
+        ValueError
+            If:
+            
+            #. Youngest unit does not have zero depth, or
+            #. adjacent units do not have matching top and bottom ages and depths.
+        
+            ...this ensures the units are contiguous in depth from the surface (ie, no gaps).
         """
         
         # Add any well attributes requested.
@@ -218,17 +277,24 @@ class Well(object):
         
         Units must be added in order of age.
         
-        lithology_components: Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
+        Parameters
+        ----------
+        lithology_components : sequence of tuples (str, float)
+            Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
+        lithologies : dict
+            A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
+        other_attributes : dict, optional
+            A dictionary of attribute name/value pairs to set on stratigraphic unit object (using ``setattr``).
         
-        lithologies: A dict mapping lithology names to lithology.Lithology objects.
+        Raises
+        ------
+        ValueError
+            If:
+            
+            #. Youngest unit does not have zero depth, or
+            #. adjacent units do not have matching top and bottom ages and depths.
         
-        other_attributes: Optional dict of attribute name/value pairs to set on stratigraphic unit object (using 'setattr').
-    
-        Raises ValueError if:
-        (1) youngest unit does not have zero depth, or
-        (2) adjacent units do not have matching top and bottom ages and depths.
-        
-        ...this ensures the units are contiguous in depth from the surface (ie, no gaps).
+            ...this ensures the units are contiguous in depth from the surface (ie, no gaps).
         """
         
         self._add_compacted_unit(
@@ -257,7 +323,10 @@ class Well(object):
         """
         Finds decompacted total sediment thickness and tectonic subsidence for each age in stratigraphic units.
         
-        Returns: List of DecompactedWell (one per age) in same order (and ages) as the well units (youngest to oldest).
+        Returns
+        -------
+        list of :class:`pybacktrack.DecompactedWell`
+            One decompacted well per age, in same order (and ages) as the well units (youngest to oldest).
         """
         
         # Each decompacted well represents decompaction at the age of a stratigraphic unit in the well.
@@ -306,9 +375,31 @@ class Well(object):
 class DecompactedStratigraphicUnit(object):
     """
     Class to hold data for a *decompacted* stratigraphic unit (decompacted at a specific age).
+    
+    Attributes
+    ----------
+    stratigraphic_unit : :class:`pybacktrack.StratigraphicUnit`
+        Stratigraphic unit referenced by this decompacted stratigraphic unit.
+    decompacted_thickness : float
+        Decompacted thickness.
+    decompacted_density : float
+        Decompacted density.
     """
     
     def __init__(self, stratigraphic_unit, decompacted_thickness, decompacted_density):
+        """
+        Create a decompacted stratigraphic unit from a stratigraphic unit, decompacted thickness and decompacted density.
+        
+        Parameters
+        ----------
+        stratigraphic_unit : :class:`pybacktrack.StratigraphicUnit`
+            Stratigraphic unit referenced by this decompacted stratigraphic unit.
+        decompacted_thickness : float
+            Decompacted thickness.
+        decompacted_density : float
+            Decompacted density.
+        """
+        
         self.stratigraphic_unit = stratigraphic_unit
         self.decompacted_thickness = decompacted_thickness
         self.decompacted_density = decompacted_density
@@ -317,11 +408,33 @@ class DecompactedStratigraphicUnit(object):
 class DecompactedWell(object):
     """
     Class containing the decompacted well data at a specific age.
+    
+    Attributes
+    ----------
+    surface_unit : :class:`pybacktrack.StratigraphicUnit`
+        Top stratigraphic unit in this decompacted well.
+    total_compacted_thickness : float
+        Total compacted thickness of all stratigraphic units.
+    total_decompacted_thickness : float
+        Total decompacted thickness of all decompacted stratigraphic units.
+    decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
+        Decompacted stratigraphic units.
     """
     
     def __init__(self, surface_unit):
         """
-        surface_unit: The top stratigraphic unit in this decompacted well.
+        Create a decompacted well whose top stratigraphic unit is ``surface_unit``.
+        
+        Parameters
+        ----------
+        surface_unit : :class:`pybacktrack.StratigraphicUnit`
+            Top stratigraphic unit in this decompacted well.
+        
+        Notes
+        -----
+        You still need to add the decompacted units with :meth:`pybacktrack.DecompactedWell.add_decompacted_unit`.
+        
+        .. seealso:: :meth:`pybacktrack.Well.decompact`
         """
         
         self.surface_unit = surface_unit
@@ -339,7 +452,20 @@ class DecompactedWell(object):
             decompacted_thickness,
             decompacted_density):
         """
-        Stratigraphic units are decompacted from top of well column to bottom.
+        Add a decompacted stratigraphic unit.
+        
+        Parameters
+        ----------
+        stratigraphic_unit : :class:`pybacktrack.StratigraphicUnit`
+            Stratigraphic unit referenced by decompacted stratigraphic unit.
+        decompacted_thickness : float
+            Decompacted thickness.
+        decompacted_density : float
+            Decompacted density.
+        
+        Notes
+        -----
+        Stratigraphic units should be decompacted from top of well column to bottom.
         """
         
         self.decompacted_stratigraphic_units.append(
@@ -354,7 +480,10 @@ class DecompactedWell(object):
     
     def get_age(self):
         """
-        Returns the age of the surface of the decompacted column of the well.
+        Returns
+        -------
+        float
+            Age of the surface of the decompacted column of the well.
         """
         
         # Return the age of the top of the first stratigraphic unit.
@@ -362,7 +491,10 @@ class DecompactedWell(object):
     
     def get_average_decompacted_density(self):
         """
-        Returns the average density of the entire decompacted column of the well.
+        Returns
+        -------
+        float
+            Average density of the entire decompacted column of the well.
         """
         
         if self.total_decompacted_thickness == 0.0:
@@ -372,8 +504,13 @@ class DecompactedWell(object):
     
     def get_sediment_isostatic_correction(self):
         """
-        Returns the isostatic correction of this decompacted well.
+        Returns
+        -------
+        float
+            Isostatic correction of this decompacted well.
         
+        Notes
+        -----
         The returned correction can be added to a known water depth to obtain the deeper isostatically compensated,
         sediment-free water depth (tectonic subsidence). Or the correction could be subtracted from a
         known tectonic subsidence (unloaded water depth) to get the depth at sediment/water interface.
@@ -385,10 +522,26 @@ class DecompactedWell(object):
     
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
-        Returns the min/max tectonic subsidence (unloaded water depth) of this decompacted well from its min/max water depth.
+        Returns the minimum and maximum tectonic subsidence obtained from minimum and maximum water depth.
         
-        The min/max are a result of the min/max paleo water depths.
+        Parameters
+        ----------
+        min_water_depth : float
+            Minimum water depth.
+        max_water_depth : float
+            Maximum water depth.
+        sea_level : float, optional
+            Sea level.
         
+        Returns
+        -------
+        min_tectonic_subsidence : float
+            Minimum tectonic subsidence (unloaded water depth) of this decompacted well from its minimum water depth.
+        max_tectonic_subsidence : float
+            Maximum tectonic subsidence (unloaded water depth) of this decompacted well from its maximum water depth.
+        
+        Notes
+        -----
         Optional sea level fluctuation is included if specified.
         """
         
@@ -405,8 +558,20 @@ class DecompactedWell(object):
         """
         Returns the water depth of this decompacted well from its tectonic subsidence (unloaded water depth).
         
-        The min/max are a result of the min/max paleo water depths.
+        Parameters
+        ----------
+        tectonic_subsidence : float
+            Tectonic subsidence.
+        sea_level : float, optional
+            Sea level.
         
+        Returns
+        -------
+        float
+            Water depth of this decompacted well from its tectonic subsidence (unloaded water depth).
+        
+        Notes
+        -----
         Optional sea level fluctuation is included if specified.
         """
         
@@ -431,31 +596,48 @@ def read_well_file(
     """
     Reads a text file with each row representing a stratigraphic unit.
     
-    well_filename: name of well text file.
+    Parameters
+    ----------
+    well_filename : str
+        Name of well text file.
+    lithologies : dict
+        Dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
+    well_bottom_age_column : int, optional
+        The column of well file containing bottom age. Defaults to 0.
+    well_bottom_depth_column : int, optional
+        The column of well file containing bottom depth. Defaults to 1.
+    well_lithology_column : int, optional
+        The column of well file containing lithology(s). Defaults to 2.
+    other_columns : dict, optional
+        Dictionary of extra columns (besides age, depth and lithology(s)).
+        Each dict value should be a column index (to read from file) and associated dict key
+        should be a string that will be the name of an attribute (added to each :class:`pybacktrack.StratigraphicUnit`
+        object in the returned :class:`pybacktrack.Well`) containing the value read.
+    well_attributes : dict, optional
+        Attributes to read from well file metadata and store in returned :class:`pybacktrack.Well` object.
+        If specified then must be a dictionary mapping each metadata name to a 2-tuple containing
+        attribute name and a function to convert attribute string to attribute value.
+        For example, {'SiteLongitude' : ('longitude', float), 'SiteLatitude' : ('latitude', float)}
+        will look for metadata name 'SiteLongitude' and store a float value in Well.longitude
+        (or None if not found), etc.
+        Each metadata not found in well file will store None in the associated attribute of :class:`pybacktrack.Well` object.
     
-    lithologies: a dict mapping lithology names to lithology.Lithology objects.
+    Returns
+    -------
+    :class:`pybacktrack.Well`
+        Well read from file.
     
-    other_columns: Optional dict of extra columns (besides age, depth and lithology(s)).
-                   Each dict value should be a column index (to read from file) and associated dict key
-                   should be a string that will be the name of an attribute (added to each StratigraphicUnit
-                   object in the returned Well) containing the value read.
+    Raises
+    ------
+    ValueError
+        If ``lithology_column`` is not the largest column number (must be last column).
     
-    well_attributes: Optional attributes to read from well file metadata and store in returned Well object.
-                     If specified then must be a dictionary mapping each metadata name to a 2-tuple containing
-                     attribute name and a function to convert attribute string to attribute value.
-                     For example, {'SiteLongitude' : ('longitude', float), 'SiteLatitude' : ('latitude', float)}
-                     will look for metadata name 'SiteLongitude' and store a float value in Well.longitude
-                     (or None if not found), etc.
-                     Each metadata not found in well file will store None in the associated attribute of Well object.
-    
-    Returns: Well
-    
+    Notes
+    -----
     Each attribute to read (eg, bottom_age, bottom_depth, etc) has a column index to direct which column it should be read from.
     
-    If file contains 'SurfaceAge = <age>'in commented ('#') lines then the top age of the
+    If file contains ``SurfaceAge = <age>`` in commented (``#``) lines then the top age of the
     youngest stratigraphic unit will have that age, otherwise it defaults to 0Ma (present day).
-    
-    Raises ValueError if 'lithology_column' is not the largest column number (must be last column).
     """
     
     if (max(bottom_age_column, bottom_depth_column) >= lithology_column or
@@ -600,17 +782,20 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
     """
     Write a text file with each row representing a stratigraphic unit.
     
-    well: The well to write.
-    
-    well_filename: Name of well text file.
-    
-    other_column_attribute_names: Names of any extra column attributes to write as column before the lithology(s) column.
-    
-    well_attributes: Optional attributes in Well object to write to well file metadata.
-                     If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
-                     will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
-                     Not that the attributes must exist in 'well' (but can be set to None).
+    Parameters
+    ----------
+    well : :class:`pybacktrack.Well`
+        The well to write.
+    well_filename : str
+        Name of well text file.
+    other_column_attribute_names : sequence of str
+        Names of any extra column attributes to write as column before the lithology(s) column.
+    well_attributes : dict, optional
+        Attributes in :class:`pybacktrack.Well` object to write to well file metadata.
+        If specified then must be a dictionary mapping each attribute name to a metadata name.
+        For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
+        will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
+        Not that the attributes must exist in ``well`` (but can be set to None).
     """
     
     if not well.stratigraphic_units:
@@ -666,15 +851,20 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
 
 def write_well_metadata(well_file, well, well_attributes=None):
     """
-    Write well metadata to file object 'well_file'.
+    Write well metadata to file object ``well_file``.
     
-    well: The well to extract metadata from.
-    
-    well_attributes: Optional attributes in Well object to write to well file metadata.
-                     If specified then must be a dictionary mapping each attribute name to a metadata name.
-                     For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
-                     will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
-                     Not that the attributes must exist in 'well' (but can be set to None).
+    Parameters
+    ----------
+    well_file : file object
+        Well file object to write to.
+    well : :class:`pybacktrack.Well`
+        Well to extract metadata from.
+    well_attributes : dict, optional
+        Attributes in :class:`pybacktrack.Well` object to write to well file metadata.
+        If specified then must be a dictionary mapping each attribute name to a metadata name.
+        For example, {'longitude' : 'SiteLongitude', 'latitude' : 'SiteLatitude'}
+        will write well.longitude (if not None) to metadata 'SiteLongitude', etc.
+        Not that the attributes must exist in ``well`` (but can be set to None).
     """
     
     # List of 2-tuples of metadata to write to file.

@@ -85,6 +85,7 @@ Creating lithologies
 
 .. autoclass:: pybacktrack.Lithology
    :members:
+   :special-members: __init__
 
 .. autofunction:: pybacktrack.read_lithologies_file
 
@@ -109,15 +110,19 @@ Decompacting well sites
 
 .. autoclass:: pybacktrack.Well
    :members:
+   :special-members: __init__
 
 .. autoclass:: pybacktrack.StratigraphicUnit
    :members:
+   :special-members: __init__
 
 .. autoclass:: pybacktrack.DecompactedWell
    :members:
+   :special-members: __init__
 
 .. autoclass:: pybacktrack.DecompactedStratigraphicUnit
    :members:
+   :special-members: __init__
 
 .. _pybacktrack_reference_converting_age_to_depth:
 
@@ -156,12 +161,14 @@ Dynamic topography
 
 .. autoclass:: pybacktrack.DynamicTopography
    :members:
+   :special-members: __init__
 
 Average sea level variations
 ----------------------------
 
 .. autoclass:: pybacktrack.SeaLevel
    :members:
+   :special-members: __init__
 
 .. _pybacktrack_reference_utilities:
 
