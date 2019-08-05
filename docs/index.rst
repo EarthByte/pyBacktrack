@@ -30,7 +30,7 @@ The following paper covers the theory and algorithms of pyBacktrack:
   `PyBacktrack 1.0: A Tool for Reconstructing Paleobathymetry on Oceanic and Continental Crust <https://doi.org/10.1029/2017GC007313>`_,
   **Geochemistry, Geophysics, Geosystems,** 19, 1898-1909, doi: 10.1029/2017GC007313
 
-.. note:: It can be downloaded either at `Geochemistry, Geophysics, Geosystems <https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2017GC007313>`_ or
+.. note:: The paper can be downloaded either at `Geochemistry, Geophysics, Geosystems <https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2017GC007313>`_ or
           `ResearchGate <https://www.researchgate.net/publication/325045269_PyBacktrack_10_A_Tool_for_Reconstructing_Paleobathymetry_on_Oceanic_and_Continental_Crust>`_.
 
 Contents
