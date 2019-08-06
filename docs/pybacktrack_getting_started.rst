@@ -49,13 +49,19 @@ PyBacktrack depends on:
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
 Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_reference_bundle_data>` are in NetCDF4 format.
 
-`pyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
+`PyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
+
+Also, pyGPlates currently requires Python 2.7 (future releases will support Python 3).
+So unfortunately you will need a Python 2.7 installation along with your existing Python 3 installation.
+The :ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach using ``sudo port select``.
+Another approach is using Python virtual environments where each environment has its own ``python``, ``pip`` and installed packages.
+However, currently pyGPlates does not yet work in virtual environments (at least on Mac systems).
 
 .. _pybacktrack_install_requirements_ubuntu:
 
-Install GMT and pyGPlates on Ubuntu
-***********************************
+Install Python 2.7, pip, GMT and pyGPlates on Ubuntu
+****************************************************
 
 This is an example demonstrating how to install GMT and pyGPlates on Ubuntu 16.04 (Xenial).
 
@@ -93,8 +99,8 @@ Or, alternatively, copy pyGPlates to the Python system install directory:
 
 .. _pybacktrack_install_requirements_mac:
 
-Install GMT and pyGPlates on Mac using Macports
-***********************************************
+Install Python 2.7, pip, GMT and pyGPlates on Mac using Macports
+****************************************************************
 
 This is an example demonstrating how to install GMT and pyGPlates on a Mac system using `Macports <https://www.macports.org/>`_.
 
@@ -103,8 +109,21 @@ First install Python 2.7 and Pip:
 
   sudo port install python27
   sudo port install py27-pip
+
+Set your default ``python`` to Python 2.7:
+::
+
   sudo port select --set python python27
   sudo port select --set pip pip27
+
+.. note:: If you already have ``python`` referencing Python 3 then you can instead use ``python2`` to reference Python 2.7:
+          ::
+          
+            sudo port select --set python2 python27
+            sudo port select --set pip2 pip27
+          
+          ...but this will require using ``python2`` on the command-line to run
+          :ref:`pybacktrack <pybacktrack_use_a_builtin_module_script>` (instead of just ``python``).
 
 Then install GMT 5:
 ::
