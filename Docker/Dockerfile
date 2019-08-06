@@ -23,12 +23,12 @@ RUN rm pygplates-ubuntu-xenial_2.1_1_amd64.deb
 Env PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision18/
 
 # Install pybacktrack (either latest public release, or directly from Github repo).
-#RUN pip install pybacktrack
-RUN apt-get install -y --no-install-recommends git
-RUN pip install -U setuptools
-RUN pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
+RUN pip install pybacktrack
+#RUN apt-get install -y --no-install-recommends git
+#RUN pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
 
 # Install pybacktrack example data from the pybacktrack package.
+RUN pip install -U setuptools  # Need pkg_resources to install examples.
 RUN python -c 'import pybacktrack; pybacktrack.install_examples()'
 
 # Seem to need this to fix install error for matplotlib (involving subprocess32).
