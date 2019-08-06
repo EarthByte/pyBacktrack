@@ -93,28 +93,49 @@ Backtrack output
 
 For each stratigraphic layer in the input drill site file, ``backtrack`` can write one or more parameters to an output file.
 
-For example, if we run the :ref:`above example <pygplates_backtrack_example>` on ODP drill site 699:
+Running the :ref:`above example <pygplates_backtrack_example>` on ODP drill site 699:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
    :literal:
 
-...then we will get the following amended drill site output file:
+...produces an :ref:`amended drill site output file <pygplates_backtrack_output_amended_drill_site>` containing an extra base sediment layer,
+and a :ref:`decompacted output file <pygplates_backtrack_output_decompacted>` containing the decompacted output parameters like
+sediment thickness and water depth.
+
+.. _pygplates_backtrack_output_amended_drill_site:
+
+Amended drill site output
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The amended drill site output file:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
-.. note:: The extra :ref:`base sediment layer <pygplates_base_sediment_layer>`.
+There is an extra :ref:`base sediment layer <pygplates_base_sediment_layer>` that extends from the bottom
+of the drill site (516.3 metres) to the total sediment thickness (601 metres).
+The bottom age of this new base layer (86.79 Ma) is the age of oceanic crust that ODP drill site 699 is on.
+If it had been on continental crust (near a passive margin such as DSDP drill site 327) then
+the bottom age of this new base layer would have been when rifting started
+(since we would have assumed deposition began when continental stretching began).
 
-...as well as the following decompacted output file:
+.. seealso:: :ref:`pygplates_base_sediment_layer` and :ref:`pygplates_backtrack_oceanic_versus_continental_sites`
+
+.. _pygplates_backtrack_output_decompacted:
+
+Decompacted output
+^^^^^^^^^^^^^^^^^^
+
+The decompacted output file:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompat.txt
    :literal:
 
-.. note:: The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*,
-          *bottom_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
+The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth* and *lithology* columns
+in the input drill site (except there is also a row associated with the surface age).
 
-The *compacted_thickness* column is the total sediment thickness (601 metres - see :ref:`base sediment layer <pygplates_base_sediment_layer>`
-of amended drill site above) minus *compacted_depth*.
+The *compacted_thickness* column is the total sediment thickness (601 metres - see base sediment layer of
+:ref:`amended drill site <pygplates_backtrack_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
 (or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density

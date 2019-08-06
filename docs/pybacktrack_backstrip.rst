@@ -96,28 +96,51 @@ Backstrip output
 
 For each stratigraphic layer in the input drill site file, ``backstrip`` can write one or more parameters to an output file.
 
-For example, if we run the :ref:`above example <pygplates_backstrip_example>` on the sunrise drill site:
+Running the :ref:`above example <pygplates_backstrip_example>` on the sunrise drill site:
 
 .. include:: ../pybacktrack/test_data/sunrise_lithology.txt
    :literal:
 
-...then we will get the following amended drill site output file:
+...produces an :ref:`amended drill site output file <pygplates_backstrip_output_amended_drill_site>` containing an extra base sediment layer,
+and a :ref:`decompacted output file <pygplates_backstrip_output_decompacted>` containing the decompacted output parameters like
+sediment thickness and tectonic subsidence.
+
+.. _pygplates_backstrip_output_amended_drill_site:
+
+Amended drill site output
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The amended drill site output file:
 
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_amended.txt
    :literal:
 
-.. note:: The extra :ref:`base sediment layer <pygplates_base_sediment_layer>`.
+There is an extra :ref:`base sediment layer <pygplates_base_sediment_layer>` that extends from the bottom
+of the drill site (704.393 metres) to the total sediment thickness (1298.15 metres).
+However the bottom age of this new base layer (190 Ma) is the same as its top age.
+This is because, unlike :ref:`backtracking <pygplates_backtrack>`, we don't know the age of the crust.
+But this is fine since the :ref:`decompacted output <pygplates_backstrip_output_decompacted>` only uses the
+top age of each layer. And the decompacted sediment thickness/density (and hence the tectonic subsidence)
+still takes into account the base sediment layer and hence the total sediment thickness
+(as seen in the :ref:`decompacted output <pygplates_backstrip_output_decompacted>`).
 
-...as well as the following decompacted output file:
+.. seealso:: :ref:`pygplates_base_sediment_layer`
+
+.. _pygplates_backstrip_output_decompacted:
+
+Decompacted output
+^^^^^^^^^^^^^^^^^^
+
+The decompacted output file:
 
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_decompat.txt
    :literal:
 
-.. note:: The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth*,
-          *min_water_depth*, *max_water_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
+The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth*,
+*min_water_depth*, *max_water_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
 
-The *compacted_thickness* column is the total sediment thickness (1298.15 metres - see :ref:`base sediment layer <pygplates_base_sediment_layer>`
-of amended drill site above) minus *compacted_depth*.
+The *compacted_thickness* column is the total sediment thickness (1298.15 metres - see base sediment layer of
+:ref:`amended drill site <pygplates_backstrip_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
 (or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density
