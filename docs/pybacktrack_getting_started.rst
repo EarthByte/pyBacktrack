@@ -5,7 +5,7 @@ Getting Started
 
 .. contents::
    :local:
-   :depth: 3
+   :depth: 4
 
 
 .. _pybacktrack_installation:
@@ -15,8 +15,8 @@ Installation
 
 You can install ``pybacktrack`` either:
 
-#. using the `pip package manager <https://pypi.org/project/pip/>`_, or
-#. using `Docker <https://www.docker.com/>`_.
+#. using :ref:`pip <pybacktrack_install_using_pip>`, or
+#. using :ref:`Docker <pybacktrack_install_using_docker>`.
 
 Docker is typically more straightforward since all the dependencies of ``pybacktrack`` have been pre-installed.
 
@@ -25,8 +25,12 @@ Docker is typically more straightforward since all the dependencies of ``pybackt
 Install using pip
 -----------------
 
-Python packages installed using pip will typically also have their dependency packages automatically installed also.
-However ``pybacktrack`` requires manual installation of some of its dependencies (as covered in the next section).
+Python packages installed using `pip <https://pypi.org/project/pip/>`_ will typically also have their dependency packages automatically installed also.
+However ``pybacktrack`` requires manual installation of some of its dependencies.
+
+.. contents::
+   :local:
+   :depth: 2
 
 .. _pybacktrack_requirements:
 
@@ -48,6 +52,75 @@ Also ensure that version 5 or above (supports NetCDF version 4) is installed sin
 `pyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
 
+.. _pybacktrack_install_requirements_ubuntu:
+
+Install GMT and pyGPlates on Ubuntu
+***********************************
+
+This is an example demonstrating how to install GMT and pyGPlates on Ubuntu 16.04 (Xenial).
+
+.. note:: The main difference for other Ubuntu versions will be the pyGPlates install package
+          (you'll need to select the package appropriate for your Ubuntu version).
+
+First install Python 2.7 and Pip:
+::
+
+  sudo apt-get update
+  
+  sudo apt-get install python python-pip
+  sudo pip install --upgrade pip
+
+Then install GMT 5:
+::
+
+  sudo apt-get install gmt
+
+Then download the pyGPlates debian package `pygplates-ubuntu-xenial_2.1_1_amd64.deb <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-18/>`_,
+and install it:
+::
+
+  sudo apt-get install pygplates-ubuntu-xenial_2.1_1_amd64.deb
+
+Then add the installed location of pyGPlates to the PYTHONPATH environment variable:
+::
+
+  export PYTHONPATH=$PYTHONPATH:/usr/lib/pygplates/revision18
+
+Or, alternatively, copy pyGPlates to the Python system install directory:
+::
+
+  cp /usr/lib/pygplates/revision18/pygplates.so /usr/lib/python2.7/dist-packages/
+
+.. _pybacktrack_install_requirements_mac:
+
+Install GMT and pyGPlates on Mac using Macports
+***********************************************
+
+This is an example demonstrating how to install GMT and pyGPlates on a Mac system using `Macports <https://www.macports.org/>`_.
+
+First install Python 2.7 and Pip:
+::
+
+  sudo port install python27
+  sudo port install py27-pip
+  sudo port select --set python python27
+  sudo port select --set pip pip27
+
+Then install GMT 5:
+::
+
+  sudo port install gmt5
+
+Then download the pyGPlates Mac zip file `pygplates_rev18_python27_MacOS64.zip <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-18/>`_,
+and extract it to your home directory.
+
+Then add the unzipped location of pyGPlates to the PYTHONPATH environment variable:
+::
+
+  export PYTHONPATH=~/pygplates_rev18_python27_MacOS64:$PYTHONPATH
+
+.. note:: The above line can be added to your ``~/.bashrc`` or ``~/.profile`` file so that
+          PYTHONPATH is set each time you open a new terminal window.
 
 .. _pybacktrack_install_pybacktrack:
 
@@ -61,6 +134,11 @@ To install the latest stable version, run:
 
 .. note:: | This will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
           | However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
+
+.. warning:: | On Mac systems, when using `Macports <https://www.macports.org/>`_, it might be better to install to the
+               local user install directory with ``pip install --user pybacktrack`` to avoid confusing Macports
+               (which installs to the system install directory).
+             | And on linux systems, if you have admin privileges, you can install to the system install directory with ``sudo pip install pybacktrack``.
 
 To install the latest development version (requires Git on local system), run:
 ::
