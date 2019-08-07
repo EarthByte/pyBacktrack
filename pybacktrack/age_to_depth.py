@@ -296,8 +296,8 @@ class ArgParseAgeModelAction(argparse.Action):
 if __name__ == '__main__':
     
     def warning_format(message, category, filename, lineno, file=None, line=None):
-        # return '{0}:{1}: {1}:{1}'.format(filename, lineno, category.__name__, message)
-        return '{0}: {1}'.format(category.__name__, message)
+        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}\n'.format(category.__name__, message)
     
     # Print the warnings without the filename and line number.
     # Users are not going to want to see that.
