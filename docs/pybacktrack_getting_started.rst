@@ -198,9 +198,26 @@ The following command installs the examples (example data and notebooks) to a ne
 Install using Docker
 --------------------
 
-This method of running ``pybacktrack`` relies on `Docker <https://www.docker.com/>`_.
+This method of running ``pybacktrack`` relies on `Docker <https://www.docker.com/>`_, so before installing
+the ``pybacktrack`` docker image, ensure you have installed `Docker <https://www.docker.com/>`_.
 
-To install the ``pybacktrack`` docker image:
+.. note:: | On Windows platforms you can install `Docker Toolbox <https://docs.docker.com/toolbox/overview/>`_ or
+            `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_.
+          | *Docker Desktop for Windows* offers the most "native" experience and is recommended by Docker, but has
+            higher system requirements and once it's installed you can no longer use VirtualBox (to run other Virtual Machines).
+          | In contrast, *Docker Toolbox* relies on VirtualBox, so if your system can run VirtualBox then
+            *Docker Toolbox* should work on your system.
+          | A similar situation applies on Mac platforms where you can install
+            `Docker Toolbox <https://docs.docker.com/toolbox/overview/>`_ or
+            `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_.
+
+Once Docker is installed, open a Docker terminal (command-line interface).
+
+.. note:: | For *Docker Toolbox* this is the *Docker Quickstart Terminal*.
+          | For `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_ and
+            `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_ this a regular command-line terminal.
+
+To install the ``pybacktrack`` docker image, type:
 
 .. code-block:: none
 
