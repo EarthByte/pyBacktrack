@@ -90,11 +90,17 @@ It is also possible that the sediment thickness recorded at the drill site is le
 thickness. This happens when the drill site does not penetrate all the way to the basement depth of oceanic or continental crust.
 In this situation a base stratigraphic layer is automatically added during backtracking and backstripping
 to represent sediment from the bottom of the drill site down to the basement depth of oceanic or continental crust.
+
 For backtracking, the bottom age of this new base layer is the age of oceanic crust if the drill site is on ocean crust,
 or the age that rifting starts if the drill site is on continental crust (since it is assumed that deposition began when
 continental stretching started) - see :ref:`backtrack <pygplates_backtrack>` for more details.
+
 For backstripping, the bottom age of this new base layer is simply set to the age at the bottom of the drill site
-(ie, bottom age of deepest stratigraphic layer).
+(ie, bottom age of deepest stratigraphic layer). This is because, unlike backtracking, we don't know the age of the crust.
+But this is fine since the decompacted output only uses the top age of each layer.
+And the decompacted sediment thickness/density (and hence the tectonic subsidence)
+still takes into account the base sediment layer and hence the total sediment thickness.
+
 By default the lithology of the base layer is ``Shale``, but can be changed using the ``-b`` command-line option in
 the :ref:`backtrack <pygplates_backtrack>` and :ref:`backstrip <pygplates_backstrip>` modules. To determine the
 total sediment thickness, a grid is sampled at the drill site location. The default grid is

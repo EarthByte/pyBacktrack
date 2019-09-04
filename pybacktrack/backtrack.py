@@ -473,12 +473,12 @@ def _add_stratigraphic_unit_to_basement(
         base_unit_bottom_age = max(base_unit_bottom_age, base_unit_top_age)
         
         # One lithology component comprising the full fraction.
-        base_unit_lithogy_components = [(base_lithology_name, 1.0)]
+        base_unit_lithology_components = [(base_lithology_name, 1.0)]
         
         well.add_compacted_unit(
             base_unit_top_age, base_unit_bottom_age,
             base_unit_top_depth, base_unit_bottom_depth,
-            base_unit_lithogy_components, lithologies)
+            base_unit_lithology_components, lithologies)
         
     elif well_sediment_thickness - present_day_total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.

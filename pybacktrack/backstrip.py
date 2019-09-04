@@ -208,7 +208,7 @@ def backstrip_well(
         base_unit_bottom_age = base_unit_top_age
         
         # One lithology component comprising the full fraction.
-        base_unit_lithogy_components = [(base_lithology_name, 1.0)]
+        base_unit_lithology_components = [(base_lithology_name, 1.0)]
         
         # We don't know the min/max water depth of the base unit so
         # just use the min/max water depth of the deepest unit of well.
@@ -219,7 +219,7 @@ def backstrip_well(
         well.add_compacted_unit(
             base_unit_top_age, base_unit_bottom_age,
             base_unit_top_depth, base_unit_bottom_depth,
-            base_unit_lithogy_components, lithologies,
+            base_unit_lithology_components, lithologies,
             base_unit_other_attributes)
         
     elif well_sediment_thickness - total_sediment_thickness > 0.01 * well_sediment_thickness:

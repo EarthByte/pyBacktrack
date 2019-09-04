@@ -115,16 +115,11 @@ The amended drill site output file:
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_amended.txt
    :literal:
 
-There is an extra :ref:`base sediment layer <pygplates_base_sediment_layer>` that extends from the bottom
-of the drill site (704.393 metres) to the total sediment thickness (1298.15 metres).
-However the bottom age of this new base layer (190 Ma) is the same as its top age.
-This is because, unlike :ref:`backtracking <pygplates_backtrack>`, we don't know the age of the crust.
-But this is fine since the :ref:`decompacted output <pygplates_backstrip_output_decompacted>` only uses the
-top age of each layer. And the decompacted sediment thickness/density (and hence the tectonic subsidence)
-still takes into account the base sediment layer and hence the total sediment thickness
-(as seen in the :ref:`decompacted output <pygplates_backstrip_output_decompacted>`).
-
-.. seealso:: :ref:`pygplates_base_sediment_layer`
+.. note:: No extra :ref:`base sediment layer <pygplates_base_sediment_layer>` is added from the bottom of the
+          drill site (2311 metres) to the total sediment thickness at the drill site (1298.15 metres),
+          because the former (bottom of drill site) is already deeper than the latter (total sediment thickness).
+          This happens because the :ref:`default total sediment thickness grid <pygplates_base_sediment_layer>` is not
+          as accurate near continental margins (compared to deeper ocean basins).
 
 .. _pygplates_backstrip_output_decompacted:
 
@@ -139,7 +134,7 @@ The decompacted output file:
 The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth*,
 *min_water_depth*, *max_water_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
 
-The *compacted_thickness* column is the total sediment thickness (1298.15 metres - see base sediment layer of
+The *compacted_thickness* column is the bottom depth of the drill site (2311 metres - noting that there is no base sediment layer in the
 :ref:`amended drill site <pygplates_backstrip_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
