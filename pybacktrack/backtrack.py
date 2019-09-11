@@ -34,7 +34,7 @@ import math
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
 from pybacktrack.dynamic_topography import DynamicTopography
-from pybacktrack.lithology import read_lithologies_file, DEFAULT_BASE_LITHOLOGY_NAME
+from pybacktrack.lithology import read_lithologies_file, read_lithologies_files, DEFAULT_BASE_LITHOLOGY_NAME
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
@@ -205,9 +205,7 @@ def backtrack_well(
         # Read all the lithology files and merge their dicts.
         # Subsequently specified files override previous files in the list.
         # So if the first and second files have the same lithology then the second lithology is used.
-        lithologies = {}
-        for lithology_filename in lithology_filenames:
-            lithologies.update(read_lithologies_file(lithology_filename))
+        lithologies = read_lithologies_files(lithology_filenames)
     
     # Read the well from a file.
     well = load_well(

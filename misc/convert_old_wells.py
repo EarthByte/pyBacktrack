@@ -429,9 +429,7 @@ if __name__ == '__main__':
     #    print(well_name, well_location)
     
     # Read all the lithology files and merge their dicts.
-    lithologies = {}
-    for lithology_filename in pybacktrack.BUNDLE_LITHOLOGY_FILENAMES:
-        lithologies.update(pybacktrack.read_lithologies_file(lithology_filename))
+    lithologies = pybacktrack.read_lithologies_files(pybacktrack.BUNDLE_LITHOLOGY_FILENAMES)
     
     # Read the ".dat" files.
     dat_filenames = glob.glob(well_dat_files_pattern)

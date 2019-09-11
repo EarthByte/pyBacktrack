@@ -84,9 +84,10 @@ def read_lithologies_file(lithologies_filename):
     
     Notes
     -----
-    The three parameter columns in the lithologies text file should contain:
+    The four parameter columns in the lithologies text file should contain:
     
-    #. name density
+    #. name
+    #. density
     #. surface_porosity
     #. porosity_decay
     """
@@ -127,6 +128,47 @@ def read_lithologies_file(lithologies_filename):
                 continue
 
             lithologies[name] = Lithology(density, surface_porosity, porosity_decay)
+    
+    return lithologies
+
+
+def read_lithologies_files(lithologies_filenames):
+    """
+    Reads each lithologies text file in the sequence and merges their lithologies.
+    
+    Parameters
+    ----------
+    lithologies_filenames : sequence of str
+        Filenames of the lithologies text files.
+    
+    Returns
+    -------
+    dict
+        Dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
+    
+    Notes
+    -----
+    The four parameter columns in each lithologies text file should contain:
+    
+    #. name
+    #. density
+    #. surface_porosity
+    #. porosity_decay
+    
+    The order of filenames is important. If a lithology name exists in multiple files
+    but has different definitions (values for density, surface porosity and porosity decay) then
+    the definition in the last file containing the lithology name is used.
+    
+    .. versionadded:: 1.2
+    """
+    
+    lithologies = {}
+    
+    # Read all the lithology files and merge their dicts.
+    # Subsequently specified files override previous files in the list.
+    # So if the first and second files have the same lithology then the second lithology is used.
+    for lithologies_filename in lithologies_filenames:
+        lithologies.update(read_lithologies_file(lithologies_filename))
     
     return lithologies
 

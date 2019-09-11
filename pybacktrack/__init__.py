@@ -41,6 +41,7 @@ from pybacktrack.backstrip import \
 from pybacktrack.lithology import \
     Lithology, \
     read_lithologies_file, \
+    read_lithologies_files, \
     create_lithology, \
     create_lithology_from_components, \
     DEFAULT_BASE_LITHOLOGY_NAME
@@ -123,6 +124,7 @@ __all__ = [
     # From lithology module...
     'Lithology',
     'read_lithologies_file',
+    'read_lithologies_files',
     'create_lithology',
     'create_lithology_from_components',
     'DEFAULT_BASE_LITHOLOGY_NAME',

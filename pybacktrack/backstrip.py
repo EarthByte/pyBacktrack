@@ -29,7 +29,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pybacktrack.bundle_data
-from pybacktrack.lithology import read_lithologies_file, DEFAULT_BASE_LITHOLOGY_NAME
+from pybacktrack.lithology import read_lithologies_file, read_lithologies_files, DEFAULT_BASE_LITHOLOGY_NAME
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
 import pybacktrack.version
@@ -140,9 +140,7 @@ def backstrip_well(
         # Read all the lithology files and merge their dicts.
         # Subsequently specified files override previous files in the list.
         # So if the first and second files have the same lithology then the second lithology is used.
-        lithologies = {}
-        for lithology_filename in lithology_filenames:
-            lithologies.update(read_lithologies_file(lithology_filename))
+        lithologies = read_lithologies_files(lithology_filenames)
     
     def read_longitude(string):
         longitude = float(string)
