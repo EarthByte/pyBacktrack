@@ -52,6 +52,16 @@ class StratigraphicUnit(object):
         Depth of top of stratigraphic unit (in metres).
     bottom_depth : float
         Depth of bottom of stratigraphic unit (in metres).
+    min_water_depth : float, optional
+        Minimum water depth (in metres).
+        Note that this attribute is only available when backstripping (not backtracking).
+        For example, it is available if :func:`pybacktrack.backstrip_well` or
+        :func:`pybacktrack.backstrip_and_write_well` has been called.
+    max_water_depth : float, optional
+        Maximum water depth (in metres).
+        Note that this attribute is only available when backstripping (not backtracking).
+        For example, it is available if :func:`pybacktrack.backstrip_well` or
+        :func:`pybacktrack.backstrip_and_write_well` has been called.
     lithology_components : sequence of tuples (str, float)
         Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
     """
@@ -76,6 +86,8 @@ class StratigraphicUnit(object):
             A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
         other_attributes : dict, optional
             A dictionary of attribute name/value pairs to set on stratigraphic unit object (using ``setattr``).
+            For example, backstripping will add the ``min_water_depth`` and ``max_water_depth`` attributes
+            (when :func:`pybacktrack.backstrip_well` or :func:`pybacktrack.backstrip_and_write_well` has been called).
         """
         
         self.top_age = top_age
@@ -279,12 +291,22 @@ class Well(object):
         
         Parameters
         ----------
+        top_age : float
+            Age of top of stratigraphic unit (in Ma).
+        bottom_age : float
+            Age of bottom of stratigraphic unit (in Ma).
+        top_depth : float
+            Depth of top of stratigraphic unit (in metres).
+        bottom_depth : float
+            Depth of bottom of stratigraphic unit (in metres).
         lithology_components : sequence of tuples (str, float)
             Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
         lithologies : dict
             A dictionary mapping lithology names to :class:`pybacktrack.Lithology` objects.
         other_attributes : dict, optional
             A dictionary of attribute name/value pairs to set on stratigraphic unit object (using ``setattr``).
+            For example, backstripping will add the ``min_water_depth`` and ``max_water_depth`` attributes
+            (when :func:`pybacktrack.backstrip_well` or :func:`pybacktrack.backstrip_and_write_well` has been called).
         
         Raises
         ------
@@ -417,8 +439,26 @@ class DecompactedWell(object):
         Total compacted thickness of all stratigraphic units.
     total_decompacted_thickness : float
         Total decompacted thickness of all decompacted stratigraphic units.
+    tectonic_subsidence : float, optional
+        Tectonic subsidence (in metres).
+        Note that this attribute is only available when backtracking (not backstripping).
+        For example, it is available if :func:`pybacktrack.backtrack_well` or
+        :func:`pybacktrack.backtrack_and_write_well` has been called.
+    min_water_depth : float, optional
+        Minimum water depth (in metres).
+        Note that this attribute is only available when backstripping (not backtracking).
+        For example, it is available if :func:`pybacktrack.backstrip_well` or
+        :func:`pybacktrack.backstrip_and_write_well` has been called.
+    max_water_depth : float, optional
+        Maximum water depth (in metres).
+        Note that this attribute is only available when backstripping (not backtracking).
+        For example, it is available if :func:`pybacktrack.backstrip_well` or
+        :func:`pybacktrack.backstrip_and_write_well` has been called.
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.
+    
+    .. versionadded:: 1.2
+       Added *min_water_depth* and *max_water_depth* attributes when backstripping.
     """
     
     def __init__(self, surface_unit):
@@ -442,6 +482,15 @@ class DecompactedWell(object):
         self.total_compacted_thickness = 0.0
         self.total_decompacted_thickness = 0.0
         self.decompacted_stratigraphic_units = []
+        
+        # If the surface unit has 'min_water_depth' and 'max_water_depth' attributes then
+        # set them on 'self' too. This only applies when backstripping (not backtracking).
+        min_water_depth = getattr(surface_unit, 'min_water_depth', None)
+        max_water_depth = getattr(surface_unit, 'max_water_depth', None)
+        if min_water_depth is not None:
+            self.min_water_depth = min_water_depth
+        if max_water_depth is not None:
+            self.max_water_depth = max_water_depth
         
         # Private.
         self._total_decompacted_thickness_times_density = 0.0
@@ -520,6 +569,36 @@ class DecompactedWell(object):
                 (_DENSITY_MANTLE - self.get_average_decompacted_density()) /
                 (_DENSITY_MANTLE - _DENSITY_WATER))
     
+    def get_min_max_tectonic_subsidence(self):
+        """
+        Returns the minimum and maximum tectonic subsidence obtained from its ``min_water_depth`` and ``max_water_depth`` attributes
+        (from backstripping) and optional ``sea_level`` attribute.
+        
+        Returns
+        -------
+        min_tectonic_subsidence : float
+            Minimum tectonic subsidence (unloaded water depth) of this decompacted well from its minimum water depth.
+        max_tectonic_subsidence : float
+            Maximum tectonic subsidence (unloaded water depth) of this decompacted well from its maximum water depth.
+        
+        Notes
+        -----
+        Optional sea level fluctuation is included if specified.
+        
+        The ``min_water_depth`` and ``max_water_depth`` attributes are only available for backstripping (not backtracking).
+        For example, they are available if :func:`pybacktrack.backstrip_well` or
+        :func:`pybackstrip.backtrack_and_write_well` has been called.
+        
+        The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        
+        .. versionadded:: 1.2
+        """
+        
+        return self.get_min_max_tectonic_subsidence_from_water_depth(
+            self.min_water_depth,
+            self.max_water_depth,
+            getattr(self, 'sea_level', None))  # self.sea_level may not exist
+    
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
         Returns the minimum and maximum tectonic subsidence obtained from minimum and maximum water depth.
@@ -554,9 +633,36 @@ class DecompactedWell(object):
         # isostatically compensated, sediment-free water depth (tectonic subsidence).
         return min_water_depth + isostatic_correction, max_water_depth + isostatic_correction
     
+    def get_water_depth(self):
+        """
+        Returns the water depth of this decompacted well from its ``tectonic_subsidence`` attribute (unloaded water depth)
+        (from backtracking) and optional ``sea_level`` attribute.
+        
+        Returns
+        -------
+        float
+            Water depth of this decompacted well from its tectonic subsidence (unloaded water depth).
+        
+        Notes
+        -----
+        Optional sea level fluctuation is included if specified.
+        
+        The ``tectonic_subsidence`` attribute is only available for backtracking (not backstripping).
+        For example, it is available if :func:`pybacktrack.backtrack_well` or
+        :func:`pybacktrack.backtrack_and_write_well` has been called.
+        
+        The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        
+        .. versionadded:: 1.2
+        """
+        
+        return self.get_water_depth_from_tectonic_subsidence(
+            self.tectonic_subsidence,
+            getattr(self, 'sea_level', None))  # self.sea_level may not exist
+    
     def get_water_depth_from_tectonic_subsidence(self, tectonic_subsidence, sea_level=None):
         """
-        Returns the water depth of this decompacted well from its tectonic subsidence (unloaded water depth).
+        Returns the water depth of this decompacted well from the specified tectonic subsidence (unloaded water depth).
         
         Parameters
         ----------
@@ -610,9 +716,12 @@ def read_well_file(
         The column of well file containing lithology(s). Defaults to 2.
     other_columns : dict, optional
         Dictionary of extra columns (besides age, depth and lithology(s)).
-        Each dict value should be a column index (to read from file) and associated dict key
+        Each dict value should be a column index (to read from file), and each associated dict key
         should be a string that will be the name of an attribute (added to each :class:`pybacktrack.StratigraphicUnit`
         object in the returned :class:`pybacktrack.Well`) containing the value read.
+        For example, backstripping will add ``min_water_depth`` and ``max_water_depth`` attributes
+        (when :func:`pybacktrack.backstrip_well` or :func:`pybacktrack.backstrip_and_write_well` has been called,
+        which in turn calls this function).
     well_attributes : dict, optional
         Attributes to read from well file metadata and store in returned :class:`pybacktrack.Well` object.
         If specified then must be a dictionary mapping each metadata name to a 2-tuple containing
@@ -790,6 +899,9 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
         Name of well text file.
     other_column_attribute_names : sequence of str
         Names of any extra column attributes to write as column before the lithology(s) column.
+        For example, backstripping will add ``min_water_depth`` and ``max_water_depth`` attributes
+        (when :func:`pybacktrack.backstrip_well` or :func:`pybacktrack.backstrip_and_write_well` has been called,
+        which in turn calls this function).
     well_attributes : dict, optional
         Attributes in :class:`pybacktrack.Well` object to write to well file metadata.
         If specified then must be a dictionary mapping each attribute name to a metadata name.

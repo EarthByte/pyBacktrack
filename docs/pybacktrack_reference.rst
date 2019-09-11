@@ -89,6 +89,8 @@ Creating lithologies
 
 .. autofunction:: pybacktrack.read_lithologies_file
 
+.. autofunction:: pybacktrack.read_lithologies_files
+
 .. autofunction:: pybacktrack.create_lithology
 
 .. autofunction:: pybacktrack.create_lithology_from_components
@@ -102,11 +104,17 @@ Constants
 Decompacting well sites
 -----------------------
 
+Reading and writing well files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. autofunction:: pybacktrack.read_well_file
 
 .. autofunction:: pybacktrack.write_well_file
 
 .. autofunction:: pybacktrack.write_well_metadata
+
+Compacted well
+^^^^^^^^^^^^^^
 
 .. autoclass:: pybacktrack.Well
    :members:
@@ -115,6 +123,9 @@ Decompacting well sites
 .. autoclass:: pybacktrack.StratigraphicUnit
    :members:
    :special-members: __init__
+
+Decompacted well
+^^^^^^^^^^^^^^^^
 
 .. autoclass:: pybacktrack.DecompactedWell
    :members:

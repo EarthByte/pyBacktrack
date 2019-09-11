@@ -877,9 +877,7 @@ def write_well(
                 elif decompacted_column == COLUMN_TECTONIC_SUBSIDENCE:
                     column_str = column_float_format_string.format(decompacted_well.tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_WATER_DEPTH:
-                    water_depth = decompacted_well.get_water_depth_from_tectonic_subsidence(
-                        decompacted_well.tectonic_subsidence,
-                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
+                    water_depth = decompacted_well.get_water_depth()
                     column_str = column_float_format_string.format(water_depth, width=column_width)
                 elif decompacted_column == COLUMN_COMPACTED_THICKNESS:
                     column_str = column_float_format_string.format(decompacted_well.total_compacted_thickness, width=column_width)

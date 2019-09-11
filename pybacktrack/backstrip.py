@@ -406,26 +406,14 @@ def write_well(
                     average_decompacted_density = decompacted_well.get_average_decompacted_density()
                     column_str = column_float_format_string.format(average_decompacted_density, width=column_width)
                 elif decompacted_column == COLUMN_AVERAGE_TECTONIC_SUBSIDENCE:
-                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                        # Use extra attributes (min/max water depth) loaded into original well...
-                        decompacted_well.surface_unit.min_water_depth,
-                        decompacted_well.surface_unit.max_water_depth,
-                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
+                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence()
                     average_tectonic_subsidence = (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
                     column_str = column_float_format_string.format(average_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MIN_TECTONIC_SUBSIDENCE:
-                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                        # Use extra attributes (min/max water depth) loaded into original well...
-                        decompacted_well.surface_unit.min_water_depth,
-                        decompacted_well.surface_unit.max_water_depth,
-                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
+                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence()
                     column_str = column_float_format_string.format(min_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MAX_TECTONIC_SUBSIDENCE:
-                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
-                        # Use extra attributes (min/max water depth) loaded into original well...
-                        decompacted_well.surface_unit.min_water_depth,
-                        decompacted_well.surface_unit.max_water_depth,
-                        getattr(decompacted_well, 'sea_level', None))  # decompacted_well.sea_level may not exist
+                    min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence()
                     column_str = column_float_format_string.format(max_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_AVERAGE_WATER_DEPTH:
                     # Use extra attributes (min/max water depth) loaded into original well...
