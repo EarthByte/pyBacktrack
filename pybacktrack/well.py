@@ -580,39 +580,43 @@ class DecompactedWell(object):
                 (_DENSITY_MANTLE - self.get_average_decompacted_density()) /
                 (_DENSITY_MANTLE - _DENSITY_WATER))
     
-    def get_min_max_tectonic_subsidence(self):
+    def get_tectonic_subsidence(self):
         """
-        Returns the minimum and maximum tectonic subsidence obtained from its ``min_water_depth`` and ``max_water_depth`` attributes
-        (from backstripping) and optional ``sea_level`` attribute.
+        Returns the tectonic subsidence obtained directly from subsidence model (if backtracking) or
+        indirectly from average of minimum and maximum water depth and sea level (if backstripping).
         
         Returns
         -------
-        min_tectonic_subsidence : float
-            Minimum tectonic subsidence (unloaded water depth) of this decompacted well from its minimum water depth.
-        max_tectonic_subsidence : float
-            Maximum tectonic subsidence (unloaded water depth) of this decompacted well from its maximum water depth.
+        float
+            Tectonic subsidence (unloaded water depth) of this decompacted well.
         
         Notes
         -----
-        Optional sea level fluctuation is included if specified.
+        When backtracking, the tectonic subsidence is obtained directly from the ``tectonic_subsidence`` attribute.
         
-        .. note:: The ``min_water_depth`` and ``max_water_depth`` attributes are only available for backstripping (not backtracking).
-                  For example, they are available if :func:`pybacktrack.backstrip_well` or
-                  :func:`pybackstrip.backtrack_and_write_well` has been called.
-        
-        .. note:: The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        When backstripping, the tectonic subsidence is obtained indirectly from the ``min_water_depth`` and
+        ``max_water_depth`` attributes and optional ``sea_level`` attribute (if a sea level model was specified).
         
         .. versionadded:: 1.2
         """
         
-        return self.get_min_max_tectonic_subsidence_from_water_depth(
-            self.min_water_depth,
-            self.max_water_depth,
-            getattr(self, 'sea_level', None))  # self.sea_level may not exist
+        # If we're backtracking then we'll have tectonic subsidence,
+        # otherwise we're backstripping (so get average tectonic subsidence from recorded min/max water depth).
+        if hasattr(self, 'tectonic_subsidence'):
+            # Backtracking.
+            return self.tectonic_subsidence
+        else:
+            # Backstripping.
+            min_tectonic_subsidence, max_tectonic_subsidence = self.get_min_max_tectonic_subsidence_from_water_depth(
+                self.min_water_depth,
+                self.max_water_depth,
+                getattr(self, 'sea_level', None))  # self.sea_level may not exist
+            
+            return (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
     
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
-        Returns the minimum and maximum tectonic subsidence obtained from minimum and maximum water depth.
+        Returns the minimum and maximum tectonic subsidence obtained from specified minimum and maximum water depths (and optional sea level).
         
         Parameters
         ----------
@@ -646,34 +650,39 @@ class DecompactedWell(object):
     
     def get_water_depth(self):
         """
-        Returns the water depth of this decompacted well from its ``tectonic_subsidence`` attribute (unloaded water depth)
-        (from backtracking) and optional ``sea_level`` attribute.
+        Returns the water depth obtained directly from average of minimum and maximum water depth (if backstripping) or
+        indirectly from tectonic subsidence model and sea level (if backtracking).
         
         Returns
         -------
         float
-            Water depth of this decompacted well from its tectonic subsidence (unloaded water depth).
+            Water depth of this decompacted well.
         
         Notes
         -----
-        Optional sea level fluctuation is included if specified.
+        When backstripping, the water depth is obtained directly as an average of the
+        ``min_water_depth`` and ``max_water_depth`` attributes.
         
-        .. note:: The ``tectonic_subsidence`` attribute is only available for backtracking (not backstripping).
-                  For example, it is available if :func:`pybacktrack.backtrack_well` or
-                  :func:`pybacktrack.backtrack_and_write_well` has been called.
-        
-        .. note:: The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        When backtracking, the water depth is obtained indirectly from the ``tectonic_subsidence`` attribute
+        and optional ``sea_level`` attribute (if a sea level model was specified).
         
         .. versionadded:: 1.2
         """
         
-        return self.get_water_depth_from_tectonic_subsidence(
-            self.tectonic_subsidence,
-            getattr(self, 'sea_level', None))  # self.sea_level may not exist
+        # If we're backtracking then we'll have tectonic subsidence (so get water depth from that),
+        # otherwise we're backstripping (so get average recorded water depth).
+        if hasattr(self, 'tectonic_subsidence'):
+            # Backtracking.
+            return self.get_water_depth_from_tectonic_subsidence(
+                self.tectonic_subsidence,
+                getattr(self, 'sea_level', None))  # self.sea_level may not exist
+        else:
+            # Backstripping.
+            return (self.min_water_depth + self.max_water_depth) / 2.0
     
     def get_water_depth_from_tectonic_subsidence(self, tectonic_subsidence, sea_level=None):
         """
-        Returns the water depth of this decompacted well from the specified tectonic subsidence (unloaded water depth).
+        Returns the water depth of this decompacted well from the specified tectonic subsidence (and optional sea level).
         
         Parameters
         ----------
