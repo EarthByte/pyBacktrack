@@ -54,14 +54,18 @@ class StratigraphicUnit(object):
         Depth of bottom of stratigraphic unit (in metres).
     min_water_depth : float, optional
         Minimum water depth (in metres).
-        Note that this attribute is only available when backstripping (not backtracking).
-        For example, it is available if :func:`pybacktrack.backstrip_well` or
-        :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. note:: This attribute is only available when backstripping (not backtracking).
+                  For example, it is available if :func:`pybacktrack.backstrip_well` or
+                  :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
     max_water_depth : float, optional
         Maximum water depth (in metres).
-        Note that this attribute is only available when backstripping (not backtracking).
-        For example, it is available if :func:`pybacktrack.backstrip_well` or
-        :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. note:: This attribute is only available when backstripping (not backtracking).
+                  For example, it is available if :func:`pybacktrack.backstrip_well` or
+                  :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
     lithology_components : sequence of tuples (str, float)
         Sequence of tuples (name, fraction) containing a lithology name and its fraction of contribution.
     """
@@ -441,24 +445,31 @@ class DecompactedWell(object):
         Total decompacted thickness of all decompacted stratigraphic units.
     tectonic_subsidence : float, optional
         Tectonic subsidence (in metres).
-        Note that this attribute is only available when backtracking (not backstripping).
-        For example, it is available if :func:`pybacktrack.backtrack_well` or
-        :func:`pybacktrack.backtrack_and_write_well` has been called.
+        
+        .. note:: This attribute is only available when backtracking (not backstripping).
+                  For example, it is available if :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backtrack_and_write_well` has been called.
+        
     min_water_depth : float, optional
         Minimum water depth (in metres).
-        Note that this attribute is only available when backstripping (not backtracking).
-        For example, it is available if :func:`pybacktrack.backstrip_well` or
-        :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. note:: This attribute is only available when backstripping (not backtracking).
+                  For example, it is available if :func:`pybacktrack.backstrip_well` or
+                  :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. versionadded:: 1.2
+        
     max_water_depth : float, optional
         Maximum water depth (in metres).
-        Note that this attribute is only available when backstripping (not backtracking).
-        For example, it is available if :func:`pybacktrack.backstrip_well` or
-        :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. note:: This attribute is only available when backstripping (not backtracking).
+                  For example, it is available if :func:`pybacktrack.backstrip_well` or
+                  :func:`pybacktrack.backstrip_and_write_well` has been called.
+        
+        .. versionadded:: 1.2
+        
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.
-    
-    .. versionadded:: 1.2
-       Added *min_water_depth* and *max_water_depth* attributes when backstripping.
     """
     
     def __init__(self, surface_unit):
@@ -585,11 +596,11 @@ class DecompactedWell(object):
         -----
         Optional sea level fluctuation is included if specified.
         
-        The ``min_water_depth`` and ``max_water_depth`` attributes are only available for backstripping (not backtracking).
-        For example, they are available if :func:`pybacktrack.backstrip_well` or
-        :func:`pybackstrip.backtrack_and_write_well` has been called.
+        .. note:: The ``min_water_depth`` and ``max_water_depth`` attributes are only available for backstripping (not backtracking).
+                  For example, they are available if :func:`pybacktrack.backstrip_well` or
+                  :func:`pybackstrip.backtrack_and_write_well` has been called.
         
-        The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        .. note:: The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
         
         .. versionadded:: 1.2
         """
@@ -647,11 +658,11 @@ class DecompactedWell(object):
         -----
         Optional sea level fluctuation is included if specified.
         
-        The ``tectonic_subsidence`` attribute is only available for backtracking (not backstripping).
-        For example, it is available if :func:`pybacktrack.backtrack_well` or
-        :func:`pybacktrack.backtrack_and_write_well` has been called.
+        .. note:: The ``tectonic_subsidence`` attribute is only available for backtracking (not backstripping).
+                  For example, it is available if :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backtrack_and_write_well` has been called.
         
-        The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
+        .. note:: The ``sea_level`` attribute is only available if a sea level model is specified when backstripping or backtracking.
         
         .. versionadded:: 1.2
         """
