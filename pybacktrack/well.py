@@ -468,6 +468,13 @@ class DecompactedWell(object):
         
         .. versionadded:: 1.2
         
+    sea_level : float, optional
+        Sea level (in metres).
+        
+        .. note:: This attribute is only available if a sea model was specified when backtracking or backstripping
+                  (for example, if ``sea_level_model`` was specified in :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backstrip_well`).
+    
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.
     """
@@ -610,7 +617,7 @@ class DecompactedWell(object):
             min_tectonic_subsidence, max_tectonic_subsidence = self.get_min_max_tectonic_subsidence_from_water_depth(
                 self.min_water_depth,
                 self.max_water_depth,
-                getattr(self, 'sea_level', None))  # self.sea_level may not exist
+                self.get_sea_level())  # might be None
             
             return (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
     
@@ -675,7 +682,7 @@ class DecompactedWell(object):
             # Backtracking.
             return self.get_water_depth_from_tectonic_subsidence(
                 self.tectonic_subsidence,
-                getattr(self, 'sea_level', None))  # self.sea_level may not exist
+                self.get_sea_level())  # might be None
         else:
             # Backstripping.
             return (self.min_water_depth + self.max_water_depth) / 2.0
@@ -709,6 +716,27 @@ class DecompactedWell(object):
         # Subtract the isostatic correction from the known tectonic subsidence (unloaded water depth)
         # to get the (loaded) water depth at the decompacted sediment/water interface.
         return tectonic_subsidence - isostatic_correction
+    
+    def get_sea_level(self):
+        """
+        Returns the sea level, or None if a sea level model was not specified (when backtracking or backstripping).
+        
+        Returns
+        -------
+        float or None
+            The sea level.
+        
+        Notes
+        -----
+        Returns the ``sea_level`` attribute if a ``sea_level_model`` was specified to
+        :func:`pybacktrack.backtrack_well` or :func:`pybacktrack.backstrip_well`,
+        otherwise returns ``None``.
+        
+        .. versionadded:: 1.2
+        """
+        
+        # Returns None if self.sea_level does not exist (ie, if a sea level model was not specified).
+        return getattr(self, 'sea_level', None)
 
 
 def read_well_file(
