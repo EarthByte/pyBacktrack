@@ -168,6 +168,7 @@ def backtrack_well(
         It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
     list of :class:`pybacktrack.DecompactedWell`
         The decompacted wells associated with the well.
+        There is one decompacted well per age, in same order (and ages) as the well units (youngest to oldest).
     
     Raises
     ------

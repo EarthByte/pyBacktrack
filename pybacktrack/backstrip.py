@@ -108,6 +108,7 @@ def backstrip_well(
         It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
     list of :class:`pybacktrack.DecompactedWell`
         The decompacted wells associated with the well.
+        There is one decompacted well per age, in same order (and ages) as the well units (youngest to oldest).
     
     Raises
     ------
@@ -409,20 +410,20 @@ def write_well(
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
                         decompacted_well.min_water_depth,
                         decompacted_well.max_water_depth,
-                        decompacted_well.get_sea_level())  # might be None
+                        decompacted_well.get_sea_level(None))  # Is None if no sea level model was specified
                     average_tectonic_subsidence = (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
                     column_str = column_float_format_string.format(average_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MIN_TECTONIC_SUBSIDENCE:
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
                         decompacted_well.min_water_depth,
                         decompacted_well.max_water_depth,
-                        decompacted_well.get_sea_level())  # might be None
+                        decompacted_well.get_sea_level(None))  # Is None if no sea level model was specified
                     column_str = column_float_format_string.format(min_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_MAX_TECTONIC_SUBSIDENCE:
                     min_tectonic_subsidence, max_tectonic_subsidence = decompacted_well.get_min_max_tectonic_subsidence_from_water_depth(
                         decompacted_well.min_water_depth,
                         decompacted_well.max_water_depth,
-                        decompacted_well.get_sea_level())  # might be None
+                        decompacted_well.get_sea_level(None))  # Is None if no sea level model was specified
                     column_str = column_float_format_string.format(max_tectonic_subsidence, width=column_width)
                 elif decompacted_column == COLUMN_AVERAGE_WATER_DEPTH:
                     # Use extra attributes (min/max water depth) loaded into original well...
@@ -545,14 +546,6 @@ def backstrip_and_write_well(
         The column of well file containing lithology(s). Defaults to 4.
     ammended_well_output_filename: string, optional
         Amended well data filename. Useful if an extra stratigraphic base unit is added from well bottom to ocean basement.
-    
-    Returns
-    -------
-    :class:`pybacktrack.Well`
-        The well read from ``well_filename``.
-        It may also be amended with a base stratigraphic unit from the bottom of the well to basement.
-    list of :class:`pybacktrack.DecompactedWell`
-        The decompacted wells associated with the well.
     
     Raises
     ------

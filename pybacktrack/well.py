@@ -53,14 +53,14 @@ class StratigraphicUnit(object):
     bottom_depth : float
         Depth of bottom of stratigraphic unit (in metres).
     min_water_depth : float, optional
-        Minimum water depth (in metres).
+        Minimum paleo-water depth of stratigraphic unit (in metres).
         
         .. note:: This attribute is only available when backstripping (not backtracking).
                   For example, it is available if :func:`pybacktrack.backstrip_well` or
                   :func:`pybacktrack.backstrip_and_write_well` has been called.
         
     max_water_depth : float, optional
-        Maximum water depth (in metres).
+        Maximum paleo-water depth of stratigraphic unit (in metres).
         
         .. note:: This attribute is only available when backstripping (not backtracking).
                   For example, it is available if :func:`pybacktrack.backstrip_well` or
@@ -243,7 +243,7 @@ class Well(object):
     Attributes
     ----------
     stratigraphic_units : list of :class:`pybacktrack.StratigraphicUnit`
-        List of stratigraphic units in this well.
+        List of stratigraphic units in this well sorted by age (from youngest to oldest).
     """
     
     def __init__(self, attributes=None, stratigraphic_units=None):
@@ -477,6 +477,7 @@ class DecompactedWell(object):
     
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.
+        They are sorted from top to bottom (in depth) which is the same as youngest to oldest.
     """
     
     def __init__(self, surface_unit):
@@ -617,7 +618,7 @@ class DecompactedWell(object):
             min_tectonic_subsidence, max_tectonic_subsidence = self.get_min_max_tectonic_subsidence_from_water_depth(
                 self.min_water_depth,
                 self.max_water_depth,
-                self.get_sea_level())  # might be None
+                self.get_sea_level(None))  # Is None if no sea level model was specified
             
             return (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
     
@@ -682,7 +683,7 @@ class DecompactedWell(object):
             # Backtracking.
             return self.get_water_depth_from_tectonic_subsidence(
                 self.tectonic_subsidence,
-                self.get_sea_level())  # might be None
+                self.get_sea_level(None))  # Is None if no sea level model was specified
         else:
             # Backstripping.
             return (self.min_water_depth + self.max_water_depth) / 2.0
@@ -717,26 +718,28 @@ class DecompactedWell(object):
         # to get the (loaded) water depth at the decompacted sediment/water interface.
         return tectonic_subsidence - isostatic_correction
     
-    def get_sea_level(self):
+    def get_sea_level(self, default_sea_level=0.0):
         """
-        Returns the sea level, or None if a sea level model was not specified (when backtracking or backstripping).
+        Returns the sea level, or ``default_sea_level`` if a sea level model was not specified (when backtracking or backstripping).
         
         Returns
         -------
-        float or None
+        float
             The sea level.
         
         Notes
         -----
         Returns the ``sea_level`` attribute if a ``sea_level_model`` was specified to
         :func:`pybacktrack.backtrack_well` or :func:`pybacktrack.backstrip_well`,
-        otherwise returns ``None``.
+        otherwise returns ``default_sea_level``.
+        
+        .. note:: ``default_sea_level`` can be set to ``None``
         
         .. versionadded:: 1.2
         """
         
-        # Returns None if self.sea_level does not exist (ie, if a sea level model was not specified).
-        return getattr(self, 'sea_level', None)
+        # Returns 'default' if self.sea_level does not exist (ie, if a sea level model was not specified).
+        return getattr(self, 'sea_level', default_sea_level)
 
 
 def read_well_file(
