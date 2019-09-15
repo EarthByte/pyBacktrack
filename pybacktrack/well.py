@@ -469,7 +469,7 @@ class DecompactedWell(object):
         .. versionadded:: 1.2
         
     sea_level : float, optional
-        Sea level (in metres).
+        Sea level in metres (positive for a sea-level rise and negative for a sea-level fall, relative to present day).
         
         .. note:: This attribute is only available if a sea model was specified when backtracking or backstripping
                   (for example, if ``sea_level_model`` was specified in :func:`pybacktrack.backtrack_well` or
@@ -633,7 +633,7 @@ class DecompactedWell(object):
         max_water_depth : float
             Maximum water depth.
         sea_level : float, optional
-            Sea level.
+            Sea level relative to present day (positive to sea-level rise and negative for sea-level fall).
         
         Returns
         -------
@@ -697,7 +697,7 @@ class DecompactedWell(object):
         tectonic_subsidence : float
             Tectonic subsidence.
         sea_level : float, optional
-            Sea level.
+            Sea level relative to present day (positive to sea-level rise and negative for sea-level fall).
         
         Returns
         -------
@@ -706,7 +706,7 @@ class DecompactedWell(object):
         
         Notes
         -----
-        Optional sea level fluctuation is included if specified.
+        Optional sea level fluctuation (relative to present day) is included if specified.
         """
         
         isostatic_correction = self.get_sediment_isostatic_correction()
@@ -720,12 +720,13 @@ class DecompactedWell(object):
     
     def get_sea_level(self, default_sea_level=0.0):
         """
-        Returns the sea level, or ``default_sea_level`` if a sea level model was not specified (when backtracking or backstripping).
+        Returns the sea level relative to present day, or ``default_sea_level`` if a sea level model
+        was not specified (when either backtracking or backstripping).
         
         Returns
         -------
         float
-            The sea level.
+            Sea level relative to present day (positive to sea-level rise and negative for sea-level fall).
         
         Notes
         -----
