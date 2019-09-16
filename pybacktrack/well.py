@@ -474,6 +474,19 @@ class DecompactedWell(object):
         .. note:: This attribute is only available if a sea model was specified when backtracking or backstripping
                   (for example, if ``sea_level_model`` was specified in :func:`pybacktrack.backtrack_well` or
                   :func:`pybacktrack.backstrip_well`).
+        
+    dynamic_topography : float, optional
+        Dynamic topography elevation in metres.
+        
+        .. note:: This attribute is only available when backtracking (not backstripping) **and**
+                  if a dynamic topography model was specified. For example, it is available if
+                  ``dynamic_topography_model`` was specified in :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backtrack_and_write_well`
+        
+        .. note:: Dynamic topography is elevation which is opposite to tectonic subsidence in that an
+                  increase in dynamic topography results in a decrease in tectonic subsidence.
+        
+        .. versionadded:: 1.2
     
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.
@@ -739,8 +752,37 @@ class DecompactedWell(object):
         .. versionadded:: 1.2
         """
         
-        # Returns 'default' if self.sea_level does not exist (ie, if a sea level model was not specified).
+        # Returns 'default_sea_level' if self.sea_level does not exist
+        # (ie, if a sea level model was not specified).
         return getattr(self, 'sea_level', default_sea_level)
+    
+    def get_dynamic_topography(self, default_dynamic_topography=0.0):
+        """
+        Returns the dynamic topography elevation relative to present day, or ``default_dynamic_topography``
+        if a dynamic topography model was not specified (when backtracking).
+        
+        Returns
+        -------
+        float
+            Dynamic topography elevation relative to present day.
+        
+        Notes
+        -----
+        Returns the ``dynamic_topography`` attribute if a ``dynamic_topography_model`` was specified to
+        :func:`pybacktrack.backtrack_well` or :func:`pybacktrack.backtrack_and_write_well`,
+        otherwise returns ``default_dynamic_topography``.
+        
+        .. note:: Dynamic topography is elevation which is opposite to tectonic subsidence in that an
+                  increase in dynamic topography results in a decrease in tectonic subsidence.
+        
+        .. note:: ``default_dynamic_topography`` can be set to ``None``
+        
+        .. versionadded:: 1.2
+        """
+        
+        # Returns 'default_dynamic_topography' if self.dynamic_topography does not exist
+        # (ie, if a dynamic topography model was not specified).
+        return getattr(self, 'dynamic_topography', default_dynamic_topography)
 
 
 def read_well_file(

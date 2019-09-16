@@ -595,6 +595,9 @@ def _add_oceanic_tectonic_subsidence(
             
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
+            
+            # Also record the change in dynamic topography since present day, since it's a useful quantity for the user to access.
+            decompacted_well.dynamic_topography = dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
 
 
 def _add_continental_tectonic_subsidence(
@@ -708,6 +711,9 @@ def _add_continental_tectonic_subsidence(
             # Account for any change in dynamic topography between rift start and current decompaction time.
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_rift_start
+            
+            # Also record the change in dynamic topography since present day, since it's a useful quantity for the user to access.
+            decompacted_well.dynamic_topography = dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
 
 
 def _sample_grid(longitude, latitude, grid_filename):

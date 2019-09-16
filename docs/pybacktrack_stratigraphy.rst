@@ -95,11 +95,13 @@ For backtracking, the bottom age of this new base layer is the age of oceanic cr
 or the age that rifting starts if the drill site is on continental crust (since it is assumed that deposition began when
 continental stretching started) - see :ref:`backtrack <pygplates_backtrack>` for more details.
 
-For backstripping, the bottom age of this new base layer is simply set to the age at the bottom of the drill site
+For backstripping, the bottom age of this new base layer is simply duplicated from the age at the bottom of the drill site
 (ie, bottom age of deepest stratigraphic layer). This is because, unlike backtracking, we don't know the age of the crust.
 But this is fine since the decompacted output only uses the top age of each layer.
 And the decompacted sediment thickness/density (and hence the tectonic subsidence)
 still takes into account the base sediment layer and hence the total sediment thickness.
+Also since backstripping requires min/max recorded paleo-water depths for each layer, these are simply duplicated
+from the bottom layer of the drill site to the new base layer.
 
 By default the lithology of the base layer is ``Shale``, but can be changed using the ``-b`` command-line option in
 the :ref:`backtrack <pygplates_backtrack>` and :ref:`backstrip <pygplates_backstrip>` modules. To determine the
