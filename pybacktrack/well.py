@@ -635,6 +635,43 @@ class DecompactedWell(object):
             
             return (min_tectonic_subsidence + max_tectonic_subsidence) / 2.0
     
+    def get_min_max_tectonic_subsidence(self):
+        """
+        Returns the minimum and maximum tectonic subsidence obtained directly from subsidence model (if backtracking) or
+        indirectly from minimum and maximum water depth and sea level (if backstripping).
+        
+        Returns
+        -------
+        min_tectonic_subsidence : float
+            Minimum tectonic subsidence (unloaded water depth) of this decompacted well.
+        max_tectonic_subsidence : float
+            Maximum tectonic subsidence (unloaded water depth) of this decompacted well.
+        
+        Notes
+        -----
+        When backtracking, the tectonic subsidence is obtained directly from the ``tectonic_subsidence`` attribute.
+        In this case the minimum and maximum tectonic subsidence are the same.
+        
+        When backstripping, the tectonic subsidence is obtained indirectly from the ``min_water_depth`` and
+        ``max_water_depth`` attributes and optional ``sea_level`` attribute (if a sea level model was specified).
+        
+        .. versionadded:: 1.2
+        """
+        
+        # If we're backtracking then we'll have tectonic subsidence,
+        # otherwise we're backstripping (so get average tectonic subsidence from recorded min/max water depth).
+        if hasattr(self, 'tectonic_subsidence'):
+            # Backtracking.
+            return self.tectonic_subsidence, self.tectonic_subsidence  # Min and max are the same.
+        else:
+            # Backstripping.
+            min_tectonic_subsidence, max_tectonic_subsidence = self.get_min_max_tectonic_subsidence_from_water_depth(
+                self.min_water_depth,
+                self.max_water_depth,
+                self.get_sea_level(None))  # Is None if no sea level model was specified
+            
+            return min_tectonic_subsidence, max_tectonic_subsidence
+    
     def get_min_max_tectonic_subsidence_from_water_depth(self, min_water_depth, max_water_depth, sea_level=None):
         """
         Returns the minimum and maximum tectonic subsidence obtained from specified minimum and maximum water depths (and optional sea level).
@@ -700,6 +737,42 @@ class DecompactedWell(object):
         else:
             # Backstripping.
             return (self.min_water_depth + self.max_water_depth) / 2.0
+    
+    def get_min_max_water_depth(self):
+        """
+        Returns the minimum and maximum water depth obtained directly from minimum and maximum water depth (if backstripping) or
+        indirectly from tectonic subsidence model and sea level (if backtracking).
+        
+        Returns
+        -------
+        min_water_depth : float
+            Minimum water depth of this decompacted well.
+        max_water_depth : float
+            Maximum water depth of this decompacted well.
+        
+        Notes
+        -----
+        When backstripping, the minimum and maximum water depths are obtained directly from the
+        ``min_water_depth`` and ``max_water_depth`` attributes.
+        
+        When backtracking, the water depth is obtained indirectly from the ``tectonic_subsidence`` attribute
+        and optional ``sea_level`` attribute (if a sea level model was specified).
+        In this case the minimum and maximum water depths are the same.
+        
+        .. versionadded:: 1.2
+        """
+        
+        # If we're backtracking then we'll have tectonic subsidence (so get water depth from that),
+        # otherwise we're backstripping (so get average recorded water depth).
+        if hasattr(self, 'tectonic_subsidence'):
+            # Backtracking.
+            water_depth = self.get_water_depth_from_tectonic_subsidence(
+                self.tectonic_subsidence,
+                self.get_sea_level(None))  # Is None if no sea level model was specified
+            return water_depth, water_depth  # Min and max are the same.
+        else:
+            # Backstripping.
+            return self.min_water_depth, self.max_water_depth
     
     def get_water_depth_from_tectonic_subsidence(self, tectonic_subsidence, sea_level=None):
         """
