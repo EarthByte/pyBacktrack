@@ -244,6 +244,17 @@ class Well(object):
     ----------
     stratigraphic_units : list of :class:`pybacktrack.StratigraphicUnit`
         List of stratigraphic units in this well sorted by age (from youngest to oldest).
+    longitude : float, optional
+        Longitude of the well location.
+        
+        .. note:: This attribute is available provided :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backstrip_well` (or any function calling them) have been called.
+        
+    latitude : float, optional
+        Latitude of the well location.
+        
+        .. note:: This attribute is available provided :func:`pybacktrack.backtrack_well` or
+                  :func:`pybacktrack.backstrip_well` (or any function calling them) have been called.
     """
     
     def __init__(self, attributes=None, stratigraphic_units=None):
