@@ -552,15 +552,6 @@ def _add_oceanic_tectonic_subsidence(
     # Get present-day dynamic topography (if requested).
     if dynamic_topography:
         dynamic_topography_at_present_day = dynamic_topography.sample(0.0)
-        if math.isnan(dynamic_topography_at_present_day):
-            # Warn the user if the dynamic topography model does not provide a value at present day.
-            # This shouldn't happen since mantle-frame grids should provide global coverage.
-            warnings.warn(u'Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                          'Ignoring dynamic topography.'.format(
-                              dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
-            
-            # Stop using dynamic topography.
-            dynamic_topography = None
     
     for decompacted_well in decompacted_wells:
         # The current decompaction time (age of the surface of the current decompacted column of the well).
@@ -578,23 +569,6 @@ def _add_oceanic_tectonic_subsidence(
         # If we have dynamic topography then add in the difference at current decompaction time compared to present-day.
         if dynamic_topography:
             dynamic_topography_at_decompaction_time = dynamic_topography.sample(decompaction_time)
-            if math.isnan(dynamic_topography_at_decompaction_time):
-                # The decompaction time is between two dynamic topography grids where one grid (or both) is older
-                # than the ocean floor at the well location and hence we cannot interpolate between the two grids.
-                #
-                # So we'll just sample the oldest dynamic topography grid that is younger than the ocean floor.
-                dynamic_topography_at_decompaction_time, dynamic_topography_age = dynamic_topography.sample_oldest()
-                if math.isnan(dynamic_topography_at_decompaction_time):
-                    # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
-                    raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
-                
-                # Warn the user if the dynamic topography model does not include the current decompaction time.
-                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                              'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                                  dynamic_topography.grids.grid_list_filename,
-                                  well.longitude, well.latitude,
-                                  decompaction_time, dynamic_topography_age))
             
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
             decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
@@ -620,43 +594,19 @@ def _add_continental_tectonic_subsidence(
     # to subsidence at present day so we can estimate subsidence due to stretching and thermal effects only.
     if dynamic_topography:
         dynamic_topography_at_present_day = dynamic_topography.sample(0.0)
-        if math.isnan(dynamic_topography_at_present_day):
-            # Warn the user if the dynamic topography model does not provide a value at present day.
-            # This shouldn't happen since mantle-frame grids should provide global coverage.
-            warnings.warn(u'Dynamic topography model "{0}" does not cover well location ({1}, {2}) at present day. '
-                          'Ignoring dynamic topography.'.format(
-                              dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
-            
-            # Stop using dynamic topography.
-            dynamic_topography = None
+        
+        if well.rift_start_age is not None:
+            rift_start_age = well.rift_start_age
         else:
-            if well.rift_start_age is not None:
-                rift_start_age = well.rift_start_age
-            else:
-                rift_start_age = well.rift_end_age
-            
-            dynamic_topography_at_rift_start = dynamic_topography.sample(rift_start_age)
-            if math.isnan(dynamic_topography_at_rift_start):
-                # This shouldn't happen because the well is in continental passive margin which should be much older than the rift start time.
-                # However we'll just sample the oldest dynamic topography grid that is younger than the continental crust.
-                dynamic_topography_at_rift_start, rift_start_dynamic_topography_age = dynamic_topography.sample_oldest()
-                if math.isnan(dynamic_topography_at_rift_start):
-                    # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
-                    raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
-                
-                # Warn the user if the dynamic topography model does not include the rift start time.
-                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                              'rift start time {3}. Using dynamic topography grid at {4}.'.format(
-                                  dynamic_topography.grids.grid_list_filename,
-                                  well.longitude, well.latitude,
-                                  rift_start_age, rift_start_dynamic_topography_age))
-            
-            # Estimate how much of present-day subsidence is due to dynamic topography.
-            # We crudely remove the relative difference of dynamic topography between rift start and present day
-            # so we can see how much subsidence between those two times is due to stretching and thermal subsidence.
-            # Dynamic topography is elevation but we want depth (subsidence) so add (instead of subtract).
-            present_day_tectonic_subsidence += dynamic_topography_at_present_day - dynamic_topography_at_rift_start
+            rift_start_age = well.rift_end_age
+        
+        dynamic_topography_at_rift_start = dynamic_topography.sample(rift_start_age)
+        
+        # Estimate how much of present-day subsidence is due to dynamic topography.
+        # We crudely remove the relative difference of dynamic topography between rift start and present day
+        # so we can see how much subsidence between those two times is due to stretching and thermal subsidence.
+        # Dynamic topography is elevation but we want depth (subsidence) so add (instead of subtract).
+        present_day_tectonic_subsidence += dynamic_topography_at_present_day - dynamic_topography_at_rift_start
     
     # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
     beta, subsidence_residual = rifting.estimate_beta(
@@ -695,21 +645,6 @@ def _add_continental_tectonic_subsidence(
         # If we have dynamic topography then add in the difference at current decompaction time compared to rift start.
         if dynamic_topography:
             dynamic_topography_at_decompaction_time = dynamic_topography.sample(decompaction_time)
-            if math.isnan(dynamic_topography_at_decompaction_time):
-                # This shouldn't happen because the well is in continental passive margin which should be much older than the decompaction time.
-                # However we'll just sample the oldest dynamic topography grid that is younger than the continental crust.
-                dynamic_topography_at_decompaction_time, dynamic_topography_age = dynamic_topography.sample_oldest()
-                if math.isnan(dynamic_topography_at_decompaction_time):
-                    # This shouldn't happen because we've already obtained a value at present day (so we should at least get that here).
-                    raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                        dynamic_topography.grids.grid_list_filename, well.longitude, well.latitude))
-                
-                # Warn the user if the dynamic topography model does not include the current decompaction time.
-                warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                              'stratigraphic unit surface time {3}. Using dynamic topography grid at {4}.'.format(
-                                  dynamic_topography.grids.grid_list_filename,
-                                  well.longitude, well.latitude,
-                                  decompaction_time, dynamic_topography_age))
             
             # Account for any change in dynamic topography between rift start and current decompaction time.
             # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).

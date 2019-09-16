@@ -78,6 +78,8 @@ class SeaLevel(object):
         ------
         ValueError
             If ``sea_level_model_name`` is not the name of a bundled sea level model.
+        
+        .. versionadded:: 1.2
         """
         
         if sea_level_model_name not in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:

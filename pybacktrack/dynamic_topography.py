@@ -33,11 +33,24 @@ import pybacktrack.bundle_data
 from pybacktrack.util.call_system_command import call_system_command
 import pygplates
 import sys
+import warnings
 
 
 class DynamicTopography(object):
     """
     Class to reconstruct ocean point location and sample the time-dependent dynamic topography *mantle* frame grid files.
+    
+    Attributes
+    ----------
+    longitude : float
+        Longitude of the ocean point location.
+    latitude : float
+        Latitude of the ocean point location.
+    age : float
+        The age of the crust that the ocean point location is on.
+        
+        .. note:: If no age was supplied and the location is on continental crust then the age of the static polygon
+                  containing location is used (or zero if no polygon contains location).
     """
     
     def __init__(self, grid_list_filename, static_polygon_filename, rotation_filenames, longitude, latitude, age=None):
@@ -70,6 +83,8 @@ class DynamicTopography(object):
         and the rotations are used to reconstruct the location when sampling the grids at a reconstructed time.
         """
         
+        self.latitude = latitude
+        self.longitude = longitude
         self.location = pygplates.PointOnSphere((latitude, longitude))
         self.age = age
         
@@ -93,7 +108,7 @@ class DynamicTopography(object):
     
     @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
-        """create_from_bundled_model(dynamic_topography_model_name)
+        """create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None)
         Create a DynamicTopography instance from a bundled dynamic topography model name.
         
         Parameters
@@ -118,6 +133,8 @@ class DynamicTopography(object):
         ------
         ValueError
             If ``dynamic_topography_model_name`` is not the name of a bundled dynamic topography model.
+        
+        .. versionadded:: 1.2
         """
         
         if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
@@ -132,6 +149,60 @@ class DynamicTopography(object):
             longitude, latitude, age)
     
     def sample(self, time):
+        """
+        Samples the time-dependent dynamic topography grid files at ``time``, but falls back to a
+        non-optimal sampling if necessary (depending on ``time``).
+        
+        Parameters
+        ----------
+        time : float
+            Time to sample dynamic topography.
+        
+        Returns
+        -------
+        float
+            The sampled dynamic topography value.
+        
+        Raises
+        ------
+        AssertionError
+            If dynamic topography model does not cover well location at any time.
+        
+        Notes
+        -----
+        The location is first reconstructed to the two grid ages bounding ``time`` before sampling
+        the two grids (and interpolating between them) using :meth:`pybacktrack.DynamicTopography.sample_interpolated`.
+        
+        However if ``time`` is outside the age range of grids, or the age of either (of two) interpolated grids
+        is older than age of the ocean point location, then the oldest grid file that is younger than the
+        age-of-appearance of the ocean point location is sampled using :meth:`pybacktrack.DynamicTopography.sample_oldest`.
+        
+        .. versionadded:: 1.2
+           Renamed previous *sample* method to :meth:`sample_interpolated <pybacktrack.DynamicTopography.sample_interpolated>`.
+        """
+        
+        dynamic_topography = self.sample_interpolated(time)
+        if math.isnan(dynamic_topography):
+            # The specified time is between two dynamic topography grids where one grid (or both) is older
+            # than the ocean floor at the well location and hence we cannot interpolate between the two grids.
+            #
+            # So we'll just sample the oldest dynamic topography grid that is younger than the ocean floor.
+            dynamic_topography, dynamic_topography_age = self.sample_oldest()
+            if math.isnan(dynamic_topography):
+                # This shouldn't happen unless there are no grids for some strange reason.
+                raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
+                    self.grids.grid_list_filename, self.longitude, self.latitude))
+            
+            # Warn the user if the dynamic topography model does not include the specified time.
+            warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
+                          'rift start time {3}. Using dynamic topography grid at {4}.'.format(
+                              self.grids.grid_list_filename,
+                              self.longitude, self.latitude,
+                              time, dynamic_topography_age))
+        
+        return dynamic_topography
+    
+    def sample_interpolated(self, time):
         """
         Samples the time-dependent grid files at 'time' at the internal location.
         
@@ -154,6 +225,9 @@ class DynamicTopography(object):
         -----
         The location is first reconstructed to the two grid ages bounding 'time' before sampling
         the two grids (and interpolating between them).
+        
+        .. versionadded:: 1.2
+           Used to be called *sample*, but that's now a new :meth:`method <pybacktrack.DynamicTopography.sample>`.
         """
         
         # Search for the two grids bounding 'time'.
@@ -365,7 +439,7 @@ class TimeDependentGrid(object):
         """
         Samples the oldest grid file that gives an unmasked value (non-NaN) at the 'longitude' / 'latitude' location (in degrees).
         
-        This function is useful when 'sample()' has already been called but returns NaN due to the specific time being
+        This function is useful when 'sample_interpolated()' has already been called but returns NaN due to the specific time being
         older than the ocean floor at that location (or the plate frame grids were reconstructed using static polygons
         but without using age grid, resulting in static-polygon-sized chunks of the grid disappearing back through time rather
         than the more gradual disappearance due to using age grid for appearance times in reconstruction as opposed to using
