@@ -191,11 +191,6 @@ def backtrack_well(
         dynamic_topography_model in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES):
         dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model]
     
-    # If a sea level *model name* was specified then convert it to a bundled sea level filename.
-    if (sea_level_model is not None and
-        sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES):
-        sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model]
-    
     # Read the lithologies from one or more text files.
     #
     # It used to be a single filename (instead of a list) so handle that case to be backward compatible.
@@ -285,7 +280,7 @@ def backtrack_well(
             well,
             decompacted_wells,
             # Create sea level object for integrating sea level over time periods...
-            SeaLevel(sea_level_model))
+            sea_level_model)
     
     # Isostatic correction for total sediment thickness.
     #
@@ -490,13 +485,21 @@ def _add_stratigraphic_unit_to_basement(
 def _add_sea_level(
         well,
         decompacted_wells,
-        sea_level):
+        sea_level_model):
     """
     Calculate average sea levels (relative to present day) for the stratigraphic layers in a well.
     
     The sea level (relative to present day) is integrated over the period of deposition of each
     stratigraphic layer (in decompacted wells) and added as a 'sea_level' attribute to each decompacted well.
     """
+    
+    # Create sea level object for integrating sea level over time periods.
+    #
+    # If a sea level *model name* was specified then convert it to a bundled sea level filename.
+    if sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
+        sea_level = SeaLevel.create_from_bundled_model(sea_level_model)
+    else:
+        sea_level = SeaLevel(sea_level_model)
     
     for decompacted_well in decompacted_wells:
         decompacted_well.sea_level = sea_level.get_average_level(

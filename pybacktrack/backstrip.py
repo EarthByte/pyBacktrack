@@ -126,11 +126,6 @@ def backstrip_well(
     *min_water_depth* and *max_water_depth* attributes to each decompacted well returned.
     """
     
-    # If a sea level *model name* was specified then convert it to a bundled sea level filename.
-    if (sea_level_model is not None and
-        sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES):
-        sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model]
-    
     # Read the lithologies from one or more text files.
     #
     # It used to be a single filename (instead of a list) so handle that case to be backward compatible.
@@ -234,7 +229,12 @@ def backstrip_well(
     # that is an average over the decompacted surface layer's period of deposition.
     if sea_level_model:
         # Create sea level object for integrating sea level over time periods.
-        sea_level = SeaLevel(sea_level_model)
+        #
+        # If a sea level *model name* was specified then convert it to a bundled sea level filename.
+        if sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
+            sea_level = SeaLevel.create_from_bundled_model(sea_level_model)
+        else:
+            sea_level = SeaLevel(sea_level_model)
         
         # The sea level (relative to present day) is integrated over the period of deposition of each
         # stratigraphic layer (in decompacted wells) and added as a 'sea_level' attribute to each decompacted well.

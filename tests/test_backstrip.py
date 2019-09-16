@@ -94,7 +94,7 @@ def test_backstrip(tmpdir):
             str(input_well_filename),
             lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
                                  pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
-            sea_level_model=pybacktrack.BUNDLE_SEA_LEVEL_MODELS['Haq87_SealevelCurve_Longterm'],
+            sea_level_model='Haq87_SealevelCurve_Longterm',
             decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH,
                                  pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY,
                                  pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
