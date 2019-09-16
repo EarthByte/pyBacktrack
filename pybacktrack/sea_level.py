@@ -59,13 +59,13 @@ class SeaLevel(object):
         self.sea_level_function, self.sea_level_times, _ = pybacktrack.util.interpolate.read_curve_function(sea_level_filename)
     
     @staticmethod
-    def create_from_bundled_model(sea_level_model):
-        """create_from_bundled_model(sea_level_model)
-        Create a SeaLevel instance from a bundled sea level model.
+    def create_from_bundled_model(sea_level_model_name):
+        """create_from_bundled_model(sea_level_model_name)
+        Create a SeaLevel instance from a bundled sea level model name.
         
         Parameters
         ----------
-        sea_level_model : string
+        sea_level_model_name : string
             Name of a bundled sea level model.
             Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
         
@@ -77,14 +77,14 @@ class SeaLevel(object):
         Raises
         ------
         ValueError
-            If ``sea_level_model`` is not the name of a bundled sea level model.
+            If ``sea_level_model_name`` is not the name of a bundled sea level model.
         """
         
-        if sea_level_model not in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
-            raise ValueError("'sea_level_model' should be one of {0}.".format(
+        if sea_level_model_name not in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
+            raise ValueError("'sea_level_model_name' should be one of {0}.".format(
                 ', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
         
-        return SeaLevel(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model])
+        return SeaLevel(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model_name])
 
     def get_average_level(self, begin_time, end_time):
         """get_average_level(begin_time, end_time)

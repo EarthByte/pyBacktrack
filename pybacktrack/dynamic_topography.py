@@ -29,6 +29,7 @@ from __future__ import print_function
 import codecs
 import math
 import os.path
+import pybacktrack.bundle_data
 from pybacktrack.util.call_system_command import call_system_command
 import pygplates
 import sys
@@ -89,6 +90,46 @@ class DynamicTopography(object):
                 self.age, _ = partitioning_plate.get_feature().get_valid_time()
             else:
                 self.age = 0.0
+    
+    @staticmethod
+    def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
+        """create_from_bundled_model(dynamic_topography_model_name)
+        Create a DynamicTopography instance from a bundled dynamic topography model name.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_name : string
+            Name of a bundled dynamic topography model.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
+        longitude : float
+            Longitude of the ocean point location.
+        latitude : float
+            Latitude of the ocean point location.
+        age : float, optional
+            The age of the crust that the point location is on.
+            If not specified then the appearance age of the static polygon containing the point is used.
+        
+        Returns
+        -------
+        :class:`pybacktrack.DynamicTopography`
+            The bundled dynamic topography model.
+        
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_name`` is not the name of a bundled dynamic topography model.
+        """
+        
+        if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
+            raise ValueError("'dynamic_topography_model_name' should be one of {0}.".format(
+                ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        
+        dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model_name]
+        dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model
+        
+        return DynamicTopography(
+            dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
+            longitude, latitude, age)
     
     def sample(self, time):
         """

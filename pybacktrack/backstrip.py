@@ -230,7 +230,7 @@ def backstrip_well(
     if sea_level_model:
         # Create sea level object for integrating sea level over time periods.
         #
-        # If a sea level *model name* was specified then convert it to a bundled sea level filename.
+        # If a sea level *model name* was specified then create it from a bundled sea level model.
         if sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
             sea_level = SeaLevel.create_from_bundled_model(sea_level_model)
         else:
