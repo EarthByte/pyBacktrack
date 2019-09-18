@@ -123,8 +123,8 @@ class SeaLevel(object):
             self.sea_level_function,
             end_time,
             begin_time,
-            points=times,
-            limit=2 * len(times))
+            points=times if times else None,  # Defaults to None if specified time period outside curve time range.
+            limit=2 * len(times) if times else 50)  # Defaults to 50 if specified time period outside curve time range.
         
         # Average sea level over integrated interval.
         average_sea_level = sea_level_integral / time_interval
