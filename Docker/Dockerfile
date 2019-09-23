@@ -31,6 +31,15 @@ RUN pip install pybacktrack
 RUN pip install -U setuptools  # Need pkg_resources to install examples.
 RUN python -c 'import pybacktrack; pybacktrack.install_examples()'
 
+# Install Cartopy and its dependencies is rather troublesome.
+# Seems need to first install GEOS and PROJ (>= 4.9.0).
+# Also need to install 'proj-data' and 'proj-bin' to avoid error "Proj 4.9.0 must be installed".
+# 'g++' is required since 'pip install cartopy' attempts to build a wheel.
+# 'libpython-dev' is required to avoid missing 'Python.h' when wheel is compiled.
+# 'pip install cython' is then needed before 'pip install cartopy'.
+RUN apt-get install -y --no-install-recommends libproj-dev proj-data proj-bin libgeos++-dev libpython-dev g++
+RUN pip install cython cartopy
+
 # Seem to need this to fix install error for matplotlib (involving subprocess32).
 RUN apt-get install -y python-subprocess32
 # Install matplotlib and jupyter for the example notebooks.
