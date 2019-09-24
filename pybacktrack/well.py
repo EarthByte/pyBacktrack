@@ -487,7 +487,9 @@ class DecompactedWell(object):
                   :func:`pybacktrack.backstrip_well`).
         
     dynamic_topography : float, optional
-        Dynamic topography elevation in metres.
+        Dynamic topography elevation *relative to present day* (in metres).
+        
+        .. note:: This attribute contains dynamic topography **relative to present day**.
         
         .. note:: This attribute is only available when backtracking (not backstripping) **and**
                   if a dynamic topography model was specified. For example, it is available if
@@ -842,16 +844,19 @@ class DecompactedWell(object):
     
     def get_dynamic_topography(self, default_dynamic_topography=0.0):
         """
-        Returns the dynamic topography elevation relative to present day, or ``default_dynamic_topography``
+        Returns the dynamic topography elevation *relative to present day*, or ``default_dynamic_topography``
         if a dynamic topography model was not specified (when backtracking).
         
         Returns
         -------
         float
-            Dynamic topography elevation relative to present day.
+            Dynamic topography elevation *relative to present day*.
         
         Notes
         -----
+        
+        .. note:: Returns dynamic topography **relative to present day**.
+        
         Returns the ``dynamic_topography`` attribute if a ``dynamic_topography_model`` was specified to
         :func:`pybacktrack.backtrack_well` or :func:`pybacktrack.backtrack_and_write_well`,
         otherwise returns ``default_dynamic_topography``.
