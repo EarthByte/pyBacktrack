@@ -70,7 +70,7 @@ def syn_rift_subsidence(
     # subsidence with an isostatic sediment contribution.
     tc = pre_rift_crustal_thickness
     return (_y_l * (1 - 1 / beta) *
-            ((_rhoM - _rhoC) * (tc / _y_l) * (1 - _alpha_v * _Tm * tc / _y_l) - _alpha_v * _Tm * _rhoM / 2.0) /
+            ((_rhoM - _rhoC) * (tc / _y_l) * (1 - _alpha_v * _Tm * tc / (2.0 * _y_l)) - _alpha_v * _Tm * _rhoM / 2.0) /
             (_rhoM * (1 - _alpha_v * _Tm) - _rhoW))
 
 
