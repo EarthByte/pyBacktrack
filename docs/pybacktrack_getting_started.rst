@@ -53,8 +53,8 @@ Also ensure that version 5 or above (supports NetCDF version 4) is installed sin
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
 
 Also, pyGPlates currently requires Python 2.7 (future releases will support Python 3).
-So unfortunately you will need a Python 2.7 installation along with your existing Python 3 installation.
-The :ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach using ``sudo port select``.
+So unfortunately you will need a Python 2.7 installation. If you have an existing Python 3 installation then the
+:ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach to selecting the default Python (using ``sudo port select``).
 Another approach is using Python virtual environments where each environment has its own ``python``, ``pip`` and installed packages.
 However, currently pyGPlates does not yet work in virtual environments (at least on Mac systems).
 
@@ -151,7 +151,12 @@ To install the latest stable version, run:
 
   pip install pybacktrack
 
-.. note:: | This will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
+.. note:: If you already have ``pybacktrack`` installed and would like to upgrade to the latest version then use the ``--upgrade`` flag:
+          ::
+          
+            pip install --upgrade pybacktrack
+
+.. note:: | Installing `pyBacktrack` will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
           | However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
 
 .. warning:: | On Mac systems, when using `Macports <https://www.macports.org/>`_, it might be better to install to the
