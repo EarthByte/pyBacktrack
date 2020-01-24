@@ -221,6 +221,7 @@ Once Docker is installed, open a Docker terminal (command-line interface).
 .. note:: | For *Docker Toolbox* this is the *Docker Quickstart Terminal*.
           | For `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_ and
             `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_ this a regular command-line terminal.
+          | On Linux systems this a regular command-line terminal.
 
 To install the ``pybacktrack`` docker image, type:
 
@@ -237,6 +238,12 @@ To run the docker image:
 | This should bring up a command prompt inside the running docker container.
 | The current working directory should be ``/usr/src/pybacktrack/``.
 | It should have a ``pybacktrack_examples`` sub-directory containing test data.
+
+.. note:: On Linux systems you may have to use `sudo` when running `docker` commands. For example:
+          ::
+          
+            sudo docker pull earthbyte/pybacktrack
+            sudo docker run -it --rm -p 18888:8888 -w /usr/src/pybacktrack earthbyte/pybacktrack
 
 From the current working directory you can run the :ref:`backtracking example <pybacktrack_a_backtracking_example>` below,
 or any :ref:`other examples <pygplates_overview>` in this documentation. For example, you could run:
