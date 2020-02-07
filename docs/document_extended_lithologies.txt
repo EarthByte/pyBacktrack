@@ -1,0 +1,11 @@
+# name                            density   porosity      decay
+#                                   kg/m3    (%/100)          m
+#
+Anhydrite                            2960       0.40        500
+Chert                                1929       0.65       2850
+Conglomerate                         3500       0.48       2700
+Dolostone                            2700       0.48       3500
+Grainstone                           2700       0.48       3500
+Reef                                 2700       0.10       3500
+Rhyolite                             2820       0.20       2700
+Salt                                 2160       0.20        750

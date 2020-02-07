@@ -171,7 +171,9 @@ And the *extended* lithologies (inside ``pybacktrack``) mostly contain shallow-w
 * Baldwin, S., 1999,
   Quantifying the development of a deep sedimentary basin: the Bonaparte Basin, NW Australia, PhD Thesis, Univ. of Cambridge.
 
-.. include:: ../pybacktrack/bundle_data/lithologies/extended.txt
+.. Note that some 'extended' lithologies are not documented (requested by Dietmar)...
+.. .. include:: ../pybacktrack/bundle_data/lithologies/extended.txt
+.. include:: document_extended_lithologies.txt
    :literal:
 
 .. _pygplates_lithology_file_format:
