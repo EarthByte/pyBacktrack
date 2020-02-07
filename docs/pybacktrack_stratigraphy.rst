@@ -166,7 +166,10 @@ The *primary* lithologies (inside ``pybacktrack``) contains the deep-sea litholo
 .. include:: ../pybacktrack/bundle_data/lithologies/primary.txt
    :literal:
 
-And the *extended* lithologies (inside ``pybacktrack``) mostly contains shallow-water lithologies:
+And the *extended* lithologies (inside ``pybacktrack``) mostly contain shallow-water lithologies:
+
+* Baldwin, S., 1999,
+  Quantifying the development of a deep sedimentary basin: the Bonaparte Basin, NW Australia, PhD Thesis, Univ. of Cambridge.
 
 .. include:: ../pybacktrack/bundle_data/lithologies/extended.txt
    :literal:
