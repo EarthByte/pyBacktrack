@@ -101,7 +101,7 @@ Running the :ref:`above example <pygplates_backstrip_example>` on the sunrise dr
 .. include:: ../pybacktrack/test_data/sunrise_lithology.txt
    :literal:
 
-...produces an :ref:`amended drill site output file <pygplates_backstrip_output_amended_drill_site>` containing an extra base sediment layer,
+...produces an :ref:`amended drill site output file <pygplates_backstrip_output_amended_drill_site>`,
 and a :ref:`decompacted output file <pygplates_backstrip_output_decompacted>` containing the decompacted output parameters like
 sediment thickness and tectonic subsidence.
 
@@ -138,9 +138,10 @@ The *compacted_thickness* column is the bottom depth of the drill site (2311 met
 :ref:`amended drill site <pygplates_backstrip_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
-(or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density
-integrated over the decompacted thickness of the drill site (each stratigraphic layer contains a mixture of water and sediment according
-to its porosity at the decompacted depth of the layer).
+(or the surface age) the decompacted thickness is just the compacted thickness. And note that because no extra
+:ref:`base sediment layer <pygplates_base_sediment_layer>` was added to the bottom of the drill site (2311 metres) the thickness and density is zero there.
+The *decompacted_density* is the average density integrated over the decompacted thickness of the drill site (each stratigraphic layer contains
+a mixture of water and sediment according to its porosity at the decompacted depth of the layer).
 
 Finally, *average_water_depth* is just the average *min_water_depth* and *max_water_depth*. And *min_tectonic_subsidence*, *max_tectonic_subsidence* and
 *average_tectonic_subsidence* are obtained from *min_water_depth* and *max_water_depth* and *average_water_depth* by adding an isostatic correction of the

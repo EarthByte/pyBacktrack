@@ -442,44 +442,50 @@ def _add_stratigraphic_unit_to_basement(
     # The well depth/thickness is the bottom depth of the deepest stratigraphic unit (they are sorted from youngest to oldest).
     deepest_well_unit = well.stratigraphic_units[-1]
     well_sediment_thickness = deepest_well_unit.bottom_depth
-    if well_sediment_thickness < present_day_total_sediment_thickness:
-        base_unit_thickness = present_day_total_sediment_thickness - well_sediment_thickness
-        base_unit_top_depth = well_sediment_thickness
-        base_unit_bottom_depth = base_unit_top_depth + base_unit_thickness
-        
-        # Age at the top of the base unit (age at which deposition ended for base unit) is
-        # the bottom age of the unit above it (deepest unit of well).
-        base_unit_top_age = deepest_well_unit.bottom_age
-        
-        # Age at the bottom of the base unit represents the basement age which is:
-        # - in the age grid for oceanic crust, or
-        # - the rift start age for continental crust.
-        if age is not None:
-            base_unit_bottom_age = age
-        else:
-            # If we have a rift start time then use it, otherwise use the rift end time.
-            # Presumably sediment started filling when rifting (and hence subsidence) began.
-            if well.rift_start_age is not None:
-                base_unit_bottom_age = well.rift_start_age
-            else:
-                base_unit_bottom_age = well.rift_end_age
-        # If it happens to be younger than the top age then we just set it to the top age.
-        base_unit_bottom_age = max(base_unit_bottom_age, base_unit_top_age)
-        
-        # One lithology component comprising the full fraction.
-        base_unit_lithology_components = [(base_lithology_name, 1.0)]
-        
-        well.add_compacted_unit(
-            base_unit_top_age, base_unit_bottom_age,
-            base_unit_top_depth, base_unit_bottom_depth,
-            base_unit_lithology_components, lithologies)
-        
-    elif well_sediment_thickness - present_day_total_sediment_thickness > 0.01 * well_sediment_thickness:
+    
+    if well_sediment_thickness - present_day_total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
         warnings.warn('Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}). '
                       'Ignoring total sediment thickness grid. '.format(
                           well_sediment_thickness, present_day_total_sediment_thickness, well.longitude, well.latitude))
+    
+    # If well thickness exceeds the total sediment thickness then clamp the base unit thickness to zero
+    # (it won't get added to ammended well file though).
+    # This can happen due to inaccuracies in the total sediment thickness grid.
+    # We still add a zero-thickness base layer anyway because we need to generate decompacted output at the
+    # bottom of the well, and since we can only output at the top of stratigraphic units we can only generate output
+    # at the bottom of the well if we added a base layer (where top of the base layer is same as bottom of well).
+    base_unit_thickness = max(0, present_day_total_sediment_thickness - well_sediment_thickness)
+    base_unit_top_depth = well_sediment_thickness
+    base_unit_bottom_depth = base_unit_top_depth + base_unit_thickness
+    
+    # Age at the top of the base unit (age at which deposition ended for base unit) is
+    # the bottom age of the unit above it (deepest unit of well).
+    base_unit_top_age = deepest_well_unit.bottom_age
+    
+    # Age at the bottom of the base unit represents the basement age which is:
+    # - in the age grid for oceanic crust, or
+    # - the rift start age for continental crust.
+    if age is not None:
+        base_unit_bottom_age = age
+    else:
+        # If we have a rift start time then use it, otherwise use the rift end time.
+        # Presumably sediment started filling when rifting (and hence subsidence) began.
+        if well.rift_start_age is not None:
+            base_unit_bottom_age = well.rift_start_age
+        else:
+            base_unit_bottom_age = well.rift_end_age
+    # If it happens to be younger than the top age then we just set it to the top age.
+    base_unit_bottom_age = max(base_unit_bottom_age, base_unit_top_age)
+    
+    # One lithology component comprising the full fraction.
+    base_unit_lithology_components = [(base_lithology_name, 1.0)]
+    
+    well.add_compacted_unit(
+        base_unit_top_age, base_unit_bottom_age,
+        base_unit_top_depth, base_unit_bottom_depth,
+        base_unit_lithology_components, lithologies)
 
 
 def _add_sea_level(

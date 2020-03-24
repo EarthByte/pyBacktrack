@@ -110,7 +110,7 @@ class StratigraphicUnit(object):
     
     def calc_decompacted_thickness(self, decompacted_depth_to_top):
         """
-        Calculate decompacted thickness when top of this stratigraphic unit is at depth a decompacted depth.
+        Calculate decompacted thickness when top of this stratigraphic unit is at a decompacted depth.
         
         Parameters
         ----------
@@ -124,6 +124,8 @@ class StratigraphicUnit(object):
         """
         
         present_day_thickness = self.bottom_depth - self.top_depth
+        if present_day_thickness == 0.0:
+            return 0.0
         
         surface_porosity = self.lithology.surface_porosity
         porosity_decay = self.lithology.porosity_decay
@@ -204,6 +206,9 @@ class StratigraphicUnit(object):
         float
             Decompacted density.
         """
+        
+        if decompacted_thickness == 0.0:
+            return 0.0
         
         density = self.lithology.density
         surface_porosity = self.lithology.surface_porosity
@@ -592,7 +597,7 @@ class DecompactedWell(object):
         """
         
         if self.total_decompacted_thickness == 0.0:
-            raise ValueError('Decompacted well has no decampacted units.')
+            return 0.0
         
         return self._total_decompacted_thickness_times_density / self.total_decompacted_thickness
     
@@ -1127,6 +1132,20 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
         
         # Write each stratigraphic unit as a single line.
         for stratigraphic_unit in well.stratigraphic_units:
+            # Skip stratigraphic unit if it has zero thickness.
+            #
+            # This can happen when a base (shale) layer is added from bottom of well
+            # down to basement depth - and it can be zero thickness if the total sediment
+            # thickness grid is less than the well depth (due to inaccuracies in the grid)
+            # - the zero-thickness base layer got added anyway because we needed to generate
+            # decompacted output at the bottom of the well, and since we can only generate output
+            # at the top of stratigraphic units we can only add output at the bottom of the well
+            # if we added a base layer (where top of the base layer is same as bottom of well).
+            #
+            # However we don't want write it back out to the well file.
+            if stratigraphic_unit.bottom_depth == stratigraphic_unit.top_depth:
+                continue
+            
             # Write bottom age and depth.
             well_file.write('   {0:<{width}.3f}'.format(stratigraphic_unit.bottom_age, width=column_widths[0]))
             well_file.write(' {0:<{width}.3f}'.format(stratigraphic_unit.bottom_depth, width=column_widths[1]))

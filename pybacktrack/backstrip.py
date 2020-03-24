@@ -190,38 +190,44 @@ def backstrip_well(
     # The well depth/thickness is the bottom depth of the deepest stratigraphic unit (they are sorted from youngest to oldest).
     deepest_well_unit = well.stratigraphic_units[-1]
     well_sediment_thickness = deepest_well_unit.bottom_depth
-    if well_sediment_thickness < total_sediment_thickness:
-        base_unit_thickness = total_sediment_thickness - well_sediment_thickness
-        base_unit_top_depth = well_sediment_thickness
-        base_unit_bottom_depth = base_unit_top_depth + base_unit_thickness
-        
-        # Age at the top of the base unit (age at which deposition ended for base unit) is
-        # the bottom age of the unit above it (deepest unit of well).
-        base_unit_top_age = deepest_well_unit.bottom_age
-        # We don't know the age at the bottom of the base unit so just set it to the top age.
-        base_unit_bottom_age = base_unit_top_age
-        
-        # One lithology component comprising the full fraction.
-        base_unit_lithology_components = [(base_lithology_name, 1.0)]
-        
-        # We don't know the min/max water depth of the base unit so
-        # just use the min/max water depth of the deepest unit of well.
-        base_unit_other_attributes = {
-            'min_water_depth': deepest_well_unit.min_water_depth,
-            'max_water_depth': deepest_well_unit.max_water_depth}
-        
-        well.add_compacted_unit(
-            base_unit_top_age, base_unit_bottom_age,
-            base_unit_top_depth, base_unit_bottom_depth,
-            base_unit_lithology_components, lithologies,
-            base_unit_other_attributes)
-        
-    elif well_sediment_thickness - total_sediment_thickness > 0.01 * well_sediment_thickness:
+
+    if well_sediment_thickness - total_sediment_thickness > 0.01 * well_sediment_thickness:
         # Warn the user that the well thickness exceeds the total sediment thickness - requested by Dietmar.
         # This can happen as a result of the large uncertainties in the sediment thickness grid.
         warnings.warn('Well thickness {0} is larger than the total sediment thickness grid {1} at well location ({2}, {3}).'.format(
                       well_sediment_thickness, total_sediment_thickness, well.longitude, well.latitude))
     
+    # If well thickness exceeds the total sediment thickness then clamp the base unit thickness to zero
+    # (it won't get added to ammended well file though).
+    # This can happen due to inaccuracies in the total sediment thickness grid.
+    # We still add a zero-thickness base layer anyway because we need to generate decompacted output at the
+    # bottom of the well, and since we can only output at the top of stratigraphic units we can only generate output
+    # at the bottom of the well if we added a base layer (where top of the base layer is same as bottom of well).
+    base_unit_thickness = max(0, total_sediment_thickness - well_sediment_thickness)
+    base_unit_top_depth = well_sediment_thickness
+    base_unit_bottom_depth = base_unit_top_depth + base_unit_thickness
+    
+    # Age at the top of the base unit (age at which deposition ended for base unit) is
+    # the bottom age of the unit above it (deepest unit of well).
+    base_unit_top_age = deepest_well_unit.bottom_age
+    # We don't know the age at the bottom of the base unit so just set it to the top age.
+    base_unit_bottom_age = base_unit_top_age
+    
+    # One lithology component comprising the full fraction.
+    base_unit_lithology_components = [(base_lithology_name, 1.0)]
+    
+    # We don't know the min/max water depth of the base unit so
+    # just use the min/max water depth of the deepest unit of well.
+    base_unit_other_attributes = {
+        'min_water_depth': deepest_well_unit.min_water_depth,
+        'max_water_depth': deepest_well_unit.max_water_depth}
+    
+    well.add_compacted_unit(
+        base_unit_top_age, base_unit_bottom_age,
+        base_unit_top_depth, base_unit_bottom_depth,
+        base_unit_lithology_components, lithologies,
+        base_unit_other_attributes)
+        
     # Each decompacted well (in returned list) represents decompaction at the age of a stratigraphic unit in the well.
     decompacted_wells = well.decompact()
     
