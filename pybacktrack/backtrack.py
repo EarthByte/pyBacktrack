@@ -99,6 +99,9 @@ def backtrack_well(
     age_grid_filename : string, optional
         Age grid filename.
         Used to obtain age of seafloor at well location.
+        Can be explicitly set to None if well site is known to be on continental crust
+        (and hence age grid should be ignored). Note that this is different than
+        not specifying a filename (since that will use the default bundled age grid).
     topography_filename : string, optional
         Topography filename.
         Used to obtain water depth at well location.
@@ -212,12 +215,17 @@ def backtrack_well(
     if not well.stratigraphic_units:
         return []
     
-    # Sample age grid at well location.
-    age = _sample_grid(well.longitude, well.latitude, age_grid_filename)
-    # If sampled outside age grid then well is on continental crust near a passive margin.
-    # In this case we'll using passive margin rifting to calculate tectonic subsidence instead of
-    # ocean floor age-to-depth models.
-    if math.isnan(age):
+    if age_grid_filename:
+        # Sample age grid at well location.
+        age = _sample_grid(well.longitude, well.latitude, age_grid_filename)
+        # If sampled outside age grid then well is on continental crust near a passive margin.
+        # In this case we'll using passive margin rifting to calculate tectonic subsidence instead of
+        # ocean floor age-to-depth models.
+        if math.isnan(age):
+            age = None
+    else:
+        # Caller knows the well site is on continental crust and wants to ignore the age grid
+        # (so they specified None for 'age_grid_filename').
         age = None
     
     # If well is on continental passive margin then rift end age needs to be
@@ -905,6 +913,9 @@ def backtrack_and_write_well(
     age_grid_filename : string, optional
         Age grid filename.
         Used to obtain age of seafloor at well location.
+        Can be explicitly set to None if well site is known to be on continental crust
+        (and hence age grid should be ignored). Note that this is different than
+        not specifying a filename (since that will use the default bundled age grid).
     topography_filename : string, optional
         Topography filename.
         Used to obtain water depth at well location.
@@ -1295,12 +1306,20 @@ if __name__ == '__main__':
                  'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
         
         # Allow user to override default age grid filename (if they don't want the one in the bundled data).
-        parser.add_argument(
+        # Can also specify that no age grid be used (in case well site is actually on continental crust but
+        # also inside the non-NaN region of age grid which would otherwise determine it to be on oceanic crust).
+        # Can specify both options though.
+        age_grid_argument_group = parser.add_mutually_exclusive_group()
+        age_grid_argument_group.add_argument(
             '-a', '--age_grid_filename', type=argparse_unicode,
             default=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
             metavar='age_grid_filename',
             help='Optional age grid filename used to obtain age of seafloor at well location. '
                  'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
+        age_grid_argument_group.add_argument(
+            '-cc', '--continental_crust', action='store_true',
+            help='The well site is known to be on continental crust (not oceanic). '
+                 'This ignores the age grid which usually determines if site is on oceanic crust or not.')
         
         # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
         parser.add_argument(
@@ -1380,6 +1399,12 @@ if __name__ == '__main__':
         #
         # Do any necessary post-processing/validation of parsed options.
         #
+
+        # See if user overrode the age grid (because they know well site is on continental crust).
+        if args.continental_crust:
+            age_grid_filename = None
+        else:
+            age_grid_filename = args.age_grid_filename
         
         # Convert output column names to enumerations.
         try:
@@ -1418,7 +1443,7 @@ if __name__ == '__main__':
             args.output_filename,
             args.well_filename,
             args.lithology_filenames,
-            args.age_grid_filename,
+            age_grid_filename,
             args.topography_filename,
             args.total_sediment_thickness_filename,
             args.crustal_thickness_filename,
@@ -1444,5 +1469,5 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        # traceback.print_exc()
+        #traceback.print_exc()
         sys.exit(1)

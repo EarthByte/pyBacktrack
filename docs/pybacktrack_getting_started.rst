@@ -151,23 +151,20 @@ To install the latest stable version, run:
 
   pip install pybacktrack
 
-.. note:: If you are using a package manager such as `Conda <https://docs.conda.io>`_ you may need to run ``python -m pip install pybacktrack`` to ensure
-          ``pybacktrack`` is installed into Conda Python and not the system Python (assuming ``python`` will execute the Conda Python interpreter). 
-          It is only necessary if, for example, ``python`` executes the Conda Python interpreter but ``pip`` installs into the system Python
-          (because the base Conda environment is not activated).
-
 .. warning:: | On Mac systems, when using `Macports <https://www.macports.org/>`_, it might be better to install to the
                local user install directory with ``pip install --user pybacktrack`` to avoid confusing Macports
                (which installs to the system install directory).
              | And on linux systems, if you have admin privileges, you can install to the system install directory with ``sudo pip install pybacktrack``.
 
+.. note:: If you are using a package manager such as `Conda <https://docs.conda.io>`_ you may need to run ``python -m pip install pybacktrack`` to ensure
+          ``pybacktrack`` is installed into Conda Python and not the system Python (assuming ``python`` will execute the Conda Python interpreter). 
+          It is only necessary if, for example, ``python`` executes the Conda Python interpreter but ``pip`` installs into the system Python
+          (because the base Conda environment is not activated).
+
 If you already have ``pybacktrack`` installed and would like to upgrade to the latest version then use the ``--upgrade`` flag:
 ::
 
   pip install --upgrade pybacktrack
-
-Installing `pyBacktrack` will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
-However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
 
 To install the latest development version (requires Git on local system), run:
 ::
@@ -181,6 +178,9 @@ To install the latest development version (requires Git on local system), run:
 ::
 
   pip install <path-to-local-directory>
+
+.. note:: Installing `pyBacktrack` will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
+          However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
 
 .. _pybacktrack_install_examples:
 
