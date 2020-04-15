@@ -6,6 +6,7 @@ import pytest
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
+import sys
 
 
 # Test data directory is inside the pybacktrack module.
@@ -64,6 +65,11 @@ def test_age_to_depth_script(tmpdir):
         model=pybacktrack.AGE_TO_DEPTH_MODEL_GDH1,
         reverse_output_columns=True)
     
+    # Use the same python that is running this test.
+    python = sys.executable
+    if not python:
+        python = 'python'
+    
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.age_to_depth
@@ -72,7 +78,7 @@ def test_age_to_depth_script(tmpdir):
     #        test_data/test_ages.txt
     #        test_depths_from_ages.txt
     #
-    age_to_depth_script_command_line = ['python', '-m', 'pybacktrack.age_to_depth',
+    age_to_depth_script_command_line = [python, '-m', 'pybacktrack.age_to_depth',
                                         '-m', 'GDH1',
                                         '-r',
                                         str(input_filename),

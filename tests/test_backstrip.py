@@ -6,6 +6,7 @@ import pytest
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
+import sys
 import warnings
 
 
@@ -27,6 +28,11 @@ def test_backstrip_script(tmpdir):
     test_ammended_well_output_filename = tmpdir.join(ammended_well_output_base_filename)
     test_decompacted_output_filename = tmpdir.join(decompacted_output_base_filename)
     
+    # Use the same python that is running this test.
+    python = sys.executable
+    if not python:
+        python = 'python'
+    
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.backstrip
@@ -38,7 +44,7 @@ def test_backstrip_script(tmpdir):
     #         --
     #         sunrise_backstrip_decompat.txt
     #
-    backstrip_script_command_line = ['python', '-m', 'pybacktrack.backstrip',
+    backstrip_script_command_line = [python, '-m', 'pybacktrack.backstrip',
                                      '-w', str(input_well_filename),
                                      '-l', 'primary', 'extended',
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness',

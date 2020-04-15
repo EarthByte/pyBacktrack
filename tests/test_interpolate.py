@@ -6,6 +6,7 @@ import pytest
 import pybacktrack
 from pybacktrack.util.call_system_command import call_system_command
 import py
+import sys
 
 
 # Test data directory is inside the pybacktrack module.
@@ -64,6 +65,11 @@ def test_interpolate_script(tmpdir):
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
     test_output_filename = tmpdir.join(output_base_filename)
     
+    # Use the same python that is running this test.
+    python = sys.executable
+    if not python:
+        python = 'python'
+    
     # The command-line strings to execute:
     #
     #     python -m pybacktrack.util.interpolate
@@ -73,7 +79,7 @@ def test_interpolate_script(tmpdir):
     #         ODP-114-699_strat_boundaries.txt
     #         ODP-114-699_strat_boundaries_age_depth.txt
     #
-    interpolate_script_command_line = ['python', '-m', 'pybacktrack.util.interpolate',
+    interpolate_script_command_line = [python, '-m', 'pybacktrack.util.interpolate',
                                        '-cx', '1', '-cy', '0',
                                        '-r',
                                        '-c', str(curve_filename),
