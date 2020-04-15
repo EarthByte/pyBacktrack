@@ -128,7 +128,7 @@ def convert_age_to_depth_files(
         If cannot read `age` value, as a floating-point number, from input file at column index `age_column_index`.
     """
     
-    with open(input_filename, 'rU') as input_file, open(output_filename, 'w') as output_file:
+    with open(input_filename, 'r') as input_file, open(output_filename, 'w') as output_file:
         for line_number, line in enumerate(input_file):
             
             # Make line number 1-based instead of 0-based.

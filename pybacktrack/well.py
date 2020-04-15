@@ -951,7 +951,7 @@ def read_well_file(
     surface_age = 0.0
     
     stratigraphic_units = []
-    with open(well_filename, 'rU') as well_file:
+    with open(well_filename, 'r') as well_file:
         for line_number, line in enumerate(well_file):
         
             # Make line number 1-based instead of 0-based.

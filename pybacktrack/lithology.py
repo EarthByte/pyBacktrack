@@ -93,7 +93,7 @@ def read_lithologies_file(lithologies_filename):
     """
     
     lithologies = {}
-    with open(lithologies_filename, 'rU') as lithologies_file:
+    with open(lithologies_filename, 'r') as lithologies_file:
         for line_number, line in enumerate(lithologies_file):
 
             # Make line number 1-based instead of 0-based.

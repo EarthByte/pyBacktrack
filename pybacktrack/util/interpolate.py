@@ -76,7 +76,7 @@ def read_curve_function(
     x_column = []
     y_column = []
     xmin, xmax = None, None
-    with open(curve_filename, 'rU') as curve_file:
+    with open(curve_filename, 'r') as curve_file:
         for line_number, line in enumerate(curve_file):
             
             # Make line number 1-based instead of 0-based.
@@ -164,7 +164,7 @@ def interpolate_file(
         If cannot read an `x` value, as a floating-point number, from input file at column index `input_x_column_index`.
     """
     
-    with open(input_filename, 'rU') as input_file, open(output_filename, 'w') as output_file:
+    with open(input_filename, 'r') as input_file, open(output_filename, 'w') as output_file:
         for line_number, line in enumerate(input_file):
             
             # Make line number 1-based instead of 0-based.

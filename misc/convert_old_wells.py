@@ -65,7 +65,7 @@ def read_well_locations_file(
     """
     
     well_locations = {}
-    with open(well_locations_filename, 'rU') as well_locations_file:
+    with open(well_locations_filename, 'r') as well_locations_file:
         # Skip the header line.
         line_number = 1
         first_line = well_locations_file.readline()
@@ -152,7 +152,7 @@ def convert_dat_file(
     well = pybacktrack.Well()
     
     # Read all lines in the input well file.
-    with open(well_input_filename, 'rU') as well_input_file:
+    with open(well_input_filename, 'r') as well_input_file:
         lines = well_input_file.readlines()
     
     # Skip comments.
@@ -281,7 +281,7 @@ def convert_txt_file(
     well = pybacktrack.Well()
     
     # Read all lines in the input well file.
-    with open(well_input_filename, 'rU') as well_input_file:
+    with open(well_input_filename, 'r') as well_input_file:
         lines = well_input_file.readlines()
     
     # Skip comments.

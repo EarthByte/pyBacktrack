@@ -38,7 +38,7 @@ def convert(
     # Read the input GA file.
     well_name = None
     well_data = []
-    with open(input_filename, 'rU') as input_file:
+    with open(input_filename, 'r') as input_file:
         found_well_header = False
         for line_number, line in enumerate(input_file):
             
