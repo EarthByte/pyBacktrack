@@ -306,7 +306,7 @@ class DynamicTopography(object):
         location_data = '{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude)
 
         # The command-line strings to execute GMT 'grdtrack'.
-        grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename.encode(sys.getfilesystemencoding()))]
+        grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename)]
         
         # Call the system command.
         stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)

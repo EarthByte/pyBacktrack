@@ -105,7 +105,7 @@ class StratigraphicUnit(object):
         
         # Add any extra attributes requested.
         if other_attributes is not None:
-            for name, value in other_attributes.iteritems():
+            for name, value in other_attributes.items():
                 setattr(self, name, value)
     
     def calc_decompacted_thickness(self, decompacted_depth_to_top):
@@ -176,7 +176,7 @@ class StratigraphicUnit(object):
         
         # Limit the number of iterations in case we never converge.
         # Although should converge within around 20 iterations (for 1e-6 accuracy).
-        for iteration in xrange(1000):
+        for iteration in range(1000):
             new_decompacted_thickness = a * math.exp(-decompacted_thickness / porosity_decay) + b
             
             # If we've converged within a tolerance then we're done.
@@ -288,7 +288,7 @@ class Well(object):
         
         # Add any well attributes requested.
         if attributes is not None:
-            for name, value in attributes.iteritems():
+            for name, value in attributes.items():
                 setattr(self, name, value)
         
         self.stratigraphic_units = []
@@ -379,7 +379,7 @@ class Well(object):
         # Note that the first stratigraphic unit doesn't really need decompaction but we do it anyway
         # (it's quick since it only requires one iteration in the decompacted thickness convergence loop).
         num_stratigraphic_units = len(self.stratigraphic_units)
-        for surface_unit_index in xrange(0, num_stratigraphic_units):
+        for surface_unit_index in range(0, num_stratigraphic_units):
             surface_unit = self.stratigraphic_units[surface_unit_index]
             
             decompacted_well = DecompactedWell(surface_unit)
@@ -389,7 +389,7 @@ class Well(object):
             total_decompacted_thickness = 0.0
             
             # Starting at the current surface unit, iterate over all units beneath it.
-            for unit_index in xrange(surface_unit_index, num_stratigraphic_units):
+            for unit_index in range(surface_unit_index, num_stratigraphic_units):
                 unit = self.stratigraphic_units[unit_index]
                 
                 # Decompact the current unit assuming there is 'total_decompacted_thickness' depth
@@ -943,7 +943,7 @@ def read_well_file(
     
     # All requested well attributes default to None if not found in well file.
     attributes = {}
-    for _, (well_attribute_name, _) in well_attributes.iteritems():
+    for _, (well_attribute_name, _) in well_attributes.items():
         attributes[well_attribute_name] = None
     
     # Attempt to parse the file for the surface age (becomes top age of top stratigraphic unit).
@@ -1033,7 +1033,7 @@ def read_well_file(
             if other_columns is not None:
                 other_attributes = {}
                 try:
-                    for column_name, column in other_columns.iteritems():
+                    for column_name, column in other_columns.items():
                         column_value = float(line_string_list[column])
                         other_attributes[column_name] = column_value
                 except ValueError:
@@ -1186,7 +1186,7 @@ def write_well_metadata(well_file, well, well_attributes=None):
     
     if well_attributes:
         # Add any requested well attributes (if they are not None).
-        for well_attribute_name, well_metadata_name in well_attributes.iteritems():
+        for well_attribute_name, well_metadata_name in well_attributes.items():
             well_attribute_value = getattr(well, well_attribute_name)
             if well_attribute_value is not None:
                 metadata.append((well_metadata_name, well_attribute_value))

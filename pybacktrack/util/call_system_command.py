@@ -16,6 +16,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from __future__ import print_function
+
 import subprocess
 import sys
 
@@ -66,17 +68,17 @@ def call_system_command(
     
     # Execute command.
     try:
-        command = subprocess.Popen(args, stdin=stdin_pipe, stdout=stdout_pipe, stderr=stderr_pipe, **subprocess_options)
+        command = subprocess.Popen(args, stdin=stdin_pipe, stdout=stdout_pipe, stderr=stderr_pipe, universal_newlines=True, **subprocess_options)
         stdout, stderr = command.communicate(stdin)
     except ValueError as e:
         if print_errors:
-            print >>sys.stderr, "System command called with invalid arguments: ", e
+            print("System command called with invalid arguments: {0}".format(e), file=sys.stderr)
         if not raise_errors:
             return None
         raise
     except OSError as e:
         if print_errors:
-            print >>sys.stderr, "Unable to execute system command: ", args, " ", e
+            print("Unable to execute system command: {0} {1}".format(args, e), file=sys.stderr)
         if not raise_errors:
             return None
         raise
@@ -86,7 +88,7 @@ def call_system_command(
         command_return_code = command.poll()
         if command_return_code != check_return_code:
             if print_errors:
-                print >>sys.stderr, "System command failed: ", args, " return code: ", command_return_code
+                print("System command failed: {0} return code: {1}".format(args, command_return_code), file=sys.stderr)
             if not raise_errors:
                 return None
             

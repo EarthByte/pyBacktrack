@@ -678,7 +678,7 @@ def _sample_grid(longitude, latitude, grid_filename):
     location_data = '{0} {1}\n'.format(longitude, latitude)
 
     # The command-line strings to execute GMT 'grdtrack'.
-    grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename.encode(sys.getfilesystemencoding()))]
+    grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename)]
     
     # Call the system command.
     stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
@@ -724,7 +724,7 @@ _DECOMPACTED_COLUMNS_DICT = {
     'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
     'lithology': COLUMN_LITHOLOGY,
     'compacted_depth': COLUMN_COMPACTED_DEPTH}
-_DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.iteritems()])
+_DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.items()])
 _DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
 _DEFAULT_DECOMPACTED_COLUMN_NAMES = ['age', 'decompacted_thickness']
@@ -1083,8 +1083,11 @@ if __name__ == '__main__':
     
     def argparse_unicode(value_string):
         try:
-            # Filename uses the system encoding - decode from 'str' to 'unicode'.
-            filename = value_string.decode(sys.getfilesystemencoding())
+            if sys.version_info[0] >= 3:
+                filename = value_string
+            else:
+                # Filename uses the system encoding - decode from 'str' to 'unicode'.
+                filename = value_string.decode(sys.getfilesystemencoding())
         except UnicodeDecodeError:
             raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
         
@@ -1408,7 +1411,9 @@ if __name__ == '__main__':
         
         # Convert output column names to enumerations.
         try:
-            decompacted_columns = [_DECOMPACTED_COLUMNS_DICT[column_name] for column_name in args.decompacted_columns]
+            decompacted_columns = []
+            for column_name in args.decompacted_columns:
+                decompacted_columns.append(_DECOMPACTED_COLUMNS_DICT[column_name])
         except KeyError:
             raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
         
