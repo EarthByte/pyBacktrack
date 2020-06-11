@@ -123,8 +123,13 @@ class SeaLevel(object):
             self.sea_level_function,
             end_time,
             begin_time,
-            points=times if times else None,  # Defaults to None if specified time period outside curve time range.
-            limit=2 * len(times) if times else 50)  # Defaults to 50 if specified time period outside curve time range.
+            # Defaults to None if specified time period outside curve time range.
+            # Note that number of breaks (points) must not exceed 'limit'...
+            points=times if times else None,
+            # Minimum limit is 50 (happens if not enough times in specified time period) to help avoid
+            # "IntegrationWarning: The maximum number of subdivisions (2) has been achieved." where
+            # the '2' is from '2 * len(times)'...
+            limit=max(50, 2 * len(times)))
         
         # Average sea level over integrated interval.
         average_sea_level = sea_level_integral / time_interval
