@@ -195,7 +195,7 @@ class DynamicTopography(object):
             
             # Warn the user if the dynamic topography model does not include the specified time.
             warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                          'rift start time {3}. Using dynamic topography grid at {4}.'.format(
+                          'time {3}. Using dynamic topography grid at {4}.'.format(
                               self.grids.grid_list_filename,
                               self.longitude, self.latitude,
                               time, dynamic_topography_age))
