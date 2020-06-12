@@ -287,7 +287,7 @@ class DynamicTopography(object):
                 return grid_value, grid_age
         
         # Unable to sample a non-NaN grid value, so just return NaN.
-        first_grid_age, _ = self.grid_ages_and_filenames[0]
+        first_grid_age, _ = self.grids.grid_ages_and_filenames[0]
         return float('nan'), first_grid_age
     
     def _sample_grid(self, grid_age, grid_filename):
@@ -392,12 +392,12 @@ class TimeDependentGrid(object):
         
         # If 'time' matches either grid age then sample associated grid.
         if math.fabs(time - grid_age_0) < 1e-6:
-            return _sample_grid(longitude, latitude, grid_filename_0)
+            return self._sample_grid(longitude, latitude, grid_filename_0)
         if math.fabs(time - grid_age_1) < 1e-6:
-            return _sample_grid(longitude, latitude, grid_filename_1)
+            return self._sample_grid(longitude, latitude, grid_filename_1)
         
-        grid_value_0 = _sample_grid(longitude, latitude, grid_filename_0)
-        grid_value_1 = _sample_grid(longitude, latitude, grid_filename_1)
+        grid_value_0 = self._sample_grid(longitude, latitude, grid_filename_0)
+        grid_value_1 = self._sample_grid(longitude, latitude, grid_filename_1)
         
         # If either value is NaN then return NaN.
         if math.isnan(grid_value_0) or math.isnan(grid_value_1):
@@ -452,10 +452,29 @@ class TimeDependentGrid(object):
         for index in range(len(self.grid_ages_and_filenames) - 1, -1, -1):
             grid_age, grid_filename = self.grid_ages_and_filenames[index]
             
-            grid_value = _sample_grid(longitude, latitude, grid_filename)
+            grid_value = self._sample_grid(longitude, latitude, grid_filename)
             if not math.isnan(grid_value):
                 return grid_value, grid_age
             
         # Unable to sample a non-NaN grid value, so just return NaN.
         first_grid_age = self.grid_ages_and_filenames[0][0]
         return float('nan'), first_grid_age
+
+    def _sample_grid(self, longitude, latitude, grid_filename):
+        """
+        Samples the grid file 'grid_filename' at the longitude/latitude location (in degrees).
+        
+        Returns sampled float value (which can be NaN if location is in a masked region of grid).
+        """
+        
+        location_data = '{0} {1}\n'.format(longitude, latitude)
+
+        # The command-line strings to execute GMT 'grdtrack'.
+        grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename)]
+        
+        # Call the system command.
+        stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
+        
+        # GMT grdtrack returns a single line containing "longitude latitude sampled_value".
+        # Note that if GMT returns "NaN" then we'll return float('nan').
+        return float(stdout_data.split()[2])
