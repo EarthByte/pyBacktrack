@@ -6,7 +6,7 @@ from __future__ import print_function
 # Public API
 #
 
-from pybacktrack.backtrack import \
+from .backtrack import \
     backtrack_well, \
     write_well as write_backtrack_well, \
     backtrack_and_write_well, \
@@ -18,9 +18,10 @@ from pybacktrack.backtrack import \
     COLUMN_WATER_DEPTH as BACKTRACK_COLUMN_WATER_DEPTH, \
     COLUMN_COMPACTED_THICKNESS as BACKTRACK_COLUMN_COMPACTED_THICKNESS, \
     COLUMN_LITHOLOGY as BACKTRACK_COLUMN_LITHOLOGY, \
-    COLUMN_COMPACTED_DEPTH as BACKTRACK_COLUMN_COMPACTED_DEPTH
+    COLUMN_COMPACTED_DEPTH as BACKTRACK_COLUMN_COMPACTED_DEPTH, \
+    COLUMN_DECOMPACTED_SEDIMENT_RATE as BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE
 
-from pybacktrack.backstrip import \
+from .backstrip import \
     backstrip_well, \
     write_well as write_backstrip_well, \
     backstrip_and_write_well, \
@@ -36,9 +37,10 @@ from pybacktrack.backstrip import \
     COLUMN_MAX_WATER_DEPTH as BACKSTRIP_COLUMN_MAX_WATER_DEPTH, \
     COLUMN_COMPACTED_THICKNESS as BACKSTRIP_COLUMN_COMPACTED_THICKNESS, \
     COLUMN_LITHOLOGY as BACKSTRIP_COLUMN_LITHOLOGY, \
-    COLUMN_COMPACTED_DEPTH as BACKSTRIP_COLUMN_COMPACTED_DEPTH
+    COLUMN_COMPACTED_DEPTH as BACKSTRIP_COLUMN_COMPACTED_DEPTH, \
+    COLUMN_DECOMPACTED_SEDIMENT_RATE as BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE
 
-from pybacktrack.lithology import \
+from .lithology import \
     Lithology, \
     read_lithologies_file, \
     read_lithologies_files, \
@@ -46,7 +48,7 @@ from pybacktrack.lithology import \
     create_lithology_from_components, \
     DEFAULT_BASE_LITHOLOGY_NAME
 
-from pybacktrack.well import \
+from .well import \
     StratigraphicUnit, \
     Well, \
     DecompactedStratigraphicUnit, \
@@ -55,38 +57,38 @@ from pybacktrack.well import \
     write_well_file, \
     write_well_metadata
 
-from pybacktrack.age_to_depth import \
+from .age_to_depth import \
     convert_age_to_depth, \
     convert_age_to_depth_files, \
     MODEL_GDH1 as AGE_TO_DEPTH_MODEL_GDH1, \
     MODEL_CROSBY_2007 as AGE_TO_DEPTH_MODEL_CROSBY_2007, \
     DEFAULT_MODEL as AGE_TO_DEPTH_DEFAULT_MODEL
 
-from pybacktrack.rifting import \
+from .rifting import \
     estimate_beta as estimate_rift_beta, \
     total_subsidence as total_rift_subsidence, \
     syn_rift_subsidence, \
     post_rift_subsidence
 
-from pybacktrack.dynamic_topography import \
+from .dynamic_topography import \
     DynamicTopography
 
-from pybacktrack.sea_level import \
+from .sea_level import \
     SeaLevel
 
-from pybacktrack.util.interpolate import \
+from .util.interpolate import \
     read_curve_function as read_interpolate_function, \
     interpolate_file
 
 # From bundle_data module.
 #
 # Importing all since there are only module variables prefixed with 'BUNDLE_' in 'bundle_data' module.
-from pybacktrack.bundle_data import *
+from .bundle_data import *
 
 # Installing examples from pybacktrack package.
-from pybacktrack.install_examples import install as install_examples
+from .install_examples import install as install_examples
 
-from pybacktrack.version import __version__, VERSION
+from .version import __version__, VERSION
 
 
 # List public interface in case client does "from pybacktrack import *".
@@ -104,6 +106,7 @@ __all__ = [
     'BACKTRACK_COLUMN_COMPACTED_THICKNESS',
     'BACKTRACK_COLUMN_LITHOLOGY',
     'BACKTRACK_COLUMN_COMPACTED_DEPTH',
+    'BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE',
     # From backstrip module...
     'backstrip_well',
     'write_backstrip_well',
@@ -121,6 +124,7 @@ __all__ = [
     'BACKSTRIP_COLUMN_COMPACTED_THICKNESS',
     'BACKSTRIP_COLUMN_LITHOLOGY',
     'BACKSTRIP_COLUMN_COMPACTED_DEPTH',
+    'BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE',
     # From lithology module...
     'Lithology',
     'read_lithologies_file',

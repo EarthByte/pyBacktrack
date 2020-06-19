@@ -285,6 +285,7 @@ COLUMN_MAX_WATER_DEPTH = 8
 COLUMN_COMPACTED_THICKNESS = 9
 COLUMN_LITHOLOGY = 10
 COLUMN_COMPACTED_DEPTH = 11
+COLUMN_DECOMPACTED_SEDIMENT_RATE = 12
 
 _DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
@@ -298,7 +299,8 @@ _DECOMPACTED_COLUMNS_DICT = {
     'max_water_depth': COLUMN_MAX_WATER_DEPTH,
     'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
     'lithology': COLUMN_LITHOLOGY,
-    'compacted_depth': COLUMN_COMPACTED_DEPTH}
+    'compacted_depth': COLUMN_COMPACTED_DEPTH,
+    'decompacted_sediment_rate': COLUMN_DECOMPACTED_SEDIMENT_RATE}
 _DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.items()])
 _DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
@@ -342,6 +344,7 @@ def write_well(
         * pybacktrack.BACKSTRIP_COLUMN_AGE
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE
         * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE
@@ -452,6 +455,9 @@ def write_well(
                     # Depth of the top of the first/surface stratigraphic unit.
                     # This matches the age (which is also the top of the first/surface stratigraphic unit).
                     column_str = column_float_format_string.format(decompacted_well.surface_unit.top_depth, width=column_width)
+                elif decompacted_column == COLUMN_DECOMPACTED_SEDIMENT_RATE:
+                    # Calculate sediment rate of surface stratigraphic unit.
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.calc_decompacted_sediment_rate(), width=column_width)
                 else:
                     raise ValueError('Unrecognised value for "decompacted_columns".')
                 
@@ -525,6 +531,7 @@ def backstrip_and_write_well(
         * pybacktrack.BACKSTRIP_COLUMN_AGE
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE
         * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE
@@ -887,5 +894,5 @@ if __name__ == '__main__':
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
-        #traceback.print_exc()
+        # traceback.print_exc()
         sys.exit(1)

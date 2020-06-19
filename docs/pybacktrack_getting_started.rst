@@ -309,6 +309,7 @@ The following example is used to demonstrate both approaches. It backtracks an o
   * compacted_thickness
   * decompacted_thickness
   * decompacted_density
+  * decompacted_sediment_rate
   * water_depth
   * tectonic_subsidence
   * lithology
@@ -334,7 +335,7 @@ The backtracking example can now be demonstrated by running the script as:
 
     python -m pybacktrack.backtrack \
         -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density water_depth tectonic_subsidence lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
@@ -373,6 +374,7 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
                              pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE,
                              pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
                              pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],

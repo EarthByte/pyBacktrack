@@ -48,7 +48,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
     python -m pybacktrack.backstrip \
         -w pybacktrack_examples/test_data/sunrise_lithology.txt \
         -l primary extended \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology \
         -slm Haq87_SealevelCurve_Longterm \
         -o sunrise_backstrip_amended.txt \
         -- \
@@ -77,6 +77,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
                              pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS,
                              pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS,
                              pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY,
+                             pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE,
                              pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
@@ -141,7 +142,9 @@ another stratigraphic layer is essentially removed, allowing the underlying laye
 (or the surface age) the decompacted thickness is just the compacted thickness. And note that because no extra
 :ref:`base sediment layer <pygplates_base_sediment_layer>` was added to the bottom of the drill site (2311 metres) the thickness and density is zero there.
 The *decompacted_density* is the average density integrated over the decompacted thickness of the drill site (each stratigraphic layer contains
-a mixture of water and sediment according to its porosity at the decompacted depth of the layer).
+a mixture of water and sediment according to its porosity at the decompacted depth of the layer). The *decompacted_sediment_rate* is the rate of
+sediment deposition in units of metres/Ma. At each time it is calculated as the fully decompacted thickness (ie, using surface porosity only) of the
+surface stratigraphic layer (whose deposition ends at the specified time) divided by the layer's deposition time interval.
 
 Finally, *average_water_depth* is just the average *min_water_depth* and *max_water_depth*. And *min_tectonic_subsidence*, *max_tectonic_subsidence* and
 *average_tectonic_subsidence* are obtained from *min_water_depth* and *max_water_depth* and *average_water_depth* by adding an isostatic correction of the

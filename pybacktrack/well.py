@@ -239,6 +239,68 @@ class StratigraphicUnit(object):
                 (_DENSITY_WATER - density) * porosity_decay * surface_porosity *
                 math.exp(-decompacted_depth_to_top / porosity_decay) *
                 (1 - math.exp(-decompacted_thickness / porosity_decay)) / decompacted_thickness)
+    
+    def calc_decompacted_sediment_rate(self):
+        """
+        Calculate decompacted sediment rate.
+
+        This is the fully decompacted thickness of this unit divided by its (deposition) time interval.
+        
+        Returns
+        -------
+        float
+            Decompacted sediment rate (in units of metres/Ma).
+        
+        Notes
+        -----
+        Fully decompacted is equivalent to assuming this unit is at the surface (ie, not units on top of it) and
+        porosity decay within the unit is not considered (in other words the weight of the upper part of the unit
+        does not compact the lower part of the unit).
+        """
+        
+        present_day_thickness = self.bottom_depth - self.top_depth
+        if present_day_thickness == 0.0:
+            return 0.0
+        
+        deposition_interval = self.bottom_age - self.top_age
+        if deposition_interval == 0.0:
+            return 0.0
+        
+        surface_porosity = self.lithology.surface_porosity
+        porosity_decay = self.lithology.porosity_decay
+        
+        #
+        # Assuming the porosity decays exponentially and that the volume of grains within a unit never changes we get:
+        #
+        #    Integral(1 - porosity(0), z = 0 -> 0 + T) = Integral(1 - porosity(z), z = d -> d + t)
+        #
+        # ...where T is 'decompacted_thickness', and 'd' is present day depth to top of unit and 't' is present day thickness of unit.
+        # Note that we used 'porosity(0)' instead of 'porosity(z)' since we're not interested in any compaction (ie, want fully decompacted).
+        #
+        # The right-hand side of above equation is:
+        #
+        #    Integral(1 - porosity(z), z = d -> d + t) = t - Integral(porosity(0) * exp(-z / decay), z = d -> d + t)
+        #                                              = t - (-decay * porosity(0) * (exp(-(d+t)/decay) - exp(-d/decay)))
+        #                                              = t - (-decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1))
+        #                                              = t + decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1)
+        #
+        #    Integral(1 - porosity(0), z = 0 -> 0 + T) = Integral(1 - porosity(z), z = d -> d + t)
+        #    T * (1 - porosity(0)) = t + decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1)
+        #
+        # So the decompacted thickness T:
+        #
+        #    T = [t + decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1)] / [1 - porosity(0)]
+        #
+        decompacted_thickness = (
+                                (present_day_thickness +
+                                    porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
+                                    (math.exp(-present_day_thickness / porosity_decay) - 1)) /
+                                (1 - surface_porosity)
+        )
+
+        decompacted_sediment_rate = decompacted_thickness / deposition_interval
+        
+        return decompacted_sediment_rate
 
 
 class Well(object):
