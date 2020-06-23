@@ -286,6 +286,7 @@ COLUMN_COMPACTED_THICKNESS = 9
 COLUMN_LITHOLOGY = 10
 COLUMN_COMPACTED_DEPTH = 11
 COLUMN_DECOMPACTED_SEDIMENT_RATE = 12
+COLUMN_DECOMPACTED_DEPTH = 13
 
 _DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
@@ -300,7 +301,8 @@ _DECOMPACTED_COLUMNS_DICT = {
     'compacted_thickness': COLUMN_COMPACTED_THICKNESS,
     'lithology': COLUMN_LITHOLOGY,
     'compacted_depth': COLUMN_COMPACTED_DEPTH,
-    'decompacted_sediment_rate': COLUMN_DECOMPACTED_SEDIMENT_RATE}
+    'decompacted_sediment_rate': COLUMN_DECOMPACTED_SEDIMENT_RATE,
+    'decompacted_depth': COLUMN_DECOMPACTED_DEPTH}
 _DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.items()])
 _DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
@@ -345,6 +347,7 @@ def write_well(
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DEPTH
         * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE
@@ -456,8 +459,11 @@ def write_well(
                     # This matches the age (which is also the top of the first/surface stratigraphic unit).
                     column_str = column_float_format_string.format(decompacted_well.surface_unit.top_depth, width=column_width)
                 elif decompacted_column == COLUMN_DECOMPACTED_SEDIMENT_RATE:
-                    # Calculate sediment rate of surface stratigraphic unit.
-                    column_str = column_float_format_string.format(decompacted_well.surface_unit.calc_decompacted_sediment_rate(), width=column_width)
+                    # Get sediment rate of surface stratigraphic unit.
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.get_decompacted_sediment_rate(), width=column_width)
+                elif decompacted_column == COLUMN_DECOMPACTED_DEPTH:
+                    # Get fully decompacted depth (assumes overlying stratigraphic units are also fully decompacted).
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.decompacted_top_depth, width=column_width)
                 else:
                     raise ValueError('Unrecognised value for "decompacted_columns".')
                 
@@ -532,6 +538,7 @@ def backstrip_and_write_well(
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE
+        * pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DEPTH
         * pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE

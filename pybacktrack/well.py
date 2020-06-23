@@ -52,6 +52,10 @@ class StratigraphicUnit(object):
         Depth of top of stratigraphic unit (in metres).
     bottom_depth : float
         Depth of bottom of stratigraphic unit (in metres).
+    decompacted_top_depth : float
+        Fully decompacted depth of top of stratigraphic unit (in metres) as if no portion of any layer had ever been buried (ie, using surface porosities only).
+    decompacted_bottom_depth : float
+        Fully decompacted depth of bottom of stratigraphic unit (in metres) as if no portion of any layer had ever been buried (ie, using surface porosities only).
     min_water_depth : float, optional
         Minimum paleo-water depth of stratigraphic unit (in metres).
         
@@ -240,9 +244,9 @@ class StratigraphicUnit(object):
                 math.exp(-decompacted_depth_to_top / porosity_decay) *
                 (1 - math.exp(-decompacted_thickness / porosity_decay)) / decompacted_thickness)
     
-    def calc_decompacted_sediment_rate(self):
+    def get_decompacted_sediment_rate(self):
         """
-        Calculate decompacted sediment rate.
+        Return fully decompacted sediment rate.
 
         This is the fully decompacted thickness of this unit divided by its (deposition) time interval.
         
@@ -253,17 +257,41 @@ class StratigraphicUnit(object):
         
         Notes
         -----
-        Fully decompacted is equivalent to assuming this unit is at the surface (ie, not units on top of it) and
+        Fully decompacted is equivalent to assuming this unit is at the surface (ie, no units on top of it) and
+        porosity decay within the unit is not considered (in other words the weight of the upper part of the unit
+        does not compact the lower part of the unit).
+        """
+        
+        fully_decompacted_thickness = self.decompacted_bottom_depth - self.decompacted_top_depth
+        if fully_decompacted_thickness == 0.0:
+            return 0.0
+        
+        deposition_interval = self.bottom_age - self.top_age
+        if deposition_interval == 0.0:
+            return 0.0
+
+        fully_decompacted_sediment_rate = fully_decompacted_thickness / deposition_interval
+        
+        return fully_decompacted_sediment_rate
+    
+    def _calc_fully_decompacted_thickness(self):
+        """
+        Calculate fully decompacted thickness.
+        
+        Returns
+        -------
+        float
+            Fully decompacted thickness.
+        
+        Notes
+        -----
+        Fully decompacted is equivalent to assuming this unit is at the surface (ie, no units on top of it) and
         porosity decay within the unit is not considered (in other words the weight of the upper part of the unit
         does not compact the lower part of the unit).
         """
         
         present_day_thickness = self.bottom_depth - self.top_depth
         if present_day_thickness == 0.0:
-            return 0.0
-        
-        deposition_interval = self.bottom_age - self.top_age
-        if deposition_interval == 0.0:
             return 0.0
         
         surface_porosity = self.lithology.surface_porosity
@@ -274,7 +302,7 @@ class StratigraphicUnit(object):
         #
         #    Integral(1 - porosity(0), z = 0 -> 0 + T) = Integral(1 - porosity(z), z = d -> d + t)
         #
-        # ...where T is 'decompacted_thickness', and 'd' is present day depth to top of unit and 't' is present day thickness of unit.
+        # ...where T is 'fully_decompacted_thickness', and 'd' is present day depth to top of unit and 't' is present day thickness of unit.
         # Note that we used 'porosity(0)' instead of 'porosity(z)' since we're not interested in any compaction (ie, want fully decompacted).
         #
         # The right-hand side of above equation is:
@@ -291,16 +319,14 @@ class StratigraphicUnit(object):
         #
         #    T = [t + decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1)] / [1 - porosity(0)]
         #
-        decompacted_thickness = (
+        fully_decompacted_thickness = (
                                 (present_day_thickness +
                                     porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
                                     (math.exp(-present_day_thickness / porosity_decay) - 1)) /
                                 (1 - surface_porosity)
         )
-
-        decompacted_sediment_rate = decompacted_thickness / deposition_interval
         
-        return decompacted_sediment_rate
+        return fully_decompacted_thickness
 
 
 class Well(object):
@@ -309,8 +335,6 @@ class Well(object):
     
     Attributes
     ----------
-    stratigraphic_units : list of :class:`pybacktrack.StratigraphicUnit`
-        List of stratigraphic units in this well sorted by age (from youngest to oldest).
     longitude : float, optional
         Longitude of the well location.
         
@@ -326,7 +350,7 @@ class Well(object):
     
     def __init__(self, attributes=None, stratigraphic_units=None):
         """
-        Create a well from stratigraphic units.
+        Create a well from optional stratigraphic units.
         
         Parameters
         ----------
@@ -346,6 +370,10 @@ class Well(object):
             #. adjacent units do not have matching top and bottom ages and depths.
         
             ...this ensures the units are contiguous in depth from the surface (ie, no gaps).
+        
+        Notes
+        -----
+        Stratigraphic units can also be added using :meth:`pybacktrack.Well.add_compacted_unit`
         """
         
         # Add any well attributes requested.
@@ -420,6 +448,14 @@ class Well(object):
                 raise ValueError('Adjacent stratigraphic units in well must have matching top and bottom ages.')
             if abs(self.stratigraphic_units[-1].bottom_depth - stratigraphic_unit.top_depth) > 1e-6:
                 raise ValueError('Adjacent stratigraphic units in well must have matching top and bottom depths.')
+        
+        # Fully decompacted top depth is decompacted bottom depth of layer above, otherwise zero (since at surface at present day).
+        if self.stratigraphic_units:
+            stratigraphic_unit.decompacted_top_depth = self.stratigraphic_units[-1].decompacted_bottom_depth
+        else:
+            stratigraphic_unit.decompacted_top_depth = 0.0
+        # Fully decompacted bottom depth increases top depth by fully decompacted thickness (using surface porosity only).
+        stratigraphic_unit.decompacted_bottom_depth = stratigraphic_unit.decompacted_top_depth + stratigraphic_unit._calc_fully_decompacted_thickness()
         
         self.stratigraphic_units.append(stratigraphic_unit)
     

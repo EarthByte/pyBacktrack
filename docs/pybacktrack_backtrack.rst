@@ -48,7 +48,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 
     python -m pybacktrack.backtrack \
         -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate water_depth tectonic_subsidence lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
@@ -79,6 +79,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE,
+                             pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH,
                              pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
                              pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
@@ -139,11 +140,13 @@ The *compacted_thickness* column is the total sediment thickness (601 metres - s
 :ref:`amended drill site <pygplates_backtrack_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
-(or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* is the average density
+(or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* column is the average density
 integrated over the decompacted thickness of the drill site (each stratigraphic layer contains a mixture of water and sediment according
-to its porosity at the decompacted depth of the layer). The *decompacted_sediment_rate* is the rate of sediment deposition in units of metres/Ma.
+to its porosity at the decompacted depth of the layer). The *decompacted_sediment_rate* column is the rate of sediment deposition in units of metres/Ma.
 At each time it is calculated as the fully decompacted thickness (ie, using surface porosity only) of the surface stratigraphic layer
-(whose deposition ends at the specified time) divided by the layer's deposition time interval.
+(whose deposition ends at the specified time) divided by the layer's deposition time interval. The *decompacted_depth* column is similar to
+*decompacted_sediment_rate* in that the stratigraphic layers are fully decompacted (using surface porosity only) as if no portion of any layer had
+ever been buried. It is also similar to *compacted_depth* except all effects of compaction have been removed.
 
 Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pygplates_backtrack_oceanic_and_continental_subsidence>`,
 and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.

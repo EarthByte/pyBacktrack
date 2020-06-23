@@ -43,6 +43,7 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS``
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY``
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE``
+- ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH``
 - ``pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE``
 - ``pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH``
 - ``pybacktrack.BACKTRACK_COLUMN_LITHOLOGY``
@@ -72,6 +73,7 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS``
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY``
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE``
+- ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DEPTH``
 - ``pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE``
 - ``pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE``
 - ``pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE``
