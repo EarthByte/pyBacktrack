@@ -108,6 +108,9 @@ def backtrack_well(
     total_sediment_thickness_filename : string, optional
         Total sediment thickness filename.
         Used to obtain total sediment thickness at well location.
+        Can be explicitly set to None if well site is known to be drilled to basement depth
+        (and hence total sediment thickness grid should be ignored). Note that this is different
+        than not specifying a filename (since that will use the default bundled total sediment thickness grid).
     crustal_thickness_filename : string, optional
         Crustal thickness filename.
         Used to obtain crustal thickness at well location.
@@ -248,8 +251,16 @@ def backtrack_well(
     # Clamp water depth so it's below sea level (ie, must be >= 0).
     present_day_water_depth = max(0, present_day_water_depth)
     
-    # Sample total sediment thickness grid at well location.
-    present_day_total_sediment_thickness = _sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
+    if total_sediment_thickness_filename:
+        # Sample total sediment thickness grid at well location.
+        present_day_total_sediment_thickness = _sample_grid(well.longitude, well.latitude, total_sediment_thickness_filename)
+    else:
+        # Caller knows the well site was drilled to basement depth and wants to ignore the total sediment thickness grid
+        # (so they specified None for 'total_sediment_thickness_filename').
+        # Use the well depth in place of the total sediment thickness.
+        # The well depth/thickness is the bottom depth of the deepest stratigraphic unit (they are sorted from youngest to oldest).
+        present_day_total_sediment_thickness = well.stratigraphic_units[-1].bottom_depth
+    
     # If sampled outside total sediment thickness grid then set total sediment thickness to zero.
     # This will result in a base stratigraphic layer not getting added underneath the well to fill
     # in the total sediment thickness (but the well is probably close to the coastlines where it's shallow
@@ -934,6 +945,9 @@ def backtrack_and_write_well(
     total_sediment_thickness_filename : string, optional
         Total sediment thickness filename.
         Used to obtain total sediment thickness at well location.
+        Can be explicitly set to None if well site is known to be drilled to basement depth
+        (and hence total sediment thickness grid should be ignored). Note that this is different
+        than not specifying a filename (since that will use the default bundled total sediment thickness grid).
     crustal_thickness_filename : string, optional
         Crustal thickness filename.
         Used to obtain crustal thickness at well location.
@@ -1325,7 +1339,7 @@ if __name__ == '__main__':
         # Allow user to override default age grid filename (if they don't want the one in the bundled data).
         # Can also specify that no age grid be used (in case well site is actually on continental crust but
         # also inside the non-NaN region of age grid which would otherwise determine it to be on oceanic crust).
-        # Can specify both options though.
+        # Cannot specify both options though.
         age_grid_argument_group = parser.add_mutually_exclusive_group()
         age_grid_argument_group.add_argument(
             '-a', '--age_grid_filename', type=argparse_unicode,
@@ -1339,12 +1353,19 @@ if __name__ == '__main__':
                  'This ignores the age grid which usually determines if site is on oceanic crust or not.')
         
         # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
-        parser.add_argument(
+        # Can also specify that no total sediment thickness grid be used (in case well site was actually drilled to basement depth)
+        # Cannot specify both options though.
+        total_sediment_thickness_argument_group = parser.add_mutually_exclusive_group()
+        total_sediment_thickness_argument_group.add_argument(
             '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
             default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
             metavar='total_sediment_thickness_filename',
             help='Optional filename used to obtain total sediment thickness at well location. '
                  'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+        total_sediment_thickness_argument_group.add_argument(
+            '-ns', '--no_total_sediment_thickness', action='store_true',
+            help='The well site was drilled to basement depth (and so represents total sediment thickness). '
+                 'This ignores the total sediment thickness grid which usually determines the base sediment layer thickness.')
         
         # Allow user to override default crustal thickness filename (if they don't want the one in the bundled data).
         parser.add_argument(
@@ -1423,6 +1444,12 @@ if __name__ == '__main__':
         else:
             age_grid_filename = args.age_grid_filename
         
+        # See if user overrode the total sediment thickness grid (because they know well site was drilled to basement depth).
+        if args.no_total_sediment_thickness:
+            total_sediment_thickness_filename = None
+        else:
+            total_sediment_thickness_filename = args.total_sediment_thickness_filename
+        
         # Convert output column names to enumerations.
         try:
             decompacted_columns = []
@@ -1464,7 +1491,7 @@ if __name__ == '__main__':
             args.lithology_filenames,
             age_grid_filename,
             args.topography_filename,
-            args.total_sediment_thickness_filename,
+            total_sediment_thickness_filename,
             args.crustal_thickness_filename,
             dynamic_topography_model,
             sea_level_model,
