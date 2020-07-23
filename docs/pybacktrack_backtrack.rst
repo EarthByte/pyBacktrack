@@ -48,7 +48,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 
     python -m pybacktrack.backtrack \
         -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth water_depth tectonic_subsidence lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
@@ -80,6 +80,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH,
+                             pybacktrack.BACKTRACK_COLUMN_DYNAMIC_TOPOGRAPHY,
                              pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH,
                              pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
@@ -147,6 +148,7 @@ At each time it is calculated as the fully decompacted thickness (ie, using surf
 (whose deposition ends at the specified time) divided by the layer's deposition time interval. The *decompacted_depth* column is similar to
 *decompacted_sediment_rate* in that the stratigraphic layers are fully decompacted (using surface porosity only) as if no portion of any layer had
 ever been buried. It is also similar to *compacted_depth* except all effects of compaction have been removed.
+The *dynamic_topography* column is the dynamic topography elevation relative to present day (or zero if no dynamic topography model was specified).
 
 Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pygplates_backtrack_oceanic_and_continental_subsidence>`,
 and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.

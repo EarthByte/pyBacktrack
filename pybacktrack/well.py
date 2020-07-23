@@ -589,6 +589,8 @@ class DecompactedWell(object):
                   (for example, if ``sea_level_model`` was specified in :func:`pybacktrack.backtrack_well` or
                   :func:`pybacktrack.backstrip_well`).
         
+        .. seealso:: :meth:`pybacktrack.DecompactedWell.get_sea_level`
+        
     dynamic_topography : float, optional
         Dynamic topography elevation *relative to present day* (in metres).
         
@@ -603,6 +605,8 @@ class DecompactedWell(object):
                   increase in dynamic topography results in a decrease in tectonic subsidence.
         
         .. versionadded:: 1.2
+        
+        .. seealso:: :meth:`pybacktrack.DecompactedWell.get_dynamic_topography`
     
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.

@@ -727,6 +727,7 @@ COLUMN_LITHOLOGY = 6
 COLUMN_COMPACTED_DEPTH = 7
 COLUMN_DECOMPACTED_SEDIMENT_RATE = 8
 COLUMN_DECOMPACTED_DEPTH = 9
+COLUMN_DYNAMIC_TOPOGRAPHY = 10
 
 _DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
@@ -738,7 +739,8 @@ _DECOMPACTED_COLUMNS_DICT = {
     'lithology': COLUMN_LITHOLOGY,
     'compacted_depth': COLUMN_COMPACTED_DEPTH,
     'decompacted_sediment_rate': COLUMN_DECOMPACTED_SEDIMENT_RATE,
-    'decompacted_depth': COLUMN_DECOMPACTED_DEPTH}
+    'decompacted_depth': COLUMN_DECOMPACTED_DEPTH,
+    'dynamic_topography': COLUMN_DYNAMIC_TOPOGRAPHY}
 _DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.items()])
 _DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
@@ -784,6 +786,7 @@ def write_well(
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_DYNAMIC_TOPOGRAPHY
         * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS
@@ -872,6 +875,9 @@ def write_well(
                 elif decompacted_column == COLUMN_DECOMPACTED_DEPTH:
                     # Get fully decompacted depth (assumes overlying stratigraphic units are also fully decompacted).
                     column_str = column_float_format_string.format(decompacted_well.surface_unit.decompacted_top_depth, width=column_width)
+                elif decompacted_column == COLUMN_DYNAMIC_TOPOGRAPHY:
+                    # Get the change in dynamic topography relative to present day.
+                    column_str = column_float_format_string.format(decompacted_well.get_dynamic_topography(), width=column_width)
                 else:
                     raise ValueError('Unrecognised value for "decompacted_columns".')
             
@@ -1002,6 +1008,7 @@ def backtrack_and_write_well(
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_DYNAMIC_TOPOGRAPHY
         * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS

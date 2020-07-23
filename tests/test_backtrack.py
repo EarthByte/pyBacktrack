@@ -37,7 +37,7 @@ def test_backtrack_script(tmpdir):
     #
     #     python -m pybacktrack.backtrack
     #         -w test_data/ODP-114-699-Lithology.txt
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth water_depth tectonic_subsidence lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
@@ -48,7 +48,7 @@ def test_backtrack_script(tmpdir):
                                      '-w', str(input_well_filename),
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness', 'decompacted_thickness',
                                      'decompacted_density', 'decompacted_sediment_rate', 'decompacted_depth',
-                                     'water_depth', 'tectonic_subsidence', 'lithology',
+                                     'dynamic_topography', 'water_depth', 'tectonic_subsidence', 'lithology',
                                      '-ym', 'M2',
                                      '-slm', 'Haq87_SealevelCurve_Longterm',
                                      '-o', str(test_ammended_well_output_filename),
@@ -82,7 +82,7 @@ def test_backtrack_ODP(tmpdir):
     #
     #     python -m pybacktrack.backtrack
     #         -w test_data/ODP-114-699-Lithology.txt
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth water_depth tectonic_subsidence lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
@@ -97,7 +97,7 @@ def test_backtrack_ODP(tmpdir):
         decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH, pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
                              pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH,
-                             pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
+                             pybacktrack.BACKTRACK_COLUMN_DYNAMIC_TOPOGRAPHY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
                              pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
         ammended_well_output_filename=str(test_ammended_well_output_filename))
     
@@ -125,7 +125,7 @@ def test_backtrack_DSDP(tmpdir):
     #
     #     python -m pybacktrack.backtrack
     #         -w test_data/DSDP-36-327-Lithology.txt
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth water_depth tectonic_subsidence lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o DSDP-36-327_backtrack_amended.txt
@@ -144,7 +144,7 @@ def test_backtrack_DSDP(tmpdir):
             decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH, pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
                                  pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY,
                                  pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE, pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DEPTH,
-                                 pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
+                                 pybacktrack.BACKTRACK_COLUMN_DYNAMIC_TOPOGRAPHY, pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH, pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE,
                                  pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
             ammended_well_output_filename=str(test_ammended_well_output_filename))
     
