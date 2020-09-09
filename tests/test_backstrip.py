@@ -35,7 +35,7 @@ def test_backstrip_script(tmpdir):
     
     # The command-line strings to execute:
     #
-    #     python -m pybacktrack.backstrip
+    #     python -m pybacktrack.backstrip_cli
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology
@@ -44,7 +44,7 @@ def test_backstrip_script(tmpdir):
     #         --
     #         sunrise_backstrip_decompat.txt
     #
-    backstrip_script_command_line = [python, '-m', 'pybacktrack.backstrip',
+    backstrip_script_command_line = [python, '-m', 'pybacktrack.backstrip_cli',
                                      '-w', str(input_well_filename),
                                      '-l', 'primary', 'extended',
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness', 'decompacted_thickness',
@@ -82,7 +82,7 @@ def test_backstrip(tmpdir):
     #
     # These function calls are the equivalent of:
     #
-    #     python -m pybacktrack.backstrip
+    #     python -m pybacktrack.backstrip_cli
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology

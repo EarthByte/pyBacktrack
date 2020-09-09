@@ -637,22 +637,13 @@ write_decompacted_wells = write_well
 backstrip_and_write_decompacted = backstrip_and_write_well
 
 
-if __name__ == '__main__':
+########################
+# Command-line parsing #
+########################
+
+def main():
     
-    def warning_format(message, category, filename, lineno, file=None, line=None):
-        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
-        return '{0}: {1}\n'.format(category.__name__, message)
-    
-    # Print the warnings without the filename and line number.
-    # Users are not going to want to see that.
-    warnings.formatwarning = warning_format
-    
-    import argparse
-    from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
-    
-    def main():
-        
-        __description__ = """Find decompacted total sediment thickness and tectonic subsidence through time.
+    __description__ = """Find decompacted total sediment thickness and tectonic subsidence through time.
     
     This backstripping script can be used to find tectonic subsidence (due to lithospheric stretching) from
     paleo water depths of the stratigraphic columns and their decompaction through time.
@@ -700,224 +691,254 @@ if __name__ == '__main__':
     NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
     For example...
 
-    python %(prog)s -w well.xy -l lithologies.txt -s tot_sed_thickness.nc -c 0 1 2 3 6 -d age decompacted_thickness -- decompacted_well.xy
+    python -m pybacktrack.backstrip_cli -w well.xy -l lithologies.txt -s tot_sed_thickness.nc -c 0 1 2 3 6 -d age decompacted_thickness -- decompacted_well.xy
     """.format(''.join('        {0}\n'.format(column_name) for column_name in _DECOMPACTED_COLUMN_NAMES))
-        
-        # The command-line parser.
-        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
-        
-        parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
-        
-        def parse_unicode(value_string):
-            try:
-                if sys.version_info[0] >= 3:
-                    filename = value_string
-                else:
-                    # Filename uses the system encoding - decode from 'str' to 'unicode'.
-                    filename = value_string.decode(sys.getfilesystemencoding())
-            except UnicodeDecodeError:
-                raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
-            
-            return filename
-        
-        parser.add_argument(
-            '-w', '--well_filename', type=parse_unicode, required=True,
-            metavar='well_filename',
-            help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
-                 'for each stratigraphic unit in a single well.')
-        
-        # Allow user to override the default lithology filename, and also specify bundled lithologies.
-        parser.add_argument(
-            '-l', '--lithology_filenames', nargs='+', action=ArgParseLithologyAction,
-            metavar='lithology_filename',
-            default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
-            help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
-                 'If more than one file provided then conflicting lithologies in latter files override those in former files. '
-                 'You can also choose built-in (bundled) lithologies (in any order) - choices include {0}. '
-                 'Defaults to "{1}" if nothing specified.'.format(
-                    ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
-                    DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
-        
-        # Action to parse a longitude/latitude location.
-        class LocationAction(argparse.Action):
-            def __call__(self, parser, namespace, values, option_string=None):
-                # Need two numbers (lon and lat).
-                if len(values) != 2:
-                    parser.error('location must be specified as two numbers (longitude and latitude)')
-                
-                try:
-                    # Convert strings to float.
-                    longitude = float(values[0])
-                    latitude = float(values[1])
-                except ValueError:
-                    raise argparse.ArgumentTypeError("encountered a longitude or latitude that is not a number")
-                
-                if longitude < -360 or longitude > 360:
-                    parser.error('longitude must be in the range [-360, 360]')
-                if latitude < -90 or latitude > 90:
-                    parser.error('latitude must be in the range [-90, 90]')
-                
-                setattr(namespace, self.dest, (longitude, latitude))
-        
-        parser.add_argument(
-            '-x', '--well_location', nargs=2, action=LocationAction,
-            metavar=('well_longitude', 'well_latitude'),
-            help='Optional location of the well. '
-                 'Must be specified if the well location is not provided inside the well file '
-                 '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
-                 'Overrides well file if both specified. '
-                 'Longitude and latitude are in degrees.')
-        
-        def parse_non_negative_integer(value_string):
-            try:
-                value = int(value_string)
-            except ValueError:
-                raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
-            
-            if value < 0:
-                raise argparse.ArgumentTypeError("%g is a negative number" % value)
-            
-            return value
-        
-        parser.add_argument(
-            '-c', '--well_columns', type=parse_non_negative_integer, nargs=5, default=[0, 1, 2, 3, 4],
-            metavar=('bottom_age_column', 'bottom_depth_column', 'min_water_depth_column', 'max_water_depth_column', 'lithology_column'),
-            help='The well file column indices (zero-based) for bottom age, bottom depth, '
-                 'min water depth, max water depth and lithology(s) respectively. '
-                 'This enables unused columns to reside in the well text file. '
-                 'For example, to skip unused columns 4 and 5 '
-                 '(perhaps containing present day water depth and whether column is under water) '
-                 'use column indices 0 1 2 3 6. Note that lithologies should be the last column since '
-                 'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
-                 'Defaults to 0 1 2 3 4.')
-        
-        parser.add_argument(
-            '-d', '--decompacted_columns', type=str, nargs='+', default=_DEFAULT_DECOMPACTED_COLUMN_NAMES,
-            metavar='decompacted_column_name',
-            help='The columns to output in the decompacted file. '
-                 'Choices include {0}. '
-                 'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
-                 'Defaults to "{1}".'.format(
-                    ', '.join(_DECOMPACTED_COLUMN_NAMES),
-                    ' '.join(_DEFAULT_DECOMPACTED_COLUMN_NAMES)))
-        
-        parser.add_argument(
-            '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
-            metavar='base_lithology_name',
-            help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
-                 'The well might not record the full depth of sedimentation. '
-                 'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
-                 'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
-        
-        parser.add_argument(
-            '-o', '--output_well_filename', type=parse_unicode,
-            metavar='output_well_filename',
-            help='Optional output well filename to write amended well data to. '
-                 'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
-        
-        # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
-        # Can also specify that no total sediment thickness grid be used (in case well site was actually drilled to basement depth)
-        # Cannot specify both options though.
-        total_sediment_thickness_argument_group = parser.add_mutually_exclusive_group()
-        total_sediment_thickness_argument_group.add_argument(
-            '-s', '--total_sediment_thickness_filename', type=parse_unicode,
-            default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-            metavar='total_sediment_thickness_filename',
-            help='Optional filename used to obtain total sediment thickness at well location. '
-                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
-        total_sediment_thickness_argument_group.add_argument(
-            '-ns', '--no_total_sediment_thickness', action='store_true',
-            help='The well site was drilled to basement depth (and so represents total sediment thickness). '
-                 'This ignores the total sediment thickness grid which usually determines the base sediment layer thickness.')
-        
-        # Can optionally specify sea level as a filename or  model name (if using bundled data) but not both.
-        sea_level_argument_group = parser.add_mutually_exclusive_group()
-        sea_level_argument_group.add_argument(
-            '-slm', '--bundle_sea_level_model', type=str,
-            metavar='bundle_sea_level_model',
-            help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
-                 'If no model (or filename) is specified then sea level is ignored. '
-                 'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
-        sea_level_argument_group.add_argument(
-            '-sl', '--sea_level_model', type=parse_unicode,
-            metavar='sea_level_model',
-            help='Optional file used to obtain sea level (relative to present-day) over time. '
-                 'If no filename (or model) is specified then sea level is ignored. '
-                 'If specified then each row should contain an age column followed by a column for sea level (in metres).')
-        
-        parser.add_argument(
-            'output_filename', type=parse_unicode,
-            metavar='output_filename',
-            help='The output filename used to store the decompacted total sediment thickness and '
-                 'tectonic subsidence through time.')
-        
-        # Parse command-line options.
-        args = parser.parse_args()
-        
-        # Convert output column names to enumerations.
-        try:
-            decompacted_columns = []
-            for column_name in args.decompacted_columns:
-                decompacted_columns.append(_DECOMPACTED_COLUMNS_DICT[column_name])
-        except KeyError:
-            raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
-        
-        # See if user overrode the total sediment thickness grid (because they know well site was drilled to basement depth).
-        if args.no_total_sediment_thickness:
-            total_sediment_thickness_filename = None
-        else:
-            total_sediment_thickness_filename = args.total_sediment_thickness_filename
-        
-        # Get sea level filename.
-        if args.bundle_sea_level_model is not None:
-            try:
-                # Convert sea level model name to filename.
-                # We don't need to do this (since backtrack() will do it for us) but it helps check user errors.
-                sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[args.bundle_sea_level_model]
-            except KeyError:
-                raise ValueError("%s is not a valid sea level model name" % args.bundle_sea_level_model)
-        elif args.sea_level_model is not None:
-            sea_level_model = args.sea_level_model
-        else:
-            sea_level_model = None
-        
-        # Decompact the well.
-        well, decompacted_wells = backstrip_well(
-            args.well_filename,
-            args.lithology_filenames,
-            total_sediment_thickness_filename,
-            sea_level_model,
-            args.base_lithology_name,
-            args.well_location,
-            well_bottom_age_column=args.well_columns[0],
-            well_bottom_depth_column=args.well_columns[1],
-            well_min_water_depth_column=args.well_columns[2],
-            well_max_water_depth_column=args.well_columns[3],
-            well_lithology_column=args.well_columns[4])
-        
-        # Attributes of well object to write to file as metadata.
-        well_attributes = {'longitude': 'SiteLongitude', 'latitude': 'SiteLatitude'}
-        
-        # Write out amended well data (ie, extra stratigraphic base unit) if requested.
-        if args.output_well_filename:
-            write_well_file(
-                well,
-                args.output_well_filename,
-                ['min_water_depth', 'max_water_depth'],
-                # Attributes of well object to write to file as metadata...
-                well_attributes=well_attributes)
-        
-        # Write the decompactions of the well at the ages of its stratigraphic units.
-        write_well(
-            decompacted_wells,
-            args.output_filename,
-            well,
-            # Attributes of well object to write to file as metadata...
-            well_attributes,
-            decompacted_columns)
+
+    import argparse
+    from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
     
+    #
+    # Gather command-line options.
+    #
+        
+    # The command-line parser.
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
+    
+    def parse_unicode(value_string):
+        try:
+            if sys.version_info[0] >= 3:
+                filename = value_string
+            else:
+                # Filename uses the system encoding - decode from 'str' to 'unicode'.
+                filename = value_string.decode(sys.getfilesystemencoding())
+        except UnicodeDecodeError:
+            raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
+        
+        return filename
+    
+    parser.add_argument(
+        '-w', '--well_filename', type=parse_unicode, required=True,
+        metavar='well_filename',
+        help='The well filename containing age, present day thickness, paleo water depth and lithology(s) '
+                'for each stratigraphic unit in a single well.')
+    
+    # Allow user to override the default lithology filename, and also specify bundled lithologies.
+    parser.add_argument(
+        '-l', '--lithology_filenames', nargs='+', action=ArgParseLithologyAction,
+        metavar='lithology_filename',
+        default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
+        help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
+                'If more than one file provided then conflicting lithologies in latter files override those in former files. '
+                'You can also choose built-in (bundled) lithologies (in any order) - choices include {0}. '
+                'Defaults to "{1}" if nothing specified.'.format(
+                ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
+                DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
+    
+    # Action to parse a longitude/latitude location.
+    class LocationAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            # Need two numbers (lon and lat).
+            if len(values) != 2:
+                parser.error('location must be specified as two numbers (longitude and latitude)')
+            
+            try:
+                # Convert strings to float.
+                longitude = float(values[0])
+                latitude = float(values[1])
+            except ValueError:
+                raise argparse.ArgumentTypeError("encountered a longitude or latitude that is not a number")
+            
+            if longitude < -360 or longitude > 360:
+                parser.error('longitude must be in the range [-360, 360]')
+            if latitude < -90 or latitude > 90:
+                parser.error('latitude must be in the range [-90, 90]')
+            
+            setattr(namespace, self.dest, (longitude, latitude))
+    
+    parser.add_argument(
+        '-x', '--well_location', nargs=2, action=LocationAction,
+        metavar=('well_longitude', 'well_latitude'),
+        help='Optional location of the well. '
+             'Must be specified if the well location is not provided inside the well file '
+             '(as "# SiteLongitude = <longitude>" and "# SiteLatitude = <latitude>"). '
+             'Overrides well file if both specified. '
+             'Longitude and latitude are in degrees.')
+    
+    def parse_non_negative_integer(value_string):
+        try:
+            value = int(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
+        
+        if value < 0:
+            raise argparse.ArgumentTypeError("%g is a negative number" % value)
+        
+        return value
+    
+    parser.add_argument(
+        '-c', '--well_columns', type=parse_non_negative_integer, nargs=5, default=[0, 1, 2, 3, 4],
+        metavar=('bottom_age_column', 'bottom_depth_column', 'min_water_depth_column', 'max_water_depth_column', 'lithology_column'),
+        help='The well file column indices (zero-based) for bottom age, bottom depth, '
+             'min water depth, max water depth and lithology(s) respectively. '
+             'This enables unused columns to reside in the well text file. '
+             'For example, to skip unused columns 4 and 5 '
+             '(perhaps containing present day water depth and whether column is under water) '
+             'use column indices 0 1 2 3 6. Note that lithologies should be the last column since '
+             'there can be multiple weighted lithologies (eg, "Grainstone 0.5 Sandstone 0.5"). '
+             'Defaults to 0 1 2 3 4.')
+    
+    parser.add_argument(
+        '-d', '--decompacted_columns', type=str, nargs='+', default=_DEFAULT_DECOMPACTED_COLUMN_NAMES,
+        metavar='decompacted_column_name',
+        help='The columns to output in the decompacted file. '
+             'Choices include {0}. '
+             'Age has units Ma. Density has units kg/m3. Thickness/subsidence/depth have units metres. '
+             'Defaults to "{1}".'.format(
+                 ', '.join(_DECOMPACTED_COLUMN_NAMES),
+                 ' '.join(_DEFAULT_DECOMPACTED_COLUMN_NAMES)))
+    
+    parser.add_argument(
+        '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
+        metavar='base_lithology_name',
+        help='Lithology name of the stratigraphic unit at the base of the well (must be present in lithologies file). '
+             'The well might not record the full depth of sedimentation. '
+             'The base unit covers the remaining depth from bottom of well to the total sediment thickness. '
+             'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
+    
+    parser.add_argument(
+        '-o', '--output_well_filename', type=parse_unicode,
+        metavar='output_well_filename',
+        help='Optional output well filename to write amended well data to. '
+             'This is useful to see the extra stratigraphic base unit added from bottom of well to basement.')
+    
+    # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
+    # Can also specify that no total sediment thickness grid be used (in case well site was actually drilled to basement depth)
+    # Cannot specify both options though.
+    total_sediment_thickness_argument_group = parser.add_mutually_exclusive_group()
+    total_sediment_thickness_argument_group.add_argument(
+        '-s', '--total_sediment_thickness_filename', type=parse_unicode,
+        default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+        metavar='total_sediment_thickness_filename',
+        help='Optional filename used to obtain total sediment thickness at well location. '
+                'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+    total_sediment_thickness_argument_group.add_argument(
+        '-ns', '--no_total_sediment_thickness', action='store_true',
+        help='The well site was drilled to basement depth (and so represents total sediment thickness). '
+             'This ignores the total sediment thickness grid which usually determines the base sediment layer thickness.')
+    
+    # Can optionally specify sea level as a filename or  model name (if using bundled data) but not both.
+    sea_level_argument_group = parser.add_mutually_exclusive_group()
+    sea_level_argument_group.add_argument(
+        '-slm', '--bundle_sea_level_model', type=str,
+        metavar='bundle_sea_level_model',
+        help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
+                'If no model (or filename) is specified then sea level is ignored. '
+                'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
+    sea_level_argument_group.add_argument(
+        '-sl', '--sea_level_model', type=parse_unicode,
+        metavar='sea_level_model',
+        help='Optional file used to obtain sea level (relative to present-day) over time. '
+                'If no filename (or model) is specified then sea level is ignored. '
+                'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+    
+    parser.add_argument(
+        'output_filename', type=parse_unicode,
+        metavar='output_filename',
+        help='The output filename used to store the decompacted total sediment thickness and '
+                'tectonic subsidence through time.')
+    
+    # Parse command-line options.
+    args = parser.parse_args()
+    
+    # Convert output column names to enumerations.
+    try:
+        decompacted_columns = []
+        for column_name in args.decompacted_columns:
+            decompacted_columns.append(_DECOMPACTED_COLUMNS_DICT[column_name])
+    except KeyError:
+        raise argparse.ArgumentTypeError("%s is not a valid decompacted column name" % column_name)
+    
+    # See if user overrode the total sediment thickness grid (because they know well site was drilled to basement depth).
+    if args.no_total_sediment_thickness:
+        total_sediment_thickness_filename = None
+    else:
+        total_sediment_thickness_filename = args.total_sediment_thickness_filename
+    
+    # Get sea level filename.
+    if args.bundle_sea_level_model is not None:
+        try:
+            # Convert sea level model name to filename.
+            # We don't need to do this (since backtrack() will do it for us) but it helps check user errors.
+            sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[args.bundle_sea_level_model]
+        except KeyError:
+            raise ValueError("%s is not a valid sea level model name" % args.bundle_sea_level_model)
+    elif args.sea_level_model is not None:
+        sea_level_model = args.sea_level_model
+    else:
+        sea_level_model = None
+    
+    # Decompact the well.
+    well, decompacted_wells = backstrip_well(
+        args.well_filename,
+        args.lithology_filenames,
+        total_sediment_thickness_filename,
+        sea_level_model,
+        args.base_lithology_name,
+        args.well_location,
+        well_bottom_age_column=args.well_columns[0],
+        well_bottom_depth_column=args.well_columns[1],
+        well_min_water_depth_column=args.well_columns[2],
+        well_max_water_depth_column=args.well_columns[3],
+        well_lithology_column=args.well_columns[4])
+    
+    # Attributes of well object to write to file as metadata.
+    well_attributes = {'longitude': 'SiteLongitude', 'latitude': 'SiteLatitude'}
+    
+    # Write out amended well data (ie, extra stratigraphic base unit) if requested.
+    if args.output_well_filename:
+        write_well_file(
+            well,
+            args.output_well_filename,
+            ['min_water_depth', 'max_water_depth'],
+            # Attributes of well object to write to file as metadata...
+            well_attributes=well_attributes)
+    
+    # Write the decompactions of the well at the ages of its stratigraphic units.
+    write_well(
+        decompacted_wells,
+        args.output_filename,
+        well,
+        # Attributes of well object to write to file as metadata...
+        well_attributes,
+        decompacted_columns)
+
+
+if __name__ == '__main__':
+
     import traceback
     
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}\n'.format(category.__name__, message)
+
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    #
+    # User should use 'backstrip_cli' module (instead of this module 'backstrip'), when executing as a script, to avoid Python 3 warning:
+    #
+    #   RuntimeWarning: 'pybacktrack.backstrip' found in sys.modules after import of package 'pybacktrack',
+    #                   but prior to execution of 'pybacktrack.backstrip'; this may result in unpredictable behaviour
+    #
+    # For more details see https://stackoverflow.com/questions/43393764/python-3-6-project-structure-leads-to-runtimewarning
+    #
+    # Importing this module (eg, 'import pybacktrack.backstrip') is fine though.
+    #
+    warnings.warn("Use 'python -m pybacktrack.backstrip_cli ...', instead of 'python -m pybacktrack.backstrip ...'.", DeprecationWarning)
+        
     try:
         main()
         sys.exit(0)

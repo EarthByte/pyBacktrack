@@ -72,13 +72,13 @@ def test_age_to_depth_script(tmpdir):
     
     # The command-line strings to execute:
     #
-    #     python -m pybacktrack.age_to_depth
+    #     python -m pybacktrack.age_to_depth_cli
     #        -m GDH1
     #        -r
     #        test_data/test_ages.txt
     #        test_depths_from_ages.txt
     #
-    age_to_depth_script_command_line = [python, '-m', 'pybacktrack.age_to_depth',
+    age_to_depth_script_command_line = [python, '-m', 'pybacktrack.age_to_depth_cli',
                                         '-m', 'GDH1',
                                         '-r',
                                         str(input_filename),

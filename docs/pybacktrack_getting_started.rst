@@ -255,7 +255,7 @@ or any :ref:`other examples <pygplates_overview>` in this documentation. For exa
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
 If you wish to run the `example notebooks <https://github.com/EarthByte/pyBacktrack/tree/master/pybacktrack/notebooks>`_
 then there is a ``notebook.sh`` script to start a Jupyter notebook server in the running docker container:
@@ -322,20 +322,20 @@ Use a built-in module script
 ----------------------------
 
 Since there is a ``backtrack`` module inside ``pybacktrack`` that can be run as a script,
-we can invoke it on the command-line using ``python -m pybacktrack.backtrack`` followed by command line options that are specific to that module.
+we can invoke it on the command-line using ``python -m pybacktrack.backtrack_cli`` followed by command line options that are specific to that module.
 This is the easiest way to run backtracking.
 
 To see its command-line options, run:
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack --help
+    python -m pybacktrack.backtrack_cli --help
 
 The backtracking example can now be demonstrated by running the script as:
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack \
+    python -m pybacktrack.backtrack_cli \
         -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology \
         -ym M2 \

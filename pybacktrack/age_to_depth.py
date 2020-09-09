@@ -293,27 +293,11 @@ class ArgParseAgeModelAction(argparse.Action):
         setattr(namespace, self.dest, model)
 
 
-if __name__ == '__main__':
-    
-    def warning_format(message, category, filename, lineno, file=None, line=None):
-        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
-        return '{0}: {1}\n'.format(category.__name__, message)
-    
-    # Print the warnings without the filename and line number.
-    # Users are not going to want to see that.
-    warnings.formatwarning = warning_format
-    
-    def argparse_unicode(value_string):
-        try:
-            if sys.version_info[0] >= 3:
-                filename = value_string
-            else:
-                # Filename uses the system encoding - decode from 'str' to 'unicode'.
-                filename = value_string.decode(sys.getfilesystemencoding())
-        except UnicodeDecodeError:
-            raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
-        
-        return filename
+########################
+# Command-line parsing #
+########################
+
+def main():
     
     __description__ = \
         """Converts rows containing age in input file to rows containing age and depth in output file.
@@ -331,11 +315,27 @@ if __name__ == '__main__':
         NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
         For example...
 
-        python %(prog)s -m {1} age_points.xy depth_points.xy
+        python -m pybacktrack.age_to_depth_cli -m {1} age_points.xy depth_points.xy
         """.format(
             ''.join('\n\n        {0}: {1}.\n'.format(model_name, model_desc)
                     for _, model_name, model_desc in ALL_MODELS),
             default_model_name)
+
+    def argparse_unicode(value_string):
+        try:
+            if sys.version_info[0] >= 3:
+                filename = value_string
+            else:
+                # Filename uses the system encoding - decode from 'str' to 'unicode'.
+                filename = value_string.decode(sys.getfilesystemencoding())
+        except UnicodeDecodeError:
+            raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
+        
+        return filename
+    
+    #
+    # Gather command-line options.
+    #
     
     # The command-line parser.
     parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -380,5 +380,37 @@ if __name__ == '__main__':
         args.model,
         args.age_column,
         args.reverse_output_columns)
+
+
+if __name__ == '__main__':
+
+    import traceback
     
-    sys.exit(0)
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}\n'.format(category.__name__, message)
+
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    #
+    # User should use 'age_to_depth_cli' module (instead of this module 'age_to_depth'), when executing as a script, to avoid Python 3 warning:
+    #
+    #   RuntimeWarning: 'pybacktrack.age_to_depth' found in sys.modules after import of package 'pybacktrack',
+    #                   but prior to execution of 'pybacktrack.age_to_depth'; this may result in unpredictable behaviour
+    #
+    # For more details see https://stackoverflow.com/questions/43393764/python-3-6-project-structure-leads-to-runtimewarning
+    #
+    # Importing this module (eg, 'import pybacktrack.age_to_depth') is fine though.
+    #
+    warnings.warn("Use 'python -m pybacktrack.age_to_depth_cli ...', instead of 'python -m pybacktrack.age_to_depth ...'.", DeprecationWarning)
+
+    try:
+        main()
+        sys.exit(0)
+    except Exception as exc:
+        print('ERROR: {0}'.format(exc), file=sys.stderr)
+        # Uncomment this to print traceback to location of raised exception.
+        # traceback.print_exc()
+        sys.exit(1)

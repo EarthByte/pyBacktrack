@@ -34,14 +34,14 @@ Running the scripts built into pyBacktrack
 ------------------------------------------
 
 PyBacktrack is a Python package containing modules. And each module can be run as a script using
-``python -m pybacktrack.<module>`` followed by command line options that are specific to that module.
-For example, the ``backtrack`` module can be run as ``python -m pybacktrack.backtrack ...``, or the ``backstrip`` module
-can be run as ``python -m pybacktrack.backstrip ...``, with ``...`` replaced by command-line options.
+``python -m pybacktrack.<module>_cli`` followed by command line options that are specific to that module.
+For example, the ``backtrack`` module can be run as ``python -m pybacktrack.backtrack_cli ...``, or the ``backstrip`` module
+can be run as ``python -m pybacktrack.backstrip_cli ...``, with ``...`` replaced by command-line options.
 
 The following sections give an introduction to each module.
 
 .. note:: In each module you can use the ``--help`` option to see all available command-line options for that specific module.
-          For example, ``python -m pybacktrack.backtrack --help`` describes all options available to the ``backtrack`` module.
+          For example, ``python -m pybacktrack.backtrack_cli --help`` describes all options available to the ``backtrack`` module.
 
 .. _pybacktrack_running_the_backtrack_script:
 
@@ -55,7 +55,7 @@ This example takes an ocean drill site as input and outputs a file containing a 
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
 ...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
 the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-114-699_backtrack_decompat.txt`` is the output file.
@@ -76,7 +76,7 @@ This example takes a passive margin site as input and outputs a file containing 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
 ...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt``, the ``-l`` option specifies the
 lithology definitions, the ``-d`` option specifies the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file,
@@ -106,7 +106,7 @@ This example takes an input file containing a column of ages, and outputs a file
 
 .. code-block:: python
 
-    python -m pybacktrack.age_to_depth -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
+    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
 
 Here the input file ``pybacktrack_examples/test_data/test_ages.txt`` contains ages in the first (and only) column.
 If they had been in another column, for example if there were other unused columns, then we would need to specify the age column with the ``-a`` option.
@@ -128,7 +128,7 @@ followed by two integers representing the age and depth column indices. For exam
 called ``age-depth-model.txt`` where age is in the first column and depth is in the second column then you can specify this
 using ``-w age-depth-model.txt 0 1``.
 
-.. note:: Use ``python -m pybacktrack.age_to_depth --help`` to see a description of all command-line options.
+.. note:: Use ``python -m pybacktrack.age_to_depth_cli --help`` to see a description of all command-line options.
 
 .. _pybacktrack_running_the_interpolate_script:
 
@@ -145,7 +145,7 @@ Finally a third file is created containing the output ages, where each interpola
 
 .. code-block:: python
 
-    python -m pybacktrack.util.interpolate -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt
+    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt
 
 Here the ``age=function(depth)`` model is specified with the ``-c``, ``-cx`` and ``-cy`` options.
 The ``-c`` option specifies the ``pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt`` file containing a column of ages and a column of depths.
@@ -159,7 +159,7 @@ If they had been in another column, for example if there were other unused colum
 The output depths and (interpolated) ages are written to the output file ``ODP-114-699_strat_boundaries_depth_age.txt``.
 The first column contains depth and the second column contains (interpolated) age. To reverse this order you can use the ``-r`` option.
 
-.. note:: Use ``python -m pybacktrack.util.interpolate --help`` to see a description of all command-line options.
+.. note:: Use ``python -m pybacktrack.util.interpolate_cli --help`` to see a description of all command-line options.
 
 .. _pybacktrack_running_your_own_script_that_imports_pybacktrack:
 
@@ -197,7 +197,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
 .. note:: The ``backtrack`` module is covered in more detail :ref:`here <pygplates_backtrack>`.
 
@@ -222,7 +222,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
 .. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
 
@@ -243,7 +243,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.age_to_depth -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
+    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
 
 interpolate
 ^^^^^^^^^^^
@@ -268,4 +268,4 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.util.interpolate -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt
+    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt

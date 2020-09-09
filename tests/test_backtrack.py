@@ -35,7 +35,7 @@ def test_backtrack_script(tmpdir):
     
     # The command-line strings to execute:
     #
-    #     python -m pybacktrack.backtrack
+    #     python -m pybacktrack.backtrack_cli
     #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2
@@ -44,7 +44,7 @@ def test_backtrack_script(tmpdir):
     #         --
     #         ODP-114-699_backtrack_decompat.txt
     #
-    backtrack_script_command_line = [python, '-m', 'pybacktrack.backtrack',
+    backtrack_script_command_line = [python, '-m', 'pybacktrack.backtrack_cli',
                                      '-w', str(input_well_filename),
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness', 'decompacted_thickness',
                                      'decompacted_density', 'decompacted_sediment_rate', 'decompacted_depth',
@@ -80,7 +80,7 @@ def test_backtrack_ODP(tmpdir):
     #
     # This function call is the equivalent of:
     #
-    #     python -m pybacktrack.backtrack
+    #     python -m pybacktrack.backtrack_cli
     #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2
@@ -123,7 +123,7 @@ def test_backtrack_DSDP(tmpdir):
     #
     # This function call is the equivalent of:
     #
-    #     python -m pybacktrack.backtrack
+    #     python -m pybacktrack.backtrack_cli
     #         -w test_data/DSDP-36-327-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
     #         -ym M2

@@ -31,6 +31,7 @@ import pybacktrack.version
 import math
 import scipy.interpolate
 import sys
+import warnings
 
 
 def read_curve_function(
@@ -205,10 +206,27 @@ def interpolate_file(
             output_file.write('{0:.2f}\t{1:.2f}\n'.format(*output_row))
 
 
-if __name__ == '__main__':
+########################
+# Command-line parsing #
+########################
+
+def main():
+
+    __description__ = \
+        """
+    Interpolate a sequence of linear segments (read from a 2-column model file) at values read from
+    a specific column in input file and write 2-column results to output file.
     
+    The linear segments represent a linear function y = f(x) where the input 2-column file contains its (x,y) node points.
+    The input 1-column data represents x values (at which to interpolate y) and the output 2-column data contains interpolated columns x and y.
+
+    NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
+    For example...
+
+    python -m pybacktrack.util.interpolate_cli -c x_y_curve.txt input_x.txt output_x_y.txt
+        """
+
     import argparse
-    import traceback
     
     def argparse_unicode(value_string):
         try:
@@ -222,74 +240,88 @@ if __name__ == '__main__':
         
         return filename
     
+    #
+    # Gather command-line options.
+    #
+
+    # The command-line parser.
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
+    
+    parser.add_argument(
+        '-c', '--curve_filename', type=str, required=True,
+        metavar='curve_filename', help='File containing linear function y=f(x). The first column is x and second column y.')
+    
+    parser.add_argument(
+        '-cx', '--curve_x_column', type=int, default=0,
+        metavar='curve_x_column_index', help='The zero-based index of column in "curve" file containing x values. Defaults to first column.')
+    parser.add_argument(
+        '-cy', '--curve_y_column', type=int, default=1,
+        metavar='curve_y_column_index', help='The zero-based index of column in "curve" file containing y values. Defaults to second column.')
+    
+    parser.add_argument(
+        '-ix', '--input_x_column', type=int, default=0,
+        metavar='input_x_column_index', help='The zero-based index of column in input file containing x values. Defaults to first column.')
+    
+    parser.add_argument(
+        '-r', '--reverse_output_columns', action='store_true',
+        help='Reverse the order of output columns to output as "y x". Defaults to "x y".')
+    
+    parser.add_argument(
+        'input_filename', type=argparse_unicode,
+        metavar='input_filename',
+        help='The input filename containing the "x" positions to interpolate at.')
+    
+    parser.add_argument(
+        'output_filename', type=argparse_unicode,
+        metavar='output_filename',
+        help='The output filename that the "x" positions (from input file) and interpolated "y" values (at those "x" positions) will be written to.')
+    
+    # Parse command-line options.
+    args = parser.parse_args()
+    
+    # Read the curve function y=f(x) from curve file.
+    curve_function, _, _ = read_curve_function(args.curve_filename, args.curve_x_column, args.curve_y_column)
+    
+    # Convert x values in 1-column input file to x and y values in 2-column output file.
+    interpolate_file(
+        curve_function,
+        args.input_filename,
+        args.output_filename,
+        args.input_x_column,
+        args.reverse_output_columns)
+
+
+if __name__ == '__main__':
+
+    import traceback
+    
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}\n'.format(category.__name__, message)
+
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    #
+    # User should use 'interpolate_cli' module (instead of this module 'interpolate'), when executing as a script, to avoid Python 3 warning:
+    #
+    #   RuntimeWarning: 'pybacktrack.util.interpolate' found in sys.modules after import of package 'pybacktrack',
+    #                   but prior to execution of 'pybacktrack.util.interpolate'; this may result in unpredictable behaviour
+    #
+    # For more details see https://stackoverflow.com/questions/43393764/python-3-6-project-structure-leads-to-runtimewarning
+    #
+    # Importing this module (eg, 'import pybacktrack.util.interpolate') is fine though.
+    #
+    warnings.warn("Use 'python -m pybacktrack.util.interpolate_cli ...', instead of 'python -m pybacktrack.util.interpolate ...'.", DeprecationWarning)
+
     try:
-        __description__ = \
-            """
-        Interpolate a sequence of linear segments (read from a 2-column model file) at values read from
-        a specific column in input file and write 2-column results to output file.
-        
-        The linear segments represent a linear function y = f(x) where the input 2-column file contains its (x,y) node points.
-        The input 1-column data represents x values (at which to interpolate y) and the output 2-column data contains interpolated columns x and y.
-
-        NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
-        For example...
-
-        python %(prog)s -c x_y_curve.txt input_x.txt output_x_y.txt
-         """
-
-        # The command-line parser.
-        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
-        
-        parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
-        
-        parser.add_argument(
-            '-c', '--curve_filename', type=str, required=True,
-            metavar='curve_filename', help='File containing linear function y=f(x). The first column is x and second column y.')
-        
-        parser.add_argument(
-            '-cx', '--curve_x_column', type=int, default=0,
-            metavar='curve_x_column_index', help='The zero-based index of column in "curve" file containing x values. Defaults to first column.')
-        parser.add_argument(
-            '-cy', '--curve_y_column', type=int, default=1,
-            metavar='curve_y_column_index', help='The zero-based index of column in "curve" file containing y values. Defaults to second column.')
-        
-        parser.add_argument(
-            '-ix', '--input_x_column', type=int, default=0,
-            metavar='input_x_column_index', help='The zero-based index of column in input file containing x values. Defaults to first column.')
-        
-        parser.add_argument(
-            '-r', '--reverse_output_columns', action='store_true',
-            help='Reverse the order of output columns to output as "y x". Defaults to "x y".')
-        
-        parser.add_argument(
-            'input_filename', type=argparse_unicode,
-            metavar='input_filename',
-            help='The input filename containing the "x" positions to interpolate at.')
-        
-        parser.add_argument(
-            'output_filename', type=argparse_unicode,
-            metavar='output_filename',
-            help='The output filename that the "x" positions (from input file) and interpolated "y" values (at those "x" positions) will be written to.')
-        
-        # Parse command-line options.
-        args = parser.parse_args()
-        
-        # Read the curve function y=f(x) from curve file.
-        curve_function, _, _ = read_curve_function(args.curve_filename, args.curve_x_column, args.curve_y_column)
-        
-        # Convert x values in 1-column input file to x and y values in 2-column output file.
-        interpolate_file(
-            curve_function,
-            args.input_filename,
-            args.output_filename,
-            args.input_x_column,
-            args.reverse_output_columns)
-        
+        main()
         sys.exit(0)
-        
     except Exception as exc:
         print('ERROR: {0}'.format(exc), file=sys.stderr)
         # Uncomment this to print traceback to location of raised exception.
         # traceback.print_exc()
-        
         sys.exit(1)

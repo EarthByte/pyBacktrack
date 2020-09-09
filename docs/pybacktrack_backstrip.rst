@@ -23,7 +23,7 @@ You can either run ``backstrip`` as a built-in script, specifying parameters as 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip ...
+    python -m pybacktrack.backstrip_cli ...
 
 ...or ``import pybacktrack`` into your own script, calling its functions and specifying parameters as function arguments (``...``):
 
@@ -33,7 +33,7 @@ You can either run ``backstrip`` as a built-in script, specifying parameters as 
     
     pybacktrack.backstrip_and_write_well(...)
 
-.. note:: You can run ``python -m pybacktrack.backstrip --help`` to see a description of all command-line options available, or
+.. note:: You can run ``python -m pybacktrack.backstrip_cli --help`` to see a description of all command-line options available, or
           see the :ref:`backstripping reference section <pybacktrack_reference_backstripping>` for documentation on the function parameters.
 
 .. _pygplates_backstrip_example:
@@ -45,7 +45,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip \
+    python -m pybacktrack.backstrip_cli \
         -w pybacktrack_examples/test_data/sunrise_lithology.txt \
         -l primary extended \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology \
@@ -153,7 +153,7 @@ Finally, *average_water_depth* is just the average *min_water_depth* and *max_wa
 *average_tectonic_subsidence* are obtained from *min_water_depth* and *max_water_depth* and *average_water_depth* by adding an isostatic correction of the
 decompacted sediment thickness (to obtain the deeper isostatically compensated, sediment-free water depth also known as tectonic subsidence).
 
-.. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backstrip --help`` to see all options), or
+.. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backstrip_cli --help`` to see all options), or
           using the *decompacted_columns* argument of the :func:`pybacktrack.backstrip_and_write_well` function.
           By default, only *age* and *decompacted_thickness* are output.
 
@@ -173,7 +173,7 @@ There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bun
 
 A sea-level model is optional. If one is not specified then sea-level variation is assumed to be zero.
 
-.. note:: A built-in sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backstrip --help`` to see all options), or
+.. note:: A built-in sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backstrip_cli --help`` to see all options), or
           using the *sea_level_model* argument of the :func:`pybacktrack.backstrip_and_write_well` function.
 
 .. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a

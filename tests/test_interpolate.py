@@ -28,7 +28,7 @@ def test_interpolate_file(tmpdir):
     #
     # These function calls are the equivalent of:
     #
-    #     python -m pybacktrack.util.interpolate
+    #     python -m pybacktrack.util.interpolate_cli
     #         -cx 1 -cy 0
     #         -r
     #         -c test_data/ODP-114-699_age-depth-model.txt
@@ -72,14 +72,14 @@ def test_interpolate_script(tmpdir):
     
     # The command-line strings to execute:
     #
-    #     python -m pybacktrack.util.interpolate
+    #     python -m pybacktrack.util.interpolate_cli
     #         -cx 1 -cy 0
     #         -r
     #         -c test_data/ODP-114-699_age-depth-model.txt
     #         ODP-114-699_strat_boundaries.txt
     #         ODP-114-699_strat_boundaries_age_depth.txt
     #
-    interpolate_script_command_line = [python, '-m', 'pybacktrack.util.interpolate',
+    interpolate_script_command_line = [python, '-m', 'pybacktrack.util.interpolate_cli',
                                        '-cx', '1', '-cy', '0',
                                        '-r',
                                        '-c', str(curve_filename),

@@ -320,10 +320,10 @@ class StratigraphicUnit(object):
         #    T = [t + decay * porosity(0) * exp(-d/decay) * (exp(-t/decay) - 1)] / [1 - porosity(0)]
         #
         fully_decompacted_thickness = (
-                                (present_day_thickness +
-                                    porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
-                                    (math.exp(-present_day_thickness / porosity_decay) - 1)) /
-                                (1 - surface_porosity)
+            (present_day_thickness +
+                porosity_decay * surface_porosity * math.exp(-self.top_depth / porosity_decay) *
+                (math.exp(-present_day_thickness / porosity_decay) - 1)) /
+            (1 - surface_porosity)
         )
         
         return fully_decompacted_thickness
@@ -604,9 +604,9 @@ class DecompactedWell(object):
         .. note:: Dynamic topography is elevation which is opposite to tectonic subsidence in that an
                   increase in dynamic topography results in a decrease in tectonic subsidence.
         
-        .. versionadded:: 1.2
-        
         .. seealso:: :meth:`pybacktrack.DecompactedWell.get_dynamic_topography`
+        
+        .. versionadded:: 1.2
     
     decompacted_stratigraphic_units: list of :class:`pybacktrack.DecompactedStratigraphicUnit`
         Decompacted stratigraphic units.

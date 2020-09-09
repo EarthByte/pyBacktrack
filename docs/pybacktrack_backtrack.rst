@@ -24,7 +24,7 @@ You can either run ``backtrack`` as a built-in script, specifying parameters as 
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack ...
+    python -m pybacktrack.backtrack_cli ...
 
 ...or ``import pybacktrack`` into your own script, calling its functions and specifying parameters as function arguments (``...``):
 
@@ -34,7 +34,7 @@ You can either run ``backtrack`` as a built-in script, specifying parameters as 
     
     pybacktrack.backtrack_and_write_well(...)
 
-.. note:: You can run ``python -m pybacktrack.backtrack --help`` to see a description of all command-line options available, or
+.. note:: You can run ``python -m pybacktrack.backtrack_cli --help`` to see a description of all command-line options available, or
           see the :ref:`backtracking reference section <pybacktrack_reference_backtracking>` for documentation on the function parameters.
 
 .. _pygplates_backtrack_example:
@@ -46,7 +46,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack \
+    python -m pybacktrack.backtrack_cli \
         -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology \
         -ym M2 \
@@ -153,7 +153,7 @@ The *dynamic_topography* column is the dynamic topography elevation relative to 
 Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pygplates_backtrack_oceanic_and_continental_subsidence>`,
 and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.
 
-.. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *decompacted_columns* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
           By default, only *age* and *decompacted_thickness* are output.
 
@@ -173,7 +173,7 @@ There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bun
 
 A sea-level model is optional. If one is not specified then sea-level variation is assumed to be zero.
 
-.. note:: A built-in sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: A built-in sea-level model can be specified using the ``-slm`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *sea_level_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a
@@ -197,7 +197,7 @@ The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_dat
   `Ocean Basin Evolution and Global-Scale Plate Reorganization Events Since Pangea Breakup <https://doi.org/10.1146/annurev-earth-060115-012211>`_,
   Annual Review of Earth and Planetary Sciences, vol. 44, pp. 107 .DOI: 10.1146/annurev-earth-060115-012211
 
-.. note:: You can optionally specify your own age grid using the ``-a`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: You can optionally specify your own age grid using the ``-a`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *age_grid_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. _pygplates_backtrack_oceanic_versus_continental_sites:
@@ -247,7 +247,7 @@ The default present-day bathymetry grid :ref:`bundled <pybacktrack_reference_bun
 * Amante, C. and B. W. Eakins, `ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis <https://dx.doi.org/10.7289/V5C8276M>`_.
   NOAA Technical Memorandum NESDIS NGDC-24, 19 pp, March 2009
 
-.. note:: You can optionally specify your own bathymetry grid using the ``-t`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: You can optionally specify your own bathymetry grid using the ``-t`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *topography_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. note:: If you specify your own bathymetry grid, ensure that its ocean water depths are negative.
@@ -269,7 +269,7 @@ by using an age-to-depth model. There are two models built into ``backtrack``:
 
 The default model is ``GDH1``.
 
-.. note:: These oceanic subsidence models can be specified using the ``-m`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: These oceanic subsidence models can be specified using the ``-m`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *ocean_age_to_depth_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. note:: It is also possible to specify your own age-to-depth model. This can be done by providing your own text file containing a column of ages and a
@@ -306,7 +306,7 @@ the same regardless of whether a rift *start* time was specified or not.
 
 .. note:: The rift start and end times can be specified in the drill site file using the ``RiftStartAge`` and ``RiftEndAge`` attributes.
           Or they can be specified directly on the ``backtrack`` command-line using the ``-rs`` and ``-re`` options respectively
-          (run ``python -m pybacktrack.backtrack --help`` to see all options). Or using the *rifting_period* argument
+          (run ``python -m pybacktrack.backtrack_cli --help`` to see all options). Or using the *rifting_period* argument
           of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 If a rift *start* time is specified, then the stretching factor varies exponentially between the rift *start* and *end* times (assuming a constant strain rate).
@@ -330,7 +330,7 @@ The default present-day crustal thickness grid :ref:`bundled <pybacktrack_refere
 * Laske, G., Masters., G., Ma, Z. and Pasyanos, M., `Update on CRUST1.0 - A 1-degree Global Model of Earth's Crust <http://igppweb.ucsd.edu/~gabi/crust1.html#download>`_,
   Geophys. Res. Abstracts, 15, Abstract EGU2013-2658, 2013
 
-.. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *crustal_thickness_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. _pygplates_dynamic_topography:
@@ -399,7 +399,7 @@ because their oceanic paleo-depths lack the regional detail at more recent times
 (because of their assimilation of seismic tomography).
 ``M1`` also assimilates seismic tomography but suffers from other shortcomings.
 
-.. note:: A built-in dynamic topography model can be specified using the ``-ym`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options), or
+.. note:: A built-in dynamic topography model can be specified using the ``-ym`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
 .. note:: It is also possible to specify your own dynamic topography model.
@@ -407,5 +407,5 @@ because their oceanic paleo-depths lack the regional detail at more recent times
           (where each filename should be relative to the directory on the list file) and the second column containing the associated grid times (in Ma).
           You'll also need the associated static-polygons file, and one or more associated rotation files.
           The grid list filename, static-polygons filename and one or more rotation filenames are then specified using the
-          ``-y`` command-line option (run ``python -m pybacktrack.backtrack --help`` to see all options),
+          ``-y`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options),
           or to the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
