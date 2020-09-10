@@ -52,94 +52,100 @@ Also ensure that version 5 or above (supports NetCDF version 4) is installed sin
 `PyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
 
-Also, pyGPlates currently requires Python 2.7 (future releases will support Python 3).
-So unfortunately you will need a Python 2.7 installation. If you have an existing Python 3 installation then the
-:ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach to selecting the default Python (using ``sudo port select``).
+`PyGPlates` now supports Python 3 (in addition to Python 2.7) so you can now use pyBacktrack with either Python 2.7 or 3.
+The :ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach to selecting the default Python (2.7 or 3) using ``sudo port select``.
 Another approach is using Python virtual environments where each environment has its own ``python``, ``pip`` and installed packages.
 However, currently pyGPlates does not yet work in virtual environments (at least on Mac systems).
 
 .. _pybacktrack_install_requirements_ubuntu:
 
-Install Python 2.7, pip, GMT and pyGPlates on Ubuntu
-****************************************************
+Install Python, Pip, GMT and pyGPlates on Ubuntu
+************************************************
 
-This is an example demonstrating how to install GMT and pyGPlates on Ubuntu 16.04 (Xenial).
+This is an example demonstrating how to install GMT and pyGPlates on Ubuntu 18.04 (Bionic).
 
 .. note:: The main difference for other Ubuntu versions will be the pyGPlates install package
           (you'll need to select the package appropriate for your Ubuntu version).
 
-First install Python 2.7 and Pip:
+First install GMT 5:
 ::
 
-  sudo apt-get update
+  sudo apt install gmt
+
+Then install Python 3 (and Pip):
+::
+
+  sudo apt update
   
-  sudo apt-get install python python-pip
-  sudo pip install --upgrade pip
+  sudo apt install python3 python3-pip
+  sudo pip3 install --upgrade pip
 
-Then install GMT 5:
-::
-
-  sudo apt-get install gmt
-
-Then download the pyGPlates debian package `pygplates-ubuntu-xenial_2.1_1_amd64.deb <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-18/>`_,
+Then download the pyGPlates Python 3 debian package `pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-28/ubuntu/>`_,
 and install it:
 ::
 
-  sudo apt-get install pygplates-ubuntu-xenial_2.1_1_amd64.deb
+  sudo apt install pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
 
 Then add the installed location of pyGPlates to the PYTHONPATH environment variable:
 ::
 
-  export PYTHONPATH=$PYTHONPATH:/usr/lib/pygplates/revision18
-
-Or, alternatively, copy pyGPlates to the Python system install directory:
-::
-
-  cp /usr/lib/pygplates/revision18/pygplates.so /usr/lib/python2.7/dist-packages/
+  export PYTHONPATH=$PYTHONPATH:/usr/lib/pygplates/revision28
 
 .. _pybacktrack_install_requirements_mac:
 
-Install Python 2.7, pip, GMT and pyGPlates on Mac using Macports
-****************************************************************
+Install Python, Pip, GMT and pyGPlates on Mac using Macports
+************************************************************
 
 This is an example demonstrating how to install GMT and pyGPlates on a Mac system using `Macports <https://www.macports.org/>`_.
 
-First install Python 2.7 and Pip:
-::
-
-  sudo port install python27
-  sudo port install py27-pip
-
-Set your default ``python`` to Python 2.7:
-::
-
-  sudo port select --set python python27
-  sudo port select --set pip pip27
-
-.. note:: If you already have ``python`` referencing Python 3 then you can instead use ``python2`` to reference Python 2.7:
-          ::
-          
-            sudo port select --set python2 python27
-            sudo port select --set pip2 pip27
-          
-          ...but this will require using ``python2`` on the command-line to run
-          :ref:`pybacktrack <pybacktrack_use_a_builtin_module_script>` (instead of just ``python``).
-
-Then install GMT 5:
+First install GMT 5:
 ::
 
   sudo port install gmt5
 
-Then download the pyGPlates Mac zip file `pygplates_rev18_python27_MacOS64.zip <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-18/>`_,
+.. note:: You will likely need to add ``/opt/local/lib/gmt5/bin/`` to your ``PATH`` environment variable,
+          for example in your ``~/.bashrc``, ``~/.bash_profile`` or ``~/.zprofile`` file so that PATH
+          is set each time you open a new terminal window.
+          After doing this, typing ``gmt`` should find GMT and show some help options.
+
+Then install Python 3 (and Pip):
+::
+
+  sudo port install python38
+  sudo port install py38-pip
+
+Set your default ``python`` to Python 3.8:
+::
+
+  sudo port select --set python python38
+  sudo port select --set pip pip38
+
+.. note:: If you already have ``python`` referencing Python 2 then you can instead use ``python3`` to reference Python 3:
+          ::
+          
+            sudo port select --set python3 python38
+            sudo port select --set pip3 pip38
+          
+          ...but this will require using ``python3`` on the command-line to run
+          :ref:`pybacktrack <pybacktrack_use_a_builtin_module_script>` (instead of just ``python``).
+
+          Alternatively you can use Python 2.7 to run pyBacktrack (instead of Python 3) by installing pyGPlates
+          for Python 2.7 (instead of for Python 3) - see below.
+
+Then download the pyGPlates Mac zip file `pygplates_rev28_python38_MacOS64.zip <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-28/>`_,
 and extract it to your home directory.
 
 Then add the unzipped location of pyGPlates to the PYTHONPATH environment variable:
 ::
 
-  export PYTHONPATH=~/pygplates_rev18_python27_MacOS64:$PYTHONPATH
+  export PYTHONPATH=~/pygplates_rev28_python38_MacOS64:$PYTHONPATH
 
-.. note:: The above line can be added to your ``~/.bashrc`` or ``~/.profile`` file so that
-          PYTHONPATH is set each time you open a new terminal window.
+.. note:: The above line can be added to your ``~/.bashrc``, ``~/.bash_profile`` or ``~/.zprofile`` file
+          so that PYTHONPATH is set each time you open a new terminal window.
+
+.. note:: If you are using Python 2.7 to run pyBacktrack (instead of Python 3) then install the Python 2.7 version of pyGPlates instead by installing
+          ``pygplates_rev28_python27_MacOS64.zip`` and adding ``~/pygplates_rev28_python27_MacOS64`` to your ``PYTHONPATH``.
+            
 
 .. _pybacktrack_install_pybacktrack:
 
@@ -149,27 +155,26 @@ Install pybacktrack
 To install the latest stable version, run:
 ::
 
-  pip install pybacktrack
+  python -m pip install pybacktrack
 
 .. warning:: | On Mac systems, when using `Macports <https://www.macports.org/>`_, it might be better to install to the
-               local user install directory with ``pip install --user pybacktrack`` to avoid confusing Macports
+               local user install directory with ``python -m pip install --user pybacktrack`` to avoid confusing Macports
                (which installs to the system install directory).
-             | And on linux systems, if you have admin privileges, you can install to the system install directory with ``sudo pip install pybacktrack``.
+             | And on linux systems, if you have admin privileges, you can install to the system install directory with ``sudo python -m pip install pybacktrack``.
 
-.. note:: If you are using a package manager such as `Conda <https://docs.conda.io>`_ you may need to run ``python -m pip install pybacktrack`` to ensure
-          ``pybacktrack`` is installed into Conda Python and not the system Python (assuming ``python`` will execute the Conda Python interpreter). 
-          It is only necessary if, for example, ``python`` executes the Conda Python interpreter but ``pip`` installs into the system Python
-          (because the base Conda environment is not activated).
+.. note:: We generally recommend using ``python -m pip install pybacktrack`` instead of ``pip install pybacktrack`` to ensure ``pybacktrack`` is installed
+          into the ``python`` you are actually using. For example, when using Conda Python it might be that ``python`` executes the Conda Python interpreter
+          but ``pip`` installs into the system Python (eg, because the base Conda environment is not activated).
 
 If you already have ``pybacktrack`` installed and would like to upgrade to the latest version then use the ``--upgrade`` flag:
 ::
 
-  pip install --upgrade pybacktrack
+  python -m pip install --upgrade pybacktrack
 
 To install the latest development version (requires Git on local system), run:
 ::
 
-  pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
+  python -m pip install "git+https://github.com/EarthByte/pyBacktrack.git#egg=pybacktrack"
 
 .. note:: | You may need to update your `Git` if you receive an error ending with ``tlsv1 alert protocol version``.
           | This is apparently due to an `update on GitHub <https://blog.github.com/2018-02-23-weak-cryptographic-standards-removed>`_.
@@ -177,7 +182,7 @@ To install the latest development version (requires Git on local system), run:
 ...or download the `pyBacktrack source code <https://github.com/EarthByte/pyBacktrack>`_, extract to a local directory and run:
 ::
 
-  pip install <path-to-local-directory>
+  python -m pip install <path-to-local-directory>
 
 .. note:: Installing `pyBacktrack` will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
           However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
@@ -255,7 +260,7 @@ or any :ref:`other examples <pygplates_overview>` in this documentation. For exa
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python3 -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
 If you wish to run the `example notebooks <https://github.com/EarthByte/pyBacktrack/tree/master/pybacktrack/notebooks>`_
 then there is a ``notebook.sh`` script to start a Jupyter notebook server in the running docker container:

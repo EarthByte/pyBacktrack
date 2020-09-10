@@ -39,7 +39,7 @@ RUN wget https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-
 RUN apt-get install -y --no-install-recommends /usr/src/pybacktrack/pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
 RUN rm pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
 # Tell Python where to find pyGPlates.
-Env PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision28/
+ENV PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision28/
 
 # Install pybacktrack (either latest public release, or directly from Github repo).
 RUN pip3 install pybacktrack
