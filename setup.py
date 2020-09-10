@@ -1,10 +1,11 @@
+from io import open
 from setuptools import setup
 
 # Project short description.
 short_description = 'A tool for reconstructing paleobathymetry on oceanic and continental crust.'
 
 # Read project long description from 'README'.
-with open('README.rst') as long_description_file:
+with open('README.rst', encoding='utf-8') as long_description_file:
     long_description = long_description_file.read()
 
 # Read package __version__.
