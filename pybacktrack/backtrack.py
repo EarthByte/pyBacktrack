@@ -115,9 +115,7 @@ def backtrack_well(
         Crustal thickness filename.
         Used to obtain crustal thickness at well location.
     dynamic_topography_model : string or tuple, optional
-        Represents a time-dependent dynamic topography raster grid.
-        Currently only used for oceanic floor (ie, well location inside age grid)
-        it is not used if well is on continental crust (passive margin).
+        Represents a time-dependent dynamic topography raster grid (in *mantle* frame).
         
         Can be either:
         
@@ -1230,7 +1228,6 @@ def main():
             
             setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
 
-    ocean_age_to_depth_model_dict = dict((model_name, model) for model, model_name, _ in age_to_depth.ALL_MODELS)
     ocean_age_to_depth_model_name_dict = dict((model, model_name) for model, model_name, _ in age_to_depth.ALL_MODELS)
     default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_to_depth.DEFAULT_MODEL]
     
@@ -1405,7 +1402,7 @@ def main():
              'filename (relative to directory of list file) of a dynamic topography grid at a particular time. '
              'Second column containing associated time (in Ma).')
     
-    # Can optionally specify sea level as a filename or  model name (if using bundled data) but not both.
+    # Can optionally specify sea level as a filename or model name (if using bundled data) but not both.
     sea_level_argument_group = parser.add_mutually_exclusive_group()
     sea_level_argument_group.add_argument(
         '-slm', '--bundle_sea_level_model', type=str,
@@ -1524,6 +1521,9 @@ if __name__ == '__main__':
     # For more details see https://stackoverflow.com/questions/43393764/python-3-6-project-structure-leads-to-runtimewarning
     #
     # Importing this module (eg, 'import pybacktrack.backtrack') is fine though.
+    #
+    # NOTE: We only warn instead of raising a runtime error because users of previous versions of pybacktrack
+    #       (prior to the introduction of the 'backtrack_cli' module) are likely still running the 'backtrack' module as a script.
     #
     warnings.warn("Use 'python -m pybacktrack.backtrack_cli ...', instead of 'python -m pybacktrack.backtrack ...'.", DeprecationWarning)
     

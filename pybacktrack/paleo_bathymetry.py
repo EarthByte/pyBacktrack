@@ -28,6 +28,7 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
 from pybacktrack.dynamic_topography import DynamicTopography
@@ -47,6 +48,8 @@ DEFAULT_GRID_SPACING_DEGREES = 1
 
 def reconstruct_backtrack_bathymetry(
         input_points,  # note: you can use 'generate_input_points_grid()' to generate a global lat/lon grid
+        oldest_time,
+        time_increment=1,
         lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
@@ -60,6 +63,8 @@ def reconstruct_backtrack_bathymetry(
     # the expanded values of the bundle filenames.
     """reconstruct_backtrack_bathymetry(\
         input_points,\
+        oldest_time,\
+        time_increment=1,\
         lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
@@ -76,6 +81,10 @@ def reconstruct_backtrack_bathymetry(
     input_points: sequence of (longitude, latitude) tuples
         The point locations to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
+    oldest_time: int
+        The oldest time (in Ma) that output is generated back to (from present day). Value must be positive.
+    time_increment: int
+        The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
     lithology_filenames: list of string, optional
         One or more text files containing lithologies.
     age_grid_filename : string, optional
@@ -122,11 +131,21 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    
+    Raises
+    ------
+    ValueError
+        If ``oldest_time`` is not a positive integer or if ``time_increment`` is not a positive integer.
 
     Notes
     -----
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
     """
+    
+    if oldest_time <= 0:
+        raise ValueError("'oldest_time' should be positive")
+    if time_increment <= 0:
+        raise ValueError("'time_increment' should be positive")
     
     # Read the lithologies from one or more text files.
     #
@@ -149,7 +168,9 @@ def reconstruct_backtrack_bathymetry(
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
+    continental_points = []
     oceanic_grid_samples = []
+    oceanic_points = []
     for longitude, latitude, total_sediment_thickness, age, topography in total_sediment_thickness_and_age_and_topography_grid_samples:
 
         # If topography sampled outside grid then set topography to zero.
@@ -162,16 +183,68 @@ def reconstruct_backtrack_bathymetry(
         # Clamp water depth so it's below sea level (ie, must be >= 0).
         water_depth = max(0, water_depth)
 
+        point_on_sphere = pygplates.PointOnSphere(latitude, longitude)
+
         # If sampled outside age grid then is on continental crust near a passive margin.
         if math.isnan(age):
             continental_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth))
+            continental_points.append(point_on_sphere)
         else:
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, age, water_depth))
+            oceanic_points.append(point_on_sphere)
 
     # Add crustal thickness to continental grid samples.
     continental_grid_samples = _grdtrack(continental_grid_samples, crustal_thickness_filename)
+    # Get present day crustal thickness (converting metres to Kms).
+    # Each continental grid sample is "longitude, latitude, total_sediment_thickness, water_depth, crustal_thickness".
+    present_day_crustal_thickness_kms = [0.001 * grid_sample[4] for grid_sample in continental_grid_samples]
+
+    # Load the deforming (topological) model.
+    print ('Reading topological model...')
+    topological_model = _read_topological_model('2019_v2')
+
+    print ('Reconstructing', len(oceanic_points), 'oceanic points...')
+    oceanic_point_time_spans = topological_model.reconstruct_geometry(
+            oceanic_points,
+            initial_time=0.0,
+            oldest_time=oldest_time,
+            time_increment=time_increment)
+
+    print ('Reconstructing', len(continental_points), 'continental points...')
+    continental_point_time_spans = topological_model.reconstruct_geometry(
+            continental_points,
+            initial_time=0.0,
+            oldest_time=oldest_time,
+            time_increment=time_increment,
+            initial_scalars={pygplates.ScalarType.gpml_crustal_thickness : present_day_crustal_thickness_kms})
+
+    print('Creating oceanic scalar features...')
+    oceanic_scalar_features = []
+    for reconstruction_time in range(0, oldest_time + 1):
+        scalar_feature = pygplates.Feature()
+        scalar_feature.set_valid_time(reconstruction_time + 0.5, reconstruction_time - 0.5)
+        scalar_feature.set_geometry(
+            (pygplates.MultiPointOnSphere(oceanic_point_time_spans.get_geometry_points(reconstruction_time)),
+            oceanic_point_time_spans.get_scalar_values(reconstruction_time)))
+        oceanic_scalar_features.append(scalar_feature)
+
+    print('Writing oceanic scalar features...')
+    pygplates.FeatureCollection(oceanic_scalar_features).write('oceanic_scalars.gpmlz')
+
+    print('Creating continental scalar features...')
+    continental_scalar_features = []
+    for reconstruction_time in range(0, oldest_time + 1):
+        scalar_feature = pygplates.Feature()
+        scalar_feature.set_valid_time(reconstruction_time + 0.5, reconstruction_time - 0.5)
+        scalar_feature.set_geometry(
+            (pygplates.MultiPointOnSphere(continental_point_time_spans.get_geometry_points(reconstruction_time)),
+            continental_point_time_spans.get_scalar_values(reconstruction_time)))
+        continental_scalar_features.append(scalar_feature)
+
+    print('Writing continental scalar features...')
+    pygplates.FeatureCollection(continental_scalar_features).write('continental_scalars.gpmlz')
 
     # Iterate over the *oceanic* grid samples.
     for longitude, latitude, present_day_total_sediment_thickness, age, present_day_water_depth in oceanic_grid_samples:
@@ -267,6 +340,29 @@ def _grdtrack(
     return output_values
 
 
+def _read_topological_model(
+        model_name):
+    """
+    Create a topological model given a file listing topological files and another file listing rotation files.
+
+    The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "bundle_data/deforming_model/" directory).
+    
+    Returns a pygplates.TopologicalModel (requires pyGPlates revision 30 or above).
+    """
+    
+    topology_files_list_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, '{0}_topology_files.txt'.format(model_name))
+    with open(topology_files_list_filename, 'r') as topology_files_list_file:
+        topology_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, filename)
+                for filename in topology_files_list_file.read().splitlines()]
+
+    rotation_files_list_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, '{0}_rotation_files.txt'.format(model_name))
+    with open(rotation_files_list_filename, 'r') as rotation_files_list_file:
+        rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, filename)
+                for filename in rotation_files_list_file.read().splitlines()]
+
+    return pygplates.TopologicalModel(topology_filenames, rotation_filenames)
+
+
 ########################
 # Command-line parsing #
 ########################
@@ -290,6 +386,17 @@ def main():
             raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
         
         return filename
+        
+    def parse_positive_integer(value_string):
+        try:
+            value = int(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
+        
+        if value <= 0:
+            raise argparse.ArgumentTypeError("%g is not a positive integer" % value)
+        
+        return value
 
     # Action to parse dynamic topography model information.
     class ArgParseDynamicTopographyAction(argparse.Action):
@@ -315,6 +422,12 @@ def main():
     parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
+
+    parser.add_argument('-o', '--oldest_time', type=parse_positive_integer, required=True,
+            help='Output is generated from present day back to the oldest time (in Ma). Value must be a positive integer.')
+    
+    parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
+            help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
         
     parser.add_argument('-g', '--grid_spacing', type=float,
             default=DEFAULT_GRID_SPACING_DEGREES,
@@ -468,6 +581,8 @@ def main():
     # Generate paleo bathymetry grids over the requested time period.
     reconstruct_backtrack_bathymetry(
         input_points,
+        args.oldest_time,
+        args.time_increment,
         args.lithology_filenames,
         args.age_grid_filename,
         args.topography_filename,
