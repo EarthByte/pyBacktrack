@@ -93,6 +93,7 @@ def find_rift_start_end_times(
         # At each time interval some points find their rift start/end times and are removed from these lists.
         reconstructed_points = [pygplates.PointOnSphere(lat, lon) for lon, lat in initial_points]
         reconstructed_point_indices = list(range(num_continent_sediment_points_in_group))
+        reconstructed_crustal_stretching_factors = [1.0] * num_continent_sediment_points_in_group
         
         # Iterate over time intervals.
         # In each time interval some points might have their rift start/end times found and hence do not need to be
@@ -106,17 +107,23 @@ def find_rift_start_end_times(
                     reconstructed_points,
                     initial_time=initial_time,
                     oldest_time=final_time,
-                    youngest_time=initial_time)
+                    youngest_time=initial_time,
+                    initial_scalars={pygplates.ScalarType.gpml_crustal_stretching_factor : reconstructed_crustal_stretching_factors})
             
             # Keep track of which points have found their rift start/end times (we'll remove these from subsequent time intervals).
             finished_reconstructed_point_indices = set()
 
             for time in range(initial_time, final_time + 1, 1):
                 topology_point_locations = time_spans.get_topology_point_locations(time, return_inactive_points=True)
+                crustal_stretching_factors = time_spans.get_scalar_values(time, return_inactive_points=True)[pygplates.ScalarType.gpml_crustal_stretching_factor]
                 for reconstructed_point_index, topology_point_location in enumerate(topology_point_locations):
                     # We didn't ask for any points to be deactivated, so this shouldn't happen, but check just in case.
                     if not topology_point_location:
                         finished_reconstructed_point_indices.add(reconstructed_point_index)
+                        continue
+
+                    # Skip current point if we've already finished with it.
+                    if reconstructed_point_index in finished_reconstructed_point_indices:
                         continue
 
                     # Index into original rift start/end time arrays (for the current group of points).
@@ -128,18 +135,27 @@ def find_rift_start_end_times(
                             rift_end_times[point_index] = time
                     elif rift_start_times[point_index] is None:
                         if not topology_point_location.located_in_resolved_network():
-                            rift_start_times[point_index] = time
-                            # We've found rift start and end times for the current point, so we're finished with it.
+                            # Only add rift start time if there's been stretching (we ignore compression since that's not rifting).
+                            #
+                            # Stretching factor is initial thickness over current thickness. And since initial thickness is at present day,
+                            # crust that is stretching forward in time is actually thickening backward in time. And thickening means a
+                            # stretching factor less than 1.0.
+                            if crustal_stretching_factors[reconstructed_point_index] < 1.0:
+                                rift_start_times[point_index] = time
+                            # Either we've found rift start (and end) times for the current point, or we've encountered compression (not extension).
+                            # Either way we're finished with it.
                             finished_reconstructed_point_indices.add(reconstructed_point_index)
             
-            # Get the reconstructed points at the final time of the time span.
+            # Get the reconstructed points/scalars at the final time of the time span.
             # These will be our initial points at the initial time of the next time span.
             reconstructed_points = time_spans.get_geometry_points(final_time, return_inactive_points=True)
+            reconstructed_crustal_stretching_factors = time_spans.get_scalar_values(final_time, return_inactive_points=True)[pygplates.ScalarType.gpml_crustal_stretching_factor]
 
-            # Remove those reconstructed points that we've found rift start/end times for.
+            # Remove those reconstructed points/scalars that we've found rift start/end times for.
             # Note: We process in reverse order so that indices are not affected by previous removals.
             for reconstructed_point_index in sorted(finished_reconstructed_point_indices, reverse=True):
                 del reconstructed_points[reconstructed_point_index]
+                del reconstructed_crustal_stretching_factors[reconstructed_point_index]
                 del reconstructed_point_indices[reconstructed_point_index]
             
             # If we've found rift start/end times for all points in the group then we're done with the group.
