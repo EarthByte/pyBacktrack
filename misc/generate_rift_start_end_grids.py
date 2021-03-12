@@ -31,10 +31,21 @@ import sys
 # Need version 30 to be able to reconstruct 'using topologies'.
 PYGPLATES_VERSION_REQUIRED = pygplates.Version(30)
 
+# Currently using the 2019 v2 deforming model.
+DEFORMING_MODEL_NAME = '2019_v2'
+# We only go back to 250Ma. Rifting since Pangea began at 240Ma.
+DEFORMING_MODEL_OLDEST_TIME = 250
+
+# Default output grid filenames for rift start and end times.
+DEFAULT_RIFT_START_TIME_GRID_FILENAME = 'rift_start_grid.nc'
+DEFAULT_RIFT_END_TIME_GRID_FILENAME = 'rift_end_grid.nc'
+
 
 def find_rift_start_end_times(
         total_sediment_thickness_filename,
-        age_grid_filename):
+        age_grid_filename,
+        rift_start_time_grid_filename,
+        rift_end_time_grid_filename):
     """Generate rift start/end times for each non-NaN grid sample in total sediment thickness grid.
     """
     
@@ -50,14 +61,14 @@ def find_rift_start_end_times(
     # Read the age grid file (at sediment locations) and only include those that have NaN values (representing non-oceanic points).
     print ('Reading continent sediment points...')
     continent_sediment_points = [(sample[0], sample[1]) for sample in _grdtrack(sediment_points, age_grid_filename) if math.isnan(sample[2])]
-    #continent_sediment_points = continent_sediment_points[:1000]
+    num_continent_sediment_points = len(continent_sediment_points)
 
     # Load the deforming (topological) model.
     print ('Reading topological model...')
-    topological_model = _read_topological_model('2019_v2')
+    topological_model = _read_topological_model(DEFORMING_MODEL_NAME)
 
-    num_continent_sediment_points = len(continent_sediment_points)
-
+    # Process points in groups to use less memory since each point in the group will have a full reconstructed history generated for it
+    # but we're ultimately only storing a rift start and end time per point.
     num_continent_sediment_point_per_group = 1000
     num_continent_sediment_point_groups = math.ceil(float(num_continent_sediment_points) / num_continent_sediment_point_per_group)
 
@@ -75,34 +86,68 @@ def find_rift_start_end_times(
         
         initial_points = continent_sediment_points[continent_sediment_point_start_index : continent_sediment_point_start_index + num_continent_sediment_points_in_group]
 
-        reconstructed_points = pygplates.MultiPointOnSphere((lat, lon) for lon, lat in initial_points)
-
         rift_start_times = [None] * num_continent_sediment_points_in_group
         rift_end_times = [None] * num_continent_sediment_points_in_group
         
-        for initial_time in range(0, 410, 10):
+        # We start with initial points and reconstruct them through multiple time intervals.
+        # At each time interval some points find their rift start/end times and are removed from these lists.
+        reconstructed_points = [pygplates.PointOnSphere(lat, lon) for lon, lat in initial_points]
+        reconstructed_point_indices = list(range(num_continent_sediment_points_in_group))
+        
+        # Iterate over time intervals.
+        # In each time interval some points might have their rift start/end times found and hence do not need to be
+        # reconstructed in subsequent time intervals (thus improving processing time).
+        for initial_time in range(0, DEFORMING_MODEL_OLDEST_TIME, 10):
             final_time = initial_time + 10
             #print ('     reconstructing time', initial_time, final_time)
+
+            # Reconstruct (using topologies) the initial reconstructed points over the time interval.
             time_spans = topological_model.reconstruct_geometry(
                     reconstructed_points,
                     initial_time=initial_time,
                     oldest_time=final_time,
                     youngest_time=initial_time)
             
+            # Keep track of which points have found their rift start/end times (we'll remove these from subsequent time intervals).
+            finished_reconstructed_point_indices = set()
+
             for time in range(initial_time, final_time + 1, 1):
                 topology_point_locations = time_spans.get_topology_point_locations(time, return_inactive_points=True)
-                for point_index, topology_point_location in enumerate(topology_point_locations):
-                    if topology_point_location:
-                        if rift_end_times[point_index] is None:
-                            if topology_point_location.located_in_resolved_network():
-                                rift_end_times[point_index] = time
-                        elif rift_start_times[point_index] is None:
-                            if not topology_point_location.located_in_resolved_network():
-                                rift_start_times[point_index] = time
+                for reconstructed_point_index, topology_point_location in enumerate(topology_point_locations):
+                    # We didn't ask for any points to be deactivated, so this shouldn't happen, but check just in case.
+                    if not topology_point_location:
+                        finished_reconstructed_point_indices.add(reconstructed_point_index)
+                        continue
+
+                    # Index into original rift start/end time arrays (for the current group of points).
+                    point_index = reconstructed_point_indices[reconstructed_point_index]
+
+                    # First find rift end time (we're processing backward in time) and then find rift start time.
+                    if rift_end_times[point_index] is None:
+                        if topology_point_location.located_in_resolved_network():
+                            rift_end_times[point_index] = time
+                    elif rift_start_times[point_index] is None:
+                        if not topology_point_location.located_in_resolved_network():
+                            rift_start_times[point_index] = time
+                            # We've found rift start and end times for the current point, so we're finished with it.
+                            finished_reconstructed_point_indices.add(reconstructed_point_index)
             
+            # Get the reconstructed points at the final time of the time span.
+            # These will be our initial points at the initial time of the next time span.
             reconstructed_points = time_spans.get_geometry_points(final_time, return_inactive_points=True)
 
+            # Remove those reconstructed points that we've found rift start/end times for.
+            # Note: We process in reverse order so that indices are not affected by previous removals.
+            for reconstructed_point_index in sorted(finished_reconstructed_point_indices, reverse=True):
+                del reconstructed_points[reconstructed_point_index]
+                del reconstructed_point_indices[reconstructed_point_index]
+            
+            # If we've found rift start/end times for all points in the group then we're done with the group.
+            if not reconstructed_points:
+                break
+
         
+        # Output points that we have found a rift start and end time for.
         for point_index in range(num_continent_sediment_points_in_group):
             rift_start_time = rift_start_times[point_index]
             rift_end_time = rift_end_times[point_index]
@@ -115,8 +160,8 @@ def find_rift_start_end_times(
                         (initial_point[0], initial_point[1], rift_end_time))
 
     print ('Writing rift start/end grid...')
-    _xyz2grd(continent_sediment_rift_start_points, "rift_start_grid.nc")
-    _xyz2grd(continent_sediment_rift_end_points, "rift_end_grid.nc")
+    _xyz2grd(continent_sediment_rift_start_points, rift_start_time_grid_filename)
+    _xyz2grd(continent_sediment_rift_end_points, rift_end_time_grid_filename)
 
 
 def _grd2xyz(
@@ -249,11 +294,6 @@ if __name__ == '__main__':
     def main():
         
         __description__ = """Create rift start and end time grids from a deforming plate model.
-    
-    NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
-    For example...
-
-    python %(prog)s ... -- 2019_v2_
     """
     
         #
@@ -281,9 +321,18 @@ if __name__ == '__main__':
                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
         
         parser.add_argument(
-            'output_files_prefix', type=argparse_unicode,
-            metavar='output_files_prefix',
-            help='The prefix of the output rift start/end grid files.')
+            '--rift_start_time_grid_filename', type=argparse_unicode,
+            default=DEFAULT_RIFT_START_TIME_GRID_FILENAME,
+            metavar='rift_start_time_grid_filename',
+            help='The output grid filename containing rift start times. '
+                'Defaults to "{0}".'.format(DEFAULT_RIFT_START_TIME_GRID_FILENAME))
+        
+        parser.add_argument(
+            '--rift_end_time_grid_filename', type=argparse_unicode,
+            default=DEFAULT_RIFT_END_TIME_GRID_FILENAME,
+            metavar='rift_end_time_grid_filename',
+            help='The output grid filename containing rift end times. '
+                'Defaults to "{0}".'.format(DEFAULT_RIFT_END_TIME_GRID_FILENAME))
         
         # Parse command-line options.
         args = parser.parse_args()
@@ -291,7 +340,9 @@ if __name__ == '__main__':
         # Generate rift start/end times for each non-NaN grid sample in total sediment thickness grid.
         find_rift_start_end_times(
                 args.total_sediment_thickness_filename,
-                args.age_grid_filename)
+                args.age_grid_filename,
+                args.rift_start_time_grid_filename,
+                args.rift_end_time_grid_filename)
         
         sys.exit(0)
     
