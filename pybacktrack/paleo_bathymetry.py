@@ -192,62 +192,18 @@ def reconstruct_backtrack_bathymetry(
             continental_points.append(point_on_sphere)
         else:
             oceanic_grid_samples.append(
-                    (longitude, latitude, total_sediment_thickness, age, water_depth))
+                    (longitude, latitude, total_sediment_thickness, water_depth, age))
             oceanic_points.append(point_on_sphere)
 
-    # Add crustal thickness to continental grid samples.
-    continental_grid_samples = _grdtrack(continental_grid_samples, crustal_thickness_filename)
-    # Get present day crustal thickness (converting metres to Kms).
-    # Each continental grid sample is "longitude, latitude, total_sediment_thickness, water_depth, crustal_thickness".
-    present_day_crustal_thickness_kms = [0.001 * grid_sample[4] for grid_sample in continental_grid_samples]
+    # Grid filenames for continental rifting start/end times.
+    rift_start_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_start_grid.nc')
+    rift_end_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_end_grid.nc')
 
-    # Load the deforming (topological) model.
-    print ('Reading topological model...')
-    topological_model = _read_topological_model('2019_v2')
-
-    print ('Reconstructing', len(oceanic_points), 'oceanic points...')
-    oceanic_point_time_spans = topological_model.reconstruct_geometry(
-            oceanic_points,
-            initial_time=0.0,
-            oldest_time=oldest_time,
-            time_increment=time_increment)
-
-    print ('Reconstructing', len(continental_points), 'continental points...')
-    continental_point_time_spans = topological_model.reconstruct_geometry(
-            continental_points,
-            initial_time=0.0,
-            oldest_time=oldest_time,
-            time_increment=time_increment,
-            initial_scalars={pygplates.ScalarType.gpml_crustal_thickness : present_day_crustal_thickness_kms})
-
-    print('Creating oceanic scalar features...')
-    oceanic_scalar_features = []
-    for reconstruction_time in range(0, oldest_time + 1):
-        scalar_feature = pygplates.Feature()
-        scalar_feature.set_valid_time(reconstruction_time + 0.5, reconstruction_time - 0.5)
-        scalar_feature.set_geometry(
-            (pygplates.MultiPointOnSphere(oceanic_point_time_spans.get_geometry_points(reconstruction_time)),
-            oceanic_point_time_spans.get_scalar_values(reconstruction_time)))
-        oceanic_scalar_features.append(scalar_feature)
-
-    print('Writing oceanic scalar features...')
-    pygplates.FeatureCollection(oceanic_scalar_features).write('oceanic_scalars.gpmlz')
-
-    print('Creating continental scalar features...')
-    continental_scalar_features = []
-    for reconstruction_time in range(0, oldest_time + 1):
-        scalar_feature = pygplates.Feature()
-        scalar_feature.set_valid_time(reconstruction_time + 0.5, reconstruction_time - 0.5)
-        scalar_feature.set_geometry(
-            (pygplates.MultiPointOnSphere(continental_point_time_spans.get_geometry_points(reconstruction_time)),
-            continental_point_time_spans.get_scalar_values(reconstruction_time)))
-        continental_scalar_features.append(scalar_feature)
-
-    print('Writing continental scalar features...')
-    pygplates.FeatureCollection(continental_scalar_features).write('continental_scalars.gpmlz')
+    # Add crustal thickness and rift start/end times to continental grid samples.
+    continental_grid_samples = _grdtrack(continental_grid_samples, crustal_thickness_filename, rift_start_grid_filename, rift_end_grid_filename)
 
     # Iterate over the *oceanic* grid samples.
-    for longitude, latitude, present_day_total_sediment_thickness, age, present_day_water_depth in oceanic_grid_samples:
+    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age in oceanic_grid_samples:
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
@@ -261,7 +217,7 @@ def reconstruct_backtrack_bathymetry(
         present_day_tectonic_subsidence = present_day_water_depth + well.decompact(0.0).get_sediment_isostatic_correction()
 
     # Iterate over the *continental* grid samples.
-    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness in continental_grid_samples:
+    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -340,29 +296,6 @@ def _grdtrack(
     return output_values
 
 
-def _read_topological_model(
-        model_name):
-    """
-    Create a topological model given a file listing topological files and another file listing rotation files.
-
-    The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "bundle_data/deforming_model/" directory).
-    
-    Returns a pygplates.TopologicalModel (requires pyGPlates revision 30 or above).
-    """
-    
-    topology_files_list_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, '{0}_topology_files.txt'.format(model_name))
-    with open(topology_files_list_filename, 'r') as topology_files_list_file:
-        topology_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, filename)
-                for filename in topology_files_list_file.read().splitlines()]
-
-    rotation_files_list_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, '{0}_rotation_files.txt'.format(model_name))
-    with open(rotation_files_list_filename, 'r') as rotation_files_list_file:
-        rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_TOPOLOGICAL_MODEL_PATH, filename)
-                for filename in rotation_files_list_file.read().splitlines()]
-
-    return pygplates.TopologicalModel(topology_filenames, rotation_filenames)
-
-
 ########################
 # Command-line parsing #
 ########################
@@ -422,9 +355,6 @@ def main():
     parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
-
-    parser.add_argument('-o', '--oldest_time', type=parse_positive_integer, required=True,
-            help='Output is generated from present day back to the oldest time (in Ma). Value must be a positive integer.')
     
     parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
             help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
@@ -534,6 +464,10 @@ def main():
         help='Optional file used to obtain sea level (relative to present-day) over time. '
              'If no filename (or model) is specified then sea level is ignored. '
              'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+
+    parser.add_argument('oldest_time', type=parse_positive_integer,
+            metavar='oldest_time',
+            help='Output is generated from present day back to the oldest time (in Ma). Value must be a positive integer.')
     
     parser.add_argument(
         'output_file_prefix', type=argparse_unicode,
