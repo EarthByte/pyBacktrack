@@ -28,6 +28,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import copy
 import math
 from pybacktrack.lithology import create_lithology_from_components
 import warnings
@@ -106,11 +107,53 @@ class StratigraphicUnit(object):
         # Create a combined lithology (if necessary) from multiple weighted lithologies.
         self.lithology = create_lithology_from_components(lithology_components, lithologies)
         self.lithology_components = lithology_components
+
+        # Full decompacted thickness is calculated on first call to 'self.get_fully_decompacted_thickness()'.
+        self._fully_decompacted_thickness = None
         
         # Add any extra attributes requested.
         if other_attributes is not None:
             for name, value in other_attributes.items():
                 setattr(self, name, value)
+    
+    @staticmethod
+    def create_partial_unit(unit, top_age):
+        """create_partial_unit(unit, top_age)
+        Create a new stratigraphic unit from 'unit' but with a compacted depth that assumes a constant sediment deposition rate for 'unit'.
+        
+        Parameters
+        ----------
+        top_age : float
+            Top age of this stratigraphic unit.
+        
+        Raises
+        ------
+        ValueError
+            If 'top_age' is outside the top/bottom age range of 'unit'.
+        
+        Notes
+        -----
+        This does *not* partially decompact 'unit'.
+        It is simply adjusting the top depth to correspond to a new top age.
+        Then when the returned partial stratigraphic unit is subsequently decompacted it'll have the correct volume of grains and
+        hence be decompacted correctly at its new top age.
+        
+        .. versionadded:: 1.4
+        """
+        
+        # Copy 'unit' and modify the top age and depth.
+        new_unit = copy.copy(unit)
+        new_unit.top_age = top_age
+        new_unit.top_depth = unit._calc_compacted_depth(top_age)
+
+        # Need to re-calculate fully decompacted thickness due to different unit compacted thickness.
+        new_unit._fully_decompacted_thickness = None
+
+        # These attributes will be different - they'll get re-calculated when this new unit is added to a well.
+        delattr(new_unit, 'decompacted_top_depth')
+        delattr(new_unit, 'decompacted_bottom_depth')
+
+        return new_unit
     
     def calc_decompacted_thickness(self, decompacted_depth_to_top):
         """
@@ -262,7 +305,7 @@ class StratigraphicUnit(object):
         does not compact the lower part of the unit).
         """
         
-        fully_decompacted_thickness = self.decompacted_bottom_depth - self.decompacted_top_depth
+        fully_decompacted_thickness = self.get_fully_decompacted_thickness()
         if fully_decompacted_thickness == 0.0:
             return 0.0
         
@@ -273,6 +316,31 @@ class StratigraphicUnit(object):
         fully_decompacted_sediment_rate = fully_decompacted_thickness / deposition_interval
         
         return fully_decompacted_sediment_rate
+    
+    def get_fully_decompacted_thickness(self):
+        """
+        Get fully decompacted thickness. It is calculated on first call.
+        
+        Returns
+        -------
+        float
+            Fully decompacted thickness.
+        
+        Notes
+        -----
+        Fully decompacted is equivalent to assuming this unit is at the surface (ie, no units on top of it) and
+        porosity decay within the unit is not considered (in other words the weight of the upper part of the unit
+        does not compact the lower part of the unit).
+        
+        .. versionadded:: 1.4
+        """
+
+        # Calculate it if haven't already.
+        if self._fully_decompacted_thickness is None:
+            self._fully_decompacted_thickness = self._calc_fully_decompacted_thickness()
+        
+        return self._fully_decompacted_thickness
+        
     
     def _calc_fully_decompacted_thickness(self):
         """
@@ -327,6 +395,112 @@ class StratigraphicUnit(object):
         )
         
         return fully_decompacted_thickness
+    
+    def _calc_compacted_depth(self, age):
+        """
+        Calculate the compacted depth of this stratigraphic unit at 'age' assuming a constant sediment deposition rate for this unit.
+        
+        Parameters
+        ----------
+        age : float
+            Age to  this stratigraphic unit.
+        
+        Raises
+        ------
+        ValueError
+            If 'age' is outside the top/bottom age range of this stratigraphic unit.
+        
+        Returns
+        -------
+        float
+            Compacted depth at 'age'.
+        
+        Notes
+        -----
+        This does *not* partially decompact this stratigraphic unit.
+        It is simply determining what depth in the compacted well corresponds to 'age'.
+        Then when the partial stratigraphic unit (with top depth replaced with the returned compacted depth) is
+        subsequently decompacted it'll have the correct volume of grains and hence be decompacted correctly at 'age'.
+        
+        .. versionadded:: 1.4
+        """
+        
+        if age < self.top_age or age > self.bottom_age:
+            raise ValueError("'age' must be between top and bottom ages of stratigraphic unit")
+        
+        present_day_thickness = self.bottom_depth - self.top_depth
+        if present_day_thickness == 0.0:
+            return self.bottom_depth
+        
+        # Sediment deposited from 'age' to bottom age dividied by sediment deposited from top age to bottom age
+        # (assuming a constant sediment deposition rate over the lifetime of this stratigraphic unit).
+        sediment_deposition_ratio = (self.bottom_age - age) / (self.bottom_age - self.top_age)
+        
+        surface_porosity = self.lithology.surface_porosity
+        porosity_decay = self.lithology.porosity_decay
+        
+        #
+        # Assuming the porosity decays exponentially and that the volume of grains within a unit never changes we get:
+        #
+        #    Integral(1 - porosity(z), z = d - ta -> d) = Ra * Integral(1 - porosity(z), z = d - t -> d)
+        #
+        # ...where 'd' is present day depth to *bottom* (not top) of unit and 't' is present day (compacted) thickness of unit and 'ta' is
+        # (compacted) thickness at 'age' (which is between top and bottom ages) and 'Ra' is the volume of grains in unit at
+        # 'age' (ie, partial sediment-deposited unit) divided by volume at top age (ie, fully sediment-deposited unit).
+        #
+        #    Integral(1 - porosity(z), z = d - ta -> d) = ta - Integral(porosity(0) * exp(-z / decay), z = d - ta -> d)
+        #                                              = ta - (-decay * porosity(0) * (exp(-d/decay) - exp(-(d-ta))/decay)))
+        #                                              = ta - (-decay * porosity(0) * exp(-d/decay) * (1 - exp(ta/decay)))
+        #                                              = ta + decay * porosity(0) * exp(-d/decay) * (1 - exp(ta/decay))
+        #
+        #    Integral(1 - porosity(z), z = d - t -> d) = t + decay * porosity(0) * exp(-d/decay) * (1 - exp(t/decay))
+        #
+        #    Integral(1 - porosity(z), z = d - ta -> d) = Ra * Integral(1 - porosity(z), z = d - t -> d)
+        #    ta + decay * porosity(0) * exp(-d/decay) * (1 - exp(ta/decay)) = Ra * (t + decay * porosity(0) * exp(-d/decay) * (1 - exp(t/decay)))
+        #    ta = -decay * porosity(0) * exp(-d/decay) * (1 - exp(ta/decay)) + Ra * (t + decay * porosity(0) * exp(-d/decay) * (1 - exp(t/decay)))
+        #    ta = a * exp(ta/decay) + b
+        #
+        # ...where a and b are:
+        #
+        #    a = decay * porosity(0) * exp(-d/decay)
+        #
+        #    b = -decay * porosity(0) * exp(-d/decay) + Ra * (t + decay * porosity(0) * exp(-d/decay) * (1 - exp(t/decay)))
+        #      = -a + Ra * (t + decay * porosity(0) * exp(-d/decay) * (1 - exp(t/decay)))
+        #
+        # So the compacted thickness ta at 'age' is:
+        #
+        #    ta = a * exp(ta/decay) + b
+        #
+        # ...can be solved iteratively by repeatedly substituting the left hand side back into the right hand side
+        # until ta converges on a solution. The initial ta is chosen to be 'Ra * t' (ie, ratio of the present day thickness
+        # instead of ratio of volume of grains) which should be a good starting point.
+        #
+        
+        # Constants 'a' and 'b' are calculated outside the iteration loop for efficiency.
+        a = porosity_decay * surface_porosity * math.exp(-self.bottom_depth / porosity_decay)
+        b = (-a + sediment_deposition_ratio * (
+                present_day_thickness +
+                porosity_decay * surface_porosity * math.exp(-self.bottom_depth / porosity_decay) *
+                (1 - math.exp(present_day_thickness / porosity_decay))))
+        
+        # Start out with initial estimate - choose the deposition ratio of present day thickness.
+        compacted_thickness_at_age = sediment_deposition_ratio * present_day_thickness
+        
+        # Limit the number of iterations in case we never converge.
+        # Although should converge within around 20 iterations (for 1e-6 accuracy).
+        for iteration in range(1000):
+            new_compacted_thickness_at_age = a * math.exp(compacted_thickness_at_age / porosity_decay) + b
+            
+            # If we've converged within a tolerance then we're done.
+            if math.fabs(new_compacted_thickness_at_age - compacted_thickness_at_age) < 1e-6:
+                compacted_thickness_at_age = new_compacted_thickness_at_age
+                break
+            
+            # The new thickness becomes the old thickness for the next loop iteration.
+            compacted_thickness_at_age = new_compacted_thickness_at_age
+        
+        # Return compacted depth at 'age'.
+        return self.bottom_depth - compacted_thickness_at_age
 
 
 class Well(object):
@@ -455,61 +629,106 @@ class Well(object):
         else:
             stratigraphic_unit.decompacted_top_depth = 0.0
         # Fully decompacted bottom depth increases top depth by fully decompacted thickness (using surface porosity only).
-        stratigraphic_unit.decompacted_bottom_depth = stratigraphic_unit.decompacted_top_depth + stratigraphic_unit._calc_fully_decompacted_thickness()
+        stratigraphic_unit.decompacted_bottom_depth = stratigraphic_unit.decompacted_top_depth + stratigraphic_unit.get_fully_decompacted_thickness()
         
         self.stratigraphic_units.append(stratigraphic_unit)
     
-    def decompact(self):
+    def decompact(
+            self,
+            age=None):
         """
-        Finds decompacted total sediment thickness and tectonic subsidence for each age in stratigraphic units.
+        Finds decompacted total sediment thickness at 'age' (if specified), otherwise at each (top) age in all stratigraphic units.
         
         Returns
         -------
-        list of :class:`pybacktrack.DecompactedWell`
-            One decompacted well per age, in same order (and ages) as the well units (youngest to oldest).
+        :class:`pybacktrack.DecompactedWell`, or list of :class:`pybacktrack.DecompactedWell`
+            The decompacted well at 'age' (if specified), otherwise one decompacted well per age in same order
+            (and ages) as the well units (youngest to oldest).
+        
+        .. versionchanged:: 1.4
+           Added the 'age' parameter.
         """
         
+        # If an age was specified then return a single decompacted well representing the state of
+        # decompaction at the specified age.
+        if age is not None:
+            # Find the stratigraphic unit containing the specified age.
+            # This is the surface unit at the specified age.
+            for surface_unit_index, surface_unit in enumerate(self.stratigraphic_units):
+                # Units are ordered by age (youngest to oldest).
+                if age < surface_unit.bottom_age:
+                    units_to_decompact = self.stratigraphic_units[surface_unit_index:]
+                    # If the requested age is in the middle of the current surface unit then
+                    # replace the surface unit (to decompact) with a new surface unit that has top age
+                    # matching the requested age and top depth adjusted appropriately.
+                    if age > surface_unit.top_age:
+                        partial_surface_unit = StratigraphicUnit.create_partial_unit(surface_unit, age)
+                        units_to_decompact[0] = partial_surface_unit
+                    return self._decompact_units(units_to_decompact)
+            
+            # No stratigraphic unit was found so return None to indicate nothing to decompact
+            # (because age is older than basement age).
+            return None
+            
+        #
+        # An age was *not* specified, so return a list of decompacted wells where each decompacted well
+        # represents the state of decompaction at the top age of each stratigraphic layer.
+        #
+
         # Each decompacted well represents decompaction at the age of a stratigraphic unit in the well.
         decompacted_wells = []
         
         # Iterate over the stratigraphic units - they are sorted by age (youngest to oldest).
         #
-        # Note that the first stratigraphic unit doesn't really need decompaction but we do it anyway
+        # Note that the first decompacted well doesn't really need decompaction (it's compacted) but we do it anyway
         # (it's quick since it only requires one iteration in the decompacted thickness convergence loop).
         num_stratigraphic_units = len(self.stratigraphic_units)
         for surface_unit_index in range(0, num_stratigraphic_units):
-            surface_unit = self.stratigraphic_units[surface_unit_index]
-            
-            decompacted_well = DecompactedWell(surface_unit)
-            
-            # The total decompacted thickness at the age of the current surface unit -
-            # this is age at which deposition ended for the current surface unit.
-            total_decompacted_thickness = 0.0
-            
-            # Starting at the current surface unit, iterate over all units beneath it.
-            for unit_index in range(surface_unit_index, num_stratigraphic_units):
-                unit = self.stratigraphic_units[unit_index]
-                
-                # Decompact the current unit assuming there is 'total_decompacted_thickness' depth
-                # of sediment (from other units) above it.
-                unit_decompacted_thickness = unit.calc_decompacted_thickness(total_decompacted_thickness)
-                
-                # Calculate decompacted density of unit (average density over thickness).
-                unit_decompacted_density = unit.calc_decompacted_density(unit_decompacted_thickness, total_decompacted_thickness)
-                
-                # Record the decompacted thickness and decompacted depth to top in the decompacted well.
-                # These are used to incrementally calculate average density of the entire decompacted stratigraphic column
-                # (used for isostatic correction).
-                decompacted_well.add_decompacted_unit(
-                    unit,
-                    unit_decompacted_thickness,
-                    unit_decompacted_density)
-                
-                total_decompacted_thickness += unit_decompacted_thickness
-            
+            # Decompact from top of surface unit to bottom of well (ie, surface unit and all units beneath it).
+            units_to_decompact = self.stratigraphic_units[surface_unit_index:]
+            surface_unit = units_to_decompact[0]
+            partial_surface_unit = StratigraphicUnit.create_partial_unit(surface_unit, surface_unit.top_age)
+            units_to_decompact[0] = partial_surface_unit
+            decompacted_well = self._decompact_units(units_to_decompact)
             decompacted_wells.append(decompacted_well)
         
         return decompacted_wells
+    
+    def _decompact_units(
+            self,
+            units):
+        # Decompact the specified stratigraphic units (which is a surface unit at a particular age and the units beneath it).
+        #
+        # Returns a DecompactedWell.
+        
+        surface_unit = units[0]
+
+        decompacted_well = DecompactedWell(surface_unit)
+        
+        # The total decompacted thickness at the age of the current surface unit -
+        # this is age at which deposition ended for the current surface unit.
+        total_decompacted_thickness = 0.0
+        
+        # Starting at the current surface unit, iterate over all units beneath it.
+        for unit in units:
+            # Decompact the current unit assuming there is 'total_decompacted_thickness' depth
+            # of sediment (from other units) above it.
+            unit_decompacted_thickness = unit.calc_decompacted_thickness(total_decompacted_thickness)
+            
+            # Calculate decompacted density of unit (average density over thickness).
+            unit_decompacted_density = unit.calc_decompacted_density(unit_decompacted_thickness, total_decompacted_thickness)
+            
+            # Record the decompacted thickness and decompacted depth to top in the decompacted well.
+            # These are used to incrementally calculate average density of the entire decompacted stratigraphic column
+            # (used for isostatic correction).
+            decompacted_well.add_decompacted_unit(
+                unit,
+                unit_decompacted_thickness,
+                unit_decompacted_density)
+            
+            total_decompacted_thickness += unit_decompacted_thickness
+            
+        return decompacted_well
 
 
 class DecompactedStratigraphicUnit(object):
