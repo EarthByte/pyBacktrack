@@ -87,6 +87,32 @@ class SeaLevel(object):
                 ', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
         
         return SeaLevel(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[sea_level_model_name])
+    
+    @staticmethod
+    def create_from_model_or_bundled_model_name(sea_level_model_or_bundled_model_name):
+        """create_from_model_or_bundled_model_name(sea_level_model_or_bundled_model_name)
+        Create a SeaLevel instance from a user-provided model or from a bundled model.
+        
+        Parameters
+        ----------
+        sea_level_model_or_bundled_model_name : string
+            Either a user-provided model specified as a text filename containing sea level curve (see :meth:`pybacktrack.SeaLevel.__init__`), or
+            name of a bundled model (see :meth:`pybacktrack.SeaLevel.create_from_bundled_model`), .
+        
+        Returns
+        -------
+        :class:`pybacktrack.SeaLevel`
+            The sea level model loaded from a user-provided model or from a bundled model.
+        
+        .. versionadded:: 1.4
+        """
+        
+        # If a sea level *bundled model name* was specified then create it from a bundled sea level model.
+        if sea_level_model_or_bundled_model_name in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
+            return SeaLevel.create_from_bundled_model(sea_level_model_or_bundled_model_name)
+        else:
+            # Create from specified sea level curve file.
+            return SeaLevel(sea_level_model_or_bundled_model_name)
 
     def get_average_level(self, begin_time, end_time):
         """get_average_level(begin_time, end_time)

@@ -148,6 +148,41 @@ class DynamicTopography(object):
             dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
             longitude, latitude, age)
     
+    @staticmethod
+    def create_from_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name, longitude, latitude, age=None):
+        """create_from_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name, longitude, latitude, age=None)
+        Create a DynamicTopography instance from a user-provided model or from a bundled model.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_or_bundled_model_name : string
+            Either a user-provided model specified as a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames)
+            (see first three parameters of :meth:`pybacktrack.DynamicTopography.__init__`), or name of a bundled dynamic topography model
+            (see :meth:`pybacktrack.DynamicTopography.create_from_bundled_model`), .
+        longitude : float
+            Longitude of the ocean point location.
+        latitude : float
+            Latitude of the ocean point location.
+        age : float, optional
+            The age of the crust that the point location is on.
+            If not specified then the appearance age of the static polygon containing the point is used.
+        
+        Returns
+        -------
+        :class:`pybacktrack.DynamicTopography`
+            The dynamic topography model loaded from a user-provided model or from a bundled model.
+        
+        .. versionadded:: 1.4
+        """
+        
+        # If a dynamic topography *bundled model name* was specified then create it from a bundled dynamic topography model.
+        if isinstance(dynamic_topography_model_or_bundled_model_name, str if sys.version_info[0] >= 3 else basestring):  # Python 2 vs 3.
+            return DynamicTopography.create_from_bundled_model(dynamic_topography_model_or_bundled_model_name, longitude, latitude, age)
+        else:
+            # Otherwise we're expecting a 3-tuple.
+            dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model_or_bundled_model_name
+            return DynamicTopography(dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames, longitude, latitude, age)
+    
     def sample(self, time):
         """
         Samples the time-dependent dynamic topography grid files at ``time``, but falls back to a

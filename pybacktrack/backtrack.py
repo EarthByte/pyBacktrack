@@ -311,15 +311,7 @@ def backtrack_well(
     
     # Create time-dependent grid object for sampling dynamic topography (if requested).
     if dynamic_topography_model:
-        # If a dynamic topography *model name* was specified then create it from a bundled dynamic topography model.
-        if isinstance(dynamic_topography_model, str if sys.version_info[0] >= 3 else basestring):  # Python 2 vs 3.
-            dynamic_topography = DynamicTopography.create_from_bundled_model(dynamic_topography_model, well.longitude, well.latitude, age)
-        else:
-            # Otherwise we're expecting a 3-tuple.
-            dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model
-            dynamic_topography = DynamicTopography(
-                dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
-                well.longitude, well.latitude, age)
+        dynamic_topography = DynamicTopography.create_from_model_or_bundled_model_name(dynamic_topography_model, well.longitude, well.latitude, age)
     else:
         dynamic_topography = None
     
@@ -517,12 +509,7 @@ def _add_sea_level(
     """
     
     # Create sea level object for integrating sea level over time periods.
-    #
-    # If a sea level *model name* was specified then create it from a bundled sea level model.
-    if sea_level_model in pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES:
-        sea_level = SeaLevel.create_from_bundled_model(sea_level_model)
-    else:
-        sea_level = SeaLevel(sea_level_model)
+    sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
     
     for decompacted_well in decompacted_wells:
         decompacted_well.sea_level = sea_level.get_average_level(
