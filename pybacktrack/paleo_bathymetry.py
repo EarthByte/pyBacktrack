@@ -137,6 +137,13 @@ def reconstruct_backtrack_bathymetry(
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     
+    Returns
+    -------
+    dict mapping each time to a list of 3-tuple (longitude, latitude, bathymetry)
+        The reconstructed paleo bathymetry points from present day to 'oldest_time' (in increments of 'time_increment').
+        Each key in the returned dict is one of those times and each value in the dict is a list of reconstructed paleo bathymetries
+        represented as a 3-tuple containing reconstructed longitude, reconstructed latitude and paleo bathmetry.
+    
     Raises
     ------
     ValueError
@@ -160,7 +167,7 @@ def reconstruct_backtrack_bathymetry(
     lithologies = read_lithologies_files(lithology_filenames)
 
     # Sample the total sediment thickness grid.
-    total_sediment_thickness_grid_samples = _grdtrack(input_points, total_sediment_thickness_filename)
+    total_sediment_thickness_grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
 
     # Ignore samples outside total sediment thickness grid (masked region) since we can only backtrack where there's sediment.
     #
@@ -169,7 +176,7 @@ def reconstruct_backtrack_bathymetry(
     total_sediment_thickness_grid_samples = [grid_sample for grid_sample in total_sediment_thickness_grid_samples if not math.isnan(grid_sample[2])]
 
     # Add age and topography to the total sediment thickness grid samples.
-    total_sediment_thickness_and_age_and_topography_grid_samples = _grdtrack(total_sediment_thickness_grid_samples, age_grid_filename, topography_filename)
+    total_sediment_thickness_and_age_and_topography_grid_samples = _gmt_grdtrack(total_sediment_thickness_grid_samples, age_grid_filename, topography_filename)
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
@@ -201,7 +208,7 @@ def reconstruct_backtrack_bathymetry(
     rift_end_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_end_grid.nc')
 
     # Add crustal thickness and rift start/end times to continental grid samples.
-    continental_grid_samples = _grdtrack(continental_grid_samples, crustal_thickness_filename, rift_start_grid_filename, rift_end_grid_filename)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename, rift_start_grid_filename, rift_end_grid_filename)
 
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
@@ -211,11 +218,14 @@ def reconstruct_backtrack_bathymetry(
     continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
                                     if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
     
-    # Create sea level object for integrating sea level over time periods.
+    # Find the sea levels over the requested time period.
     if sea_level_model:
-        sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
+        _sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
+        # Calculate sea level (relative to present day) that is an average over each time increment in the requested time period.
+        # This is a dict indexed by time.
+        sea_levels = {time : _sea_level.get_average_level(time + time_increment, time) for time in range(0, oldest_time + 1, time_increment)}
     else:
-        sea_level = None
+        sea_levels = None
 
     # Rotation model used to reconstruct the grid points.
     rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
@@ -279,9 +289,10 @@ def reconstruct_backtrack_bathymetry(
             # We add in the constant offset between the age-to-depth model (at age of well) and unloaded water depth at present day.
             decompacted_well.tectonic_subsidence = tectonic_subsidence_from_model + tectonic_subsidence_model_adjustment
             
-            # If we have a sea level model then calculate sea level (relative to present day) that is an average over the time interval.
-            if sea_level:
-                decompacted_well.sea_level = sea_level.get_average_level(decompaction_time + time_increment, decompaction_time)
+            # If we have sea levels then store the sea level (relative to present day) at current decompaction time
+            # in the decompacted well (it'll get used later when calculating water depth).
+            if sea_levels:
+                decompacted_well.sea_level = sea_levels[decompaction_time]
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
@@ -353,9 +364,10 @@ def reconstruct_backtrack_bathymetry(
             decompacted_well.tectonic_subsidence = rifting.total_subsidence(
                 beta, pre_rift_crustal_thickness, decompaction_time, rift_end_age, rift_start_age)
             
-            # If we have a sea level model then calculate sea level (relative to present day) that is an average over the time interval.
-            if sea_level:
-                decompacted_well.sea_level = sea_level.get_average_level(decompaction_time + time_increment, decompaction_time)
+            # If we have sea levels then store the sea level (relative to present day) at current decompaction time
+            # in the decompacted well (it'll get used later when calculating water depth).
+            if sea_levels:
+                decompacted_well.sea_level = sea_levels[decompaction_time]
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
@@ -370,6 +382,8 @@ def reconstruct_backtrack_bathymetry(
             paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
     
     print('num_ignored_continental_points', num_ignored_continental_points)
+
+    return paleo_bathymetry
 
 
 def generate_input_points_grid(grid_spacing_degrees):
@@ -399,7 +413,7 @@ def generate_input_points_grid(grid_spacing_degrees):
     return input_points
 
 
-def _grdtrack(
+def _gmt_grdtrack(
         input,
         *grid_filenames):
     """
@@ -435,6 +449,38 @@ def _grdtrack(
         output_values.append(output_value)
     
     return output_values
+
+
+def _gmt_nearneighbor(
+        input,
+        grid_spacing,
+        grid_filename):
+    """
+    Run 'gmt nearneighbor' on grid locations/values to output a grid file.
+    
+    'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
+    'grid_spacing' is spacing of output grid points in degrees.
+    """
+    
+    # Create a multiline string (one line per lon/lat/value row).
+    input_data = ''.join(
+            ' '.join(str(item) for item in row) + '\n' for row in input)
+
+    # The command-line strings to execute GMT 'nearneighbor'.
+    nearneighbor_command_line = [
+        "gmt",
+        "nearneighbor",
+        "-N4/1", # Divide search radius into 4 sectors but only require a value in 1 sector.
+        "-S{0}d".format(0.7 * grid_spacing),
+        "-I{0}".format(grid_spacing),
+        # Use GMT gridline registration since our input point grid has data points on the grid lines.
+        # Gridline registration is the default so we don't need to force pixel registration...
+        # "-r", # Force pixel registration since data points are at centre of cells.
+        "-Rg",
+        "-G{0}".format(grid_filename)]
+    
+    # Call the system command.
+    call_system_command(nearneighbor_command_line, stdin=input_data)
 
 
 ########################
@@ -653,8 +699,8 @@ def main():
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
     input_points = generate_input_points_grid(args.grid_spacing)
     
-    # Generate paleo bathymetry grids over the requested time period.
-    reconstruct_backtrack_bathymetry(
+    # Generate reconstructed paleo bathymetry points over the requested time period.
+    paleo_bathymetry = reconstruct_backtrack_bathymetry(
         input_points,
         args.oldest_time,
         args.time_increment,
@@ -667,6 +713,14 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model)
+    
+    # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
+    for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment):
+        # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
+        paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
+        # Generate paleo bathymetry grid from list of reconstructed points.
+        paleo_bathymetry_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
+        _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, args.grid_spacing, paleo_bathymetry_filename)
 
 
 if __name__ == '__main__':
