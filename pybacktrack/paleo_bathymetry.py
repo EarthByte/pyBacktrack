@@ -33,6 +33,7 @@ import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
 from pybacktrack.dynamic_topography import DynamicTopography
 from pybacktrack.lithology import read_lithologies_files, DEFAULT_BASE_LITHOLOGY_NAME
+import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
 import pybacktrack.version
@@ -44,6 +45,10 @@ import warnings
 
 # Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
 DEFAULT_GRID_SPACING_DEGREES = 1
+
+# Ignore locations where the rifting stretching factor (beta) estimate results in a
+# tectonic subsidence inaccuracy (at present day) exceeding this amount (in metres)...
+_MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 100
 
 
 def reconstruct_backtrack_bathymetry(
@@ -168,9 +173,7 @@ def reconstruct_backtrack_bathymetry(
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
-    continental_points = []
     oceanic_grid_samples = []
-    oceanic_points = []
     for longitude, latitude, total_sediment_thickness, age, topography in total_sediment_thickness_and_age_and_topography_grid_samples:
 
         # If topography sampled outside grid then set topography to zero.
@@ -189,11 +192,9 @@ def reconstruct_backtrack_bathymetry(
         if math.isnan(age):
             continental_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth))
-            continental_points.append(point_on_sphere)
         else:
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, age))
-            oceanic_points.append(point_on_sphere)
 
     # Grid filenames for continental rifting start/end times.
     rift_start_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_start_grid.nc')
@@ -202,33 +203,136 @@ def reconstruct_backtrack_bathymetry(
     # Add crustal thickness and rift start/end times to continental grid samples.
     continental_grid_samples = _grdtrack(continental_grid_samples, crustal_thickness_filename, rift_start_grid_filename, rift_end_grid_filename)
 
+    # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
+    # also no tectonic subsidence.
+    #
+    # Note: The 6th and 7th values (indices 5 and 6) of each sample are the rift start and end ages.
+    #       A value of NaN means there is no rifting at the sample location.
+    continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
+                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
+    
+    # Create sea level object for integrating sea level over time periods.
+    if sea_level_model:
+        sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
+    else:
+        sea_level = None
+    
+    # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
+    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+
     # Iterate over the *oceanic* grid samples.
+    count = 0
+    print('ocean')
     for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age in oceanic_grid_samples:
+        if count % 1000 == 0:
+            print(count, 'of', len(oceanic_grid_samples))
+        count += 1
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
         well = Well()
         well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, [(base_lithology_name, 1.0)], lithologies)
-        well.longitude, well.latitude = longitude, latitude
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
         present_day_tectonic_subsidence = present_day_water_depth + well.decompact(0.0).get_sediment_isostatic_correction()
 
+        # Present-day tectonic subsidence calculated from age-to-depth model.
+        present_day_tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(age, ocean_age_to_depth_model)
+        
+        # There will be a difference between unloaded water depth and subsidence based on age-to-depth model.
+        # Assume this offset is constant for all ages and use it to adjust the subsidence obtained from age-to-depth model for other ages.
+        tectonic_subsidence_model_adjustment = present_day_tectonic_subsidence - present_day_tectonic_subsidence_from_model
+        
+        for decompaction_time in range(0, oldest_time + 1, time_increment):
+            # Decompact at the current time.
+            decompacted_well = well.decompact(decompaction_time)
+
+            # If the decompaction time has exceeded the age of ocean crust (bottom age of well) then we're finished with current well.
+            if decompacted_well is None:
+                break
+
+            # Age of the ocean basin at well location when it's decompacted to the current decompaction age.
+            paleo_age_of_crust_at_decompaction_time = max(0, age - decompaction_time)
+            
+            # Use age-to-depth model to lookup depth given the age.
+            tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(paleo_age_of_crust_at_decompaction_time, ocean_age_to_depth_model)
+            
+            # We add in the constant offset between the age-to-depth model (at age of well) and unloaded water depth at present day.
+            decompacted_well.tectonic_subsidence = tectonic_subsidence_from_model + tectonic_subsidence_model_adjustment
+            
+            # If we have a sea level model then calculate sea level (relative to present day) that is an average over the time interval.
+            if sea_level:
+                decompacted_well.sea_level = sea_level.get_average_level(decompaction_time + time_increment, decompaction_time)
+            
+            # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
+            bathymetry = decompacted_well.get_water_depth()
+
+            # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
+            paleo_bathymetry[decompaction_time].append((longitude, latitude, bathymetry))
+
+    num_ignored_continental_points = 0
+
     # Iterate over the *continental* grid samples.
+    count = 0
+    print('continent')
     for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
+        if count % 1000 == 0:
+            print(count, 'of', len(continental_grid_samples))
+        count += 1
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
         well = Well()
         well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, [(base_lithology_name, 1.0)], lithologies)
-        well.longitude, well.latitude = longitude, latitude
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
         present_day_tectonic_subsidence = present_day_water_depth + well.decompact(0.0).get_sediment_isostatic_correction()
+        
+        # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
+        beta, subsidence_residual = rifting.estimate_beta(present_day_tectonic_subsidence, present_day_crustal_thickness, rift_end_age)
+        
+        # Initial (pre-rift) crustal thickness is beta times present day crustal thickness.
+        pre_rift_crustal_thickness = beta * present_day_crustal_thickness
+        
+        # Ignore locations where the rifting stretching factor (beta) estimate results in a
+        # tectonic subsidence inaccuracy (at present day) exceeding this amount (in metres).
+        #
+        # This can happen if the actual subsidence is quite deep and the beta value required to achieve
+        # this subsidence would be unrealistically large and result in a pre-rift crustal thickness that
+        # exceeds typical lithospheric thicknesses.
+        # In this case the beta factor is clamped to avoid this but, as a result, the calculated subsidence
+        # is not as deep as the actual subsidence.
+        if math.fabs(subsidence_residual) > _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
+            num_ignored_continental_points += 1
+            continue
+        
+        for decompaction_time in range(0, oldest_time + 1, time_increment):
+            # Decompact at the current time.
+            decompacted_well = well.decompact(decompaction_time)
+
+            # If the decompaction time has exceeded the rift start time (bottom age of well) then we're finished with current well.
+            if decompacted_well is None:
+                break
+
+            # Calculate rifting subsidence at decompaction time.
+            decompacted_well.tectonic_subsidence = rifting.total_subsidence(
+                beta, pre_rift_crustal_thickness, decompaction_time, rift_end_age, rift_start_age)
+            
+            # If we have a sea level model then calculate sea level (relative to present day) that is an average over the time interval.
+            if sea_level:
+                decompacted_well.sea_level = sea_level.get_average_level(decompaction_time + time_increment, decompaction_time)
+            
+            # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
+            bathymetry = decompacted_well.get_water_depth()
+
+            # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
+            paleo_bathymetry[decompaction_time].append((longitude, latitude, bathymetry))
+    
+    print('num_ignored_continental_points', num_ignored_continental_points)
 
 
 def generate_input_points_grid(grid_spacing_degrees):
