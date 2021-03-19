@@ -216,6 +216,15 @@ def reconstruct_backtrack_bathymetry(
         sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
     else:
         sea_level = None
+
+    # Rotation model used to reconstruct the grid points.
+    rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
+    # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
+    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size=math.ceil(oldest_time)+1)
+
+    # Static polygons used to assign plate IDs to the grid points.
+    static_polygon_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'static_polygons.shp')
+    plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
     # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
@@ -227,6 +236,14 @@ def reconstruct_backtrack_bathymetry(
         if count % 1000 == 0:
             print(count, 'of', len(oceanic_grid_samples))
         count += 1
+        
+        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
+        partitioning_plate = plate_partitioner.partition_point(present_day_location)
+        if partitioning_plate:
+            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+        else:
+            reconstruction_plate_id = 0
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
@@ -268,9 +285,15 @@ def reconstruct_backtrack_bathymetry(
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
+        
+            # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id)
+            # Reconstruct location to current decompaction time.
+            reconstructed_location = rotation * present_day_location
+            reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
 
             # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
-            paleo_bathymetry[decompaction_time].append((longitude, latitude, bathymetry))
+            paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
 
     num_ignored_continental_points = 0
 
@@ -281,6 +304,14 @@ def reconstruct_backtrack_bathymetry(
         if count % 1000 == 0:
             print(count, 'of', len(continental_grid_samples))
         count += 1
+        
+        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
+        partitioning_plate = plate_partitioner.partition_point(present_day_location)
+        if partitioning_plate:
+            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+        else:
+            reconstruction_plate_id = 0
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -328,9 +359,15 @@ def reconstruct_backtrack_bathymetry(
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
+        
+            # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id)
+            # Reconstruct location to current decompaction time.
+            reconstructed_location = rotation * present_day_location
+            reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
 
             # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
-            paleo_bathymetry[decompaction_time].append((longitude, latitude, bathymetry))
+            paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
     
     print('num_ignored_continental_points', num_ignored_continental_points)
 
