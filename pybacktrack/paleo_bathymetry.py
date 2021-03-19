@@ -27,7 +27,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from functools import partial
 import math
+import multiprocessing
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
@@ -63,7 +65,8 @@ def reconstruct_backtrack_bathymetry(
         dynamic_topography_model=None,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
-        ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL):
+        ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
     """reconstruct_backtrack_bathymetry(\
@@ -136,6 +139,8 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    use_all_cpus: bool
+        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
     
     Returns
     -------
@@ -165,6 +170,9 @@ def reconstruct_backtrack_bathymetry(
     # Subsequently specified files override previous files in the list.
     # So if the first and second files have the same lithology then the second lithology is used.
     lithologies = read_lithologies_files(lithology_filenames)
+
+    # All sediment is represented as a single lithology (of total sediment thickness) using the base lithology.
+    base_lithology_components = [(base_lithology_name, 1.0)]
 
     # Sample the total sediment thickness grid.
     total_sediment_thickness_grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
@@ -227,13 +235,127 @@ def reconstruct_backtrack_bathymetry(
     else:
         sea_levels = None
 
-    # Rotation model used to reconstruct the grid points.
+    # Rotation files used to reconstruct the grid points.
     rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
-    # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
-    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size=math.ceil(oldest_time)+1)
 
     # Static polygons used to assign plate IDs to the grid points.
     static_polygon_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'static_polygons.shp')
+
+    # If using a single CPU then just process all ocean/continent points in one call.
+    if not use_all_cpus:
+        oceanic_paleo_bathymetry = _reconstruct_backtrack_oceanic_bathymetry(
+                oceanic_grid_samples,
+                oldest_time,
+                time_increment,
+                ocean_age_to_depth_model,
+                lithologies,
+                base_lithology_components,
+                sea_levels,
+                rotation_filenames,
+                static_polygon_filename)
+        
+        continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
+                continental_grid_samples,
+                oldest_time,
+                time_increment,
+                lithologies,
+                base_lithology_components,
+                sea_levels,
+                rotation_filenames,
+                static_polygon_filename)
+        
+        # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
+        paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+        for paleo_bathymetry_dict in (oceanic_paleo_bathymetry, continental_paleo_bathymetry):
+            for time, bathymetries in paleo_bathymetry_dict.items():
+                paleo_bathymetry[time].extend(bathymetries)
+        
+        return paleo_bathymetry
+    
+    #
+    # Use 'multiprocessing' pools to distribute across CPUs.
+    #
+
+    try:
+        num_cpus = multiprocessing.cpu_count()
+    except NotImplementedError:
+        num_cpus = 1
+    
+    # Divide the oceanic grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
+    num_oceanic_grid_sample_groups = 2 * num_cpus
+    num_oceanic_grid_samples_per_group = math.ceil(float(len(oceanic_grid_samples)) / num_oceanic_grid_sample_groups)
+
+    # Distribute the groups of oceanic points across the multiprocessing pool.
+    with multiprocessing.Pool(num_cpus) as pool:
+        oceanic_paleo_bathymetry_dict_list = pool.map(
+                partial(
+                    _reconstruct_backtrack_oceanic_bathymetry,
+                    oldest_time=oldest_time,
+                    time_increment=time_increment,
+                    ocean_age_to_depth_model=ocean_age_to_depth_model,
+                    lithologies=lithologies,
+                    base_lithology_components=base_lithology_components,
+                    sea_levels=sea_levels,
+                    rotation_filenames=rotation_filenames,
+                    static_polygon_filename=static_polygon_filename),
+                (
+                    oceanic_grid_samples[
+                        oceanic_grid_sample_group_index * num_oceanic_grid_samples_per_group :
+                        (oceanic_grid_sample_group_index + 1) * num_oceanic_grid_samples_per_group]
+                                for oceanic_grid_sample_group_index in range(num_oceanic_grid_sample_groups)
+                ),
+                1) # chunksize
+    
+    # Divide the continental grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
+    num_continental_grid_sample_groups = 2 * num_cpus
+    num_continental_grid_samples_per_group = math.ceil(float(len(continental_grid_samples)) / num_continental_grid_sample_groups)
+
+    # Distribute the groups of continental points across the multiprocessing pool.
+    with multiprocessing.Pool(num_cpus) as pool:
+        continental_paleo_bathymetry_dict_list = pool.map(
+                partial(
+                    _reconstruct_backtrack_continental_bathymetry,
+                    oldest_time=oldest_time,
+                    time_increment=time_increment,
+                    lithologies=lithologies,
+                    base_lithology_components=base_lithology_components,
+                    sea_levels=sea_levels,
+                    rotation_filenames=rotation_filenames,
+                    static_polygon_filename=static_polygon_filename),
+                (
+                    continental_grid_samples[
+                        continental_grid_sample_group_index * num_continental_grid_samples_per_group :
+                        (continental_grid_sample_group_index + 1) * num_continental_grid_samples_per_group]
+                                for continental_grid_sample_group_index in range(num_continental_grid_sample_groups)
+                ),
+                1) # chunksize
+    
+    # Combine the pool bathymetry dicts into a single bathymetry dict.
+    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+    for paleo_bathymetry_dict_list in (oceanic_paleo_bathymetry_dict_list, continental_paleo_bathymetry_dict_list):
+        for paleo_bathymetry_dict in paleo_bathymetry_dict_list:
+            for time, bathymetries in paleo_bathymetry_dict.items():
+                paleo_bathymetry[time].extend(bathymetries)
+    
+    return paleo_bathymetry
+
+
+def _reconstruct_backtrack_oceanic_bathymetry(
+        oceanic_grid_samples,
+        oldest_time,
+        time_increment,
+        ocean_age_to_depth_model,
+        lithologies,
+        base_lithology_components,
+        sea_levels,
+        rotation_filenames,
+        static_polygon_filename):
+
+    # Rotation model used to reconstruct the grid points.
+    # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
+    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = math.ceil(oldest_time) + 1)
+
+    # Static polygons partitioner used to assign plate IDs to the grid points.
     plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
     # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
@@ -247,23 +369,19 @@ def reconstruct_backtrack_bathymetry(
             print(count, 'of', len(oceanic_grid_samples))
         count += 1
         
-        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
-        present_day_location = pygplates.PointOnSphere(latitude, longitude)
-        partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if partitioning_plate:
-            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-        else:
-            reconstruction_plate_id = 0
-        
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
         well = Well()
-        well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, [(base_lithology_name, 1.0)], lithologies)
+        well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
-        present_day_tectonic_subsidence = present_day_water_depth + well.decompact(0.0).get_sediment_isostatic_correction()
+        present_day_decompacted_well = well.decompact(0.0)
+        if not present_day_decompacted_well:
+            # Skip current grid sample, 'age' must be zero and so there has been no time for sediment deposition.
+            continue
+        present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
 
         # Present-day tectonic subsidence calculated from age-to-depth model.
         present_day_tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(age, ocean_age_to_depth_model)
@@ -272,12 +390,20 @@ def reconstruct_backtrack_bathymetry(
         # Assume this offset is constant for all ages and use it to adjust the subsidence obtained from age-to-depth model for other ages.
         tectonic_subsidence_model_adjustment = present_day_tectonic_subsidence - present_day_tectonic_subsidence_from_model
         
+        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
+        partitioning_plate = plate_partitioner.partition_point(present_day_location)
+        if partitioning_plate:
+            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+        else:
+            reconstruction_plate_id = 0
+        
         for decompaction_time in range(0, oldest_time + 1, time_increment):
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
 
             # If the decompaction time has exceeded the age of ocean crust (bottom age of well) then we're finished with current well.
-            if decompacted_well is None:
+            if not decompacted_well:
                 break
 
             # Age of the ocean basin at well location when it's decompacted to the current decompaction age.
@@ -306,6 +432,29 @@ def reconstruct_backtrack_bathymetry(
             # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
             paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
 
+    return paleo_bathymetry
+
+
+def _reconstruct_backtrack_continental_bathymetry(
+        continental_grid_samples,
+        oldest_time,
+        time_increment,
+        lithologies,
+        base_lithology_components,
+        sea_levels,
+        rotation_filenames,
+        static_polygon_filename):
+
+    # Rotation model used to reconstruct the grid points.
+    # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
+    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = math.ceil(oldest_time) + 1)
+
+    # Static polygons partitioner used to assign plate IDs to the grid points.
+    plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
+    
+    # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
+    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+
     num_ignored_continental_points = 0
 
     # Iterate over the *continental* grid samples.
@@ -316,23 +465,19 @@ def reconstruct_backtrack_bathymetry(
             print(count, 'of', len(continental_grid_samples))
         count += 1
         
-        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
-        present_day_location = pygplates.PointOnSphere(latitude, longitude)
-        partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if partitioning_plate:
-            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-        else:
-            reconstruction_plate_id = 0
-        
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
         well = Well()
-        well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, [(base_lithology_name, 1.0)], lithologies)
+        well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
-        present_day_tectonic_subsidence = present_day_water_depth + well.decompact(0.0).get_sediment_isostatic_correction()
+        present_day_decompacted_well = well.decompact(0.0)
+        if not present_day_decompacted_well:
+            # Skip current grid sample, 'rift_start_age' must be zero and so there has been no time for sediment deposition (which happens when rifting starts).
+            continue
+        present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
         
         # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
         beta, subsidence_residual = rifting.estimate_beta(present_day_tectonic_subsidence, present_day_crustal_thickness, rift_end_age)
@@ -352,12 +497,20 @@ def reconstruct_backtrack_bathymetry(
             num_ignored_continental_points += 1
             continue
         
+        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
+        partitioning_plate = plate_partitioner.partition_point(present_day_location)
+        if partitioning_plate:
+            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+        else:
+            reconstruction_plate_id = 0
+        
         for decompaction_time in range(0, oldest_time + 1, time_increment):
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
 
             # If the decompaction time has exceeded the rift start time (bottom age of well) then we're finished with current well.
-            if decompacted_well is None:
+            if not decompacted_well:
                 break
 
             # Calculate rifting subsidence at decompaction time.
@@ -651,6 +804,10 @@ def main():
         help='Optional file used to obtain sea level (relative to present-day) over time. '
              'If no filename (or model) is specified then sea level is ignored. '
              'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+    
+    parser.add_argument(
+        '--use_all_cpus', action='store_true',
+        help='Use all CPUs (cores). Defaults to using a single CPU.')
 
     parser.add_argument('oldest_time', type=parse_positive_integer,
             metavar='oldest_time',
@@ -712,15 +869,45 @@ def main():
         dynamic_topography_model,
         sea_level_model,
         args.base_lithology_name,
-        args.ocean_age_to_depth_model)
+        args.ocean_age_to_depth_model,
+        args.use_all_cpus)
     
     # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
-    for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment):
-        # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
-        paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
-        # Generate paleo bathymetry grid from list of reconstructed points.
-        paleo_bathymetry_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
-        _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, args.grid_spacing, paleo_bathymetry_filename)
+    if not args.use_all_cpus:
+        for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment):
+            # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
+            paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
+            # Generate paleo bathymetry grid from list of reconstructed points.
+            paleo_bathymetry_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
+            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, args.grid_spacing, paleo_bathymetry_filename)
+    else:  # Use 'multiprocessing' pools to distribute across CPUs...
+        try:
+            num_cpus = multiprocessing.cpu_count()
+        except NotImplementedError:
+            num_cpus = 1
+        # Distribute writing of each grid to a different CPU.
+        with multiprocessing.Pool(num_cpus) as pool:
+            oceanic_paleo_bathymetry_dict_list = pool.map(
+                    partial(
+                        _gmt_nearneighbor_multiprocessing,
+                        grid_spacing=args.grid_spacing,
+                        grid_file_prefix=args.output_file_prefix),
+                    (
+                        (paleo_bathymetry[reconstruction_time], reconstruction_time)
+                                    for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment)
+                    ),
+                    1) # chunksize
+
+
+def _gmt_nearneighbor_multiprocessing(
+        paleo_bathymetry_and_reconstruction_time,
+        grid_spacing,
+        grid_file_prefix):
+    
+    paleo_bathymetry, reconstruction_time = paleo_bathymetry_and_reconstruction_time
+    # Generate paleo bathymetry grid from list of reconstructed points.
+    paleo_bathymetry_filename = '{0}_{1}.nc'.format(grid_file_prefix, reconstruction_time)
+    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_filename)
 
 
 if __name__ == '__main__':
