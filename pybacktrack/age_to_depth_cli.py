@@ -44,7 +44,3 @@ if __name__ == '__main__':
         # Uncomment this to print traceback to location of raised exception.
         # traceback.print_exc()
         sys.exit(1)
-
-else:
-    # User should only be using this module as a script, not importing it.
-    raise RuntimeError("Only use as 'python -m pybacktrack.age_to_depth_cli ...', not as 'import pybacktrack.age_to_depth_cli'.")
