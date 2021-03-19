@@ -43,6 +43,9 @@ from .backstrip import \
     COLUMN_DECOMPACTED_SEDIMENT_RATE as BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE, \
     COLUMN_DECOMPACTED_DEPTH as BACKSTRIP_COLUMN_DECOMPACTED_DEPTH
 
+from .paleo_bathymetry import \
+    reconstruct_backtrack_bathymetry
+
 from .lithology import \
     Lithology, \
     read_lithologies_file, \
@@ -131,6 +134,8 @@ __all__ = [
     'BACKSTRIP_COLUMN_COMPACTED_DEPTH',
     'BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE',
     'BACKSTRIP_COLUMN_DECOMPACTED_DEPTH',
+    # From paleo_bathymetry module...
+    'reconstruct_backtrack_bathymetry',
     # From lithology module...
     'Lithology',
     'read_lithologies_file',
