@@ -46,7 +46,8 @@ import warnings
 
 
 # Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
-DEFAULT_GRID_SPACING_DEGREES = 1
+DEFAULT_GRID_SPACING_DEGREES = 1.0
+DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
 
 # Ignore locations where the rifting stretching factor (beta) estimate results in a
 # tectonic subsidence inaccuracy (at present day) exceeding this amount (in metres)...
@@ -362,12 +363,12 @@ def _reconstruct_backtrack_oceanic_bathymetry(
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
 
     # Iterate over the *oceanic* grid samples.
-    count = 0
-    print('ocean')
+    #count = 0
+    #print('ocean')
     for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age in oceanic_grid_samples:
-        if count % 1000 == 0:
-            print(count, 'of', len(oceanic_grid_samples))
-        count += 1
+        #if count % 1000 == 0:
+        #    print(count, 'of', len(oceanic_grid_samples))
+        #count += 1
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
@@ -458,12 +459,12 @@ def _reconstruct_backtrack_continental_bathymetry(
     num_ignored_continental_points = 0
 
     # Iterate over the *continental* grid samples.
-    count = 0
-    print('continent')
+    #count = 0
+    #print('continent')
     for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
-        if count % 1000 == 0:
-            print(count, 'of', len(continental_grid_samples))
-        count += 1
+        #if count % 1000 == 0:
+        #    print(count, 'of', len(continental_grid_samples))
+        #count += 1
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -534,7 +535,7 @@ def _reconstruct_backtrack_continental_bathymetry(
             # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
             paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
     
-    print('num_ignored_continental_points', num_ignored_continental_points)
+    #print('num_ignored_continental_points', num_ignored_continental_points)
 
     return paleo_bathymetry
 
@@ -606,13 +607,13 @@ def _gmt_grdtrack(
 
 def _gmt_nearneighbor(
         input,
-        grid_spacing,
+        grid_spacing_degrees,
         grid_filename):
     """
     Run 'gmt nearneighbor' on grid locations/values to output a grid file.
     
     'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
-    'grid_spacing' is spacing of output grid points in degrees.
+    'grid_spacing_degrees' is spacing of output grid points in degrees.
     """
     
     # Create a multiline string (one line per lon/lat/value row).
@@ -624,8 +625,8 @@ def _gmt_nearneighbor(
         "gmt",
         "nearneighbor",
         "-N4/1", # Divide search radius into 4 sectors but only require a value in 1 sector.
-        "-S{0}d".format(0.7 * grid_spacing),
-        "-I{0}".format(grid_spacing),
+        "-S{0}d".format(0.7 * grid_spacing_degrees),
+        "-I{0}".format(grid_spacing_degrees),
         # Use GMT gridline registration since our input point grid has data points on the grid lines.
         # Gridline registration is the default so we don't need to force pixel registration...
         # "-r", # Force pixel registration since data points are at centre of cells.
@@ -643,6 +644,11 @@ def _gmt_nearneighbor(
 def main():
     
     __description__ = """Generate paleo bathymetry grids through time.
+    
+    NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
+    For example...
+
+    python -m pybacktrack.paleo_bathymetry_cli ... --use_all_cpus -g 0.2 -- 240 paleo_bathymetry_12m
     """
 
     import argparse
@@ -699,10 +705,15 @@ def main():
     parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
             help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
         
-    parser.add_argument('-g', '--grid_spacing', type=float,
+    grid_spacing_argument_group = parser.add_mutually_exclusive_group()
+    grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
             default=DEFAULT_GRID_SPACING_DEGREES,
             help='The grid spacing (in degrees) of sample points in lon/lat space. '
                 'Defaults to {0} degrees.'.format(DEFAULT_GRID_SPACING_DEGREES))
+    grid_spacing_argument_group.add_argument('-gm', '--grid_spacing_minutes', type=float,
+            default=DEFAULT_GRID_SPACING_MINUTES,
+            help='The grid spacing (in minutes) of sample points in lon/lat space. '
+                'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
@@ -826,6 +837,13 @@ def main():
     #
     # Do any necessary post-processing/validation of parsed options.
     #
+
+    if args.grid_spacing_degrees is not None:
+        grid_spacing_degrees = args.grid_spacing_degrees
+    elif args.grid_spacing_minutes is not None:
+        grid_spacing_degrees = args.grid_spacing_minutes / 60.0
+    else:
+        grid_spacing_degrees = DEFAULT_GRID_SPACING_DEGREES
     
     # Get dynamic topography model info.
     if args.bundle_dynamic_topography_model is not None:
@@ -854,7 +872,7 @@ def main():
         sea_level_model = None
     
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
-    input_points = generate_input_points_grid(args.grid_spacing)
+    input_points = generate_input_points_grid(grid_spacing_degrees)
     
     # Generate reconstructed paleo bathymetry points over the requested time period.
     paleo_bathymetry = reconstruct_backtrack_bathymetry(
@@ -879,7 +897,7 @@ def main():
             paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
             # Generate paleo bathymetry grid from list of reconstructed points.
             paleo_bathymetry_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
-            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, args.grid_spacing, paleo_bathymetry_filename)
+            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_filename)
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
         try:
             num_cpus = multiprocessing.cpu_count()
@@ -890,7 +908,7 @@ def main():
             oceanic_paleo_bathymetry_dict_list = pool.map(
                     partial(
                         _gmt_nearneighbor_multiprocessing,
-                        grid_spacing=args.grid_spacing,
+                        grid_spacing=grid_spacing_degrees,
                         grid_file_prefix=args.output_file_prefix),
                     (
                         (paleo_bathymetry[reconstruction_time], reconstruction_time)
