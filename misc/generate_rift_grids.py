@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import itertools
 import math
 import multiprocessing
 import os.path
@@ -37,74 +38,70 @@ DEFORMING_MODEL_NAME = '2019_v2'
 # We only go back to 250Ma. Rifting since Pangea began at 240Ma.
 DEFORMING_MODEL_OLDEST_TIME = 250
 
-# Default output grid filenames for rift start and end times.
-DEFAULT_RIFT_START_TIME_GRID_FILENAME = 'rift_start_grid.nc'
-DEFAULT_RIFT_END_TIME_GRID_FILENAME = 'rift_end_grid.nc'
+# Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
+DEFAULT_GRID_SPACING_DEGREES = 1.0
+DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
 
 
-def find_rift_start_end_times(
+def generate_rift_parameter_points(
+        input_points,
         total_sediment_thickness_filename,
         age_grid_filename,
-        rift_start_time_grid_filename,
-        rift_end_time_grid_filename):
-    """Generate rift start/end times for each non-NaN grid sample in total sediment thickness grid.
+        use_all_cpus=False):
+    """Generate rift parameter grids (at non-NaN grid sample locations in total sediment thickness grid).
+
+    Returns a list of tuples (longitude, latitude, rift_start_time, rift_end_time)
     """
     
     # Check the imported pygplates version.
     if pygplates.Version.get_imported_version() < PYGPLATES_VERSION_REQUIRED:
         raise RuntimeError('Using pygplates version {0} but version {1} or greater is required'.format(
                 pygplates.Version.get_imported_version(), PYGPLATES_VERSION_REQUIRED))
-    
+
     # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
     #print ('Reading sediment points...')
-    sediment_points = [(sample[0], sample[1]) for sample in _grd2xyz(total_sediment_thickness_filename) if not math.isnan(sample[2])]
+    sediment_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, total_sediment_thickness_filename) if not math.isnan(sample[2])]
 
     # Read the age grid file (at sediment locations) and only include those that have NaN values (representing non-oceanic points).
     #print ('Reading continent sediment points...')
-    continent_sediment_points = [(sample[0], sample[1]) for sample in _grdtrack(sediment_points, age_grid_filename) if math.isnan(sample[2])]
+    continent_sediment_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(sediment_points, age_grid_filename) if math.isnan(sample[2])]
     num_continent_sediment_points = len(continent_sediment_points)
 
-    # Number of CPUs for our multiprocessing pool.
-    try:
-        num_cpus = multiprocessing.cpu_count()
-    except NotImplementedError:
-        num_cpus = 1
-    
-    # Divide the points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
-    num_continent_sediment_point_groups = 2 * num_cpus
-    num_continent_sediment_point_per_group = math.ceil(float(num_continent_sediment_points) / num_continent_sediment_point_groups)
-
-    # Distribute the groups of points across the multiprocessing pool.
+    # If using a single CPU then just process all ocean/continent points in one call.
     #print ('Reconstructing', num_continent_sediment_points, 'continent sediment points...')
-    with multiprocessing.Pool(num_cpus) as pool:
-        continent_sediment_rift_start_end_point_lists = pool.map(
-                find_continent_sediment_rift_start_end_times,
-                (
-                    continent_sediment_points[
-                        continent_sediment_point_group_index * num_continent_sediment_point_per_group :
-                        (continent_sediment_point_group_index + 1) * num_continent_sediment_point_per_group]
-                                for continent_sediment_point_group_index in range(num_continent_sediment_point_groups)
-                ),
-                1) # chunksize
+    if not use_all_cpus:
+        continent_sediment_rift_parameter_point_list = find_continent_sediment_rift_parameters(continent_sediment_points)
+        return continent_sediment_rift_parameter_point_list
+
+    else:  # Use 'multiprocessing' pools to distribute across CPUs...
+        # Number of CPUs for our multiprocessing pool.
+        try:
+            num_cpus = multiprocessing.cpu_count()
+        except NotImplementedError:
+            num_cpus = 1
+        
+        # Divide the points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
+        num_continent_sediment_point_groups = 2 * num_cpus
+        num_continent_sediment_point_per_group = math.ceil(float(num_continent_sediment_points) / num_continent_sediment_point_groups)
+
+        # Distribute the groups of points across the multiprocessing pool.
+        with multiprocessing.Pool(num_cpus) as pool:
+            continent_sediment_rift_parameter_point_lists = pool.map(
+                    find_continent_sediment_rift_parameters,
+                    (
+                        continent_sediment_points[
+                            continent_sediment_point_group_index * num_continent_sediment_point_per_group :
+                            (continent_sediment_point_group_index + 1) * num_continent_sediment_point_per_group]
+                                    for continent_sediment_point_group_index in range(num_continent_sediment_point_groups)
+                    ),
+                    1) # chunksize
     
-    # Combine the processed groups of points into a single rift start (and end) time list.
-    continent_sediment_rift_start_points = []
-    continent_sediment_rift_end_points = []
-    for continent_sediment_rift_start_end_point_list in continent_sediment_rift_start_end_point_lists:
-        # Separate rift start/end list into separate start and end lists (for separate start and end grids).
-        for lon, lat, rift_start_time, rift_end_time in continent_sediment_rift_start_end_point_list:
-            continent_sediment_rift_start_points.append((lon, lat, rift_start_time))
-            continent_sediment_rift_end_points.append((lon, lat, rift_end_time))
-
-    # Create the rift start and end time grids.
-    #print ('Writing rift start/end grids...')
-    _xyz2grd(continent_sediment_rift_start_points, rift_start_time_grid_filename)
-    _xyz2grd(continent_sediment_rift_end_points, rift_end_time_grid_filename)
+    return list(itertools.chain.from_iterable(continent_sediment_rift_parameter_point_lists))
 
 
-def find_continent_sediment_rift_start_end_times(
+def find_continent_sediment_rift_parameters(
         initial_points):
-    """Find rift start/end times for each continent-sediment input point that undergoes rift deformation.
+    """Find rift parameters for each continent-sediment input point that undergoes rift deformation.
 
     Returns a list of 4-tuples (lon, lat, rift_start_time, rift_end_time).
     """
@@ -123,7 +120,7 @@ def find_continent_sediment_rift_start_end_times(
     reconstructed_point_indices = list(range(num_continent_sediment_points))
     reconstructed_crustal_stretching_factors = [1.0] * num_continent_sediment_points
     
-    continent_sediment_rift_start_end_points = []
+    continent_sediment_rift_parameter_points = []
 
     # Iterate over time intervals.
     # In each time interval some points might have their rift start/end times found and hence do not need to be
@@ -167,11 +164,12 @@ def find_continent_sediment_rift_start_end_times(
                     if not topology_point_location.located_in_resolved_network():
                         # Only add rift start time if there's been stretching (we ignore compression since that's not rifting).
                         #
-                        # Stretching factor is initial thickness over current thickness. And since initial thickness is at present day,
-                        # crust that is stretching forward in time is actually thickening backward in time. And thickening means a
-                        # stretching factor less than 1.0.
-                        if crustal_stretching_factors[reconstructed_point_index] < 1.0:
+                        # Stretching factor is initial thickness over current thickness. And since initial thickness is at present day, crust that is
+                        # stretching forward in time is actually thickening backward in time, so we need to invert the crustal stretching factor.
+                        crustal_stretching_factor_forward_in_time = 1.0 / crustal_stretching_factors[reconstructed_point_index]
+                        if crustal_stretching_factor_forward_in_time > 1.0:
                             rift_start_times[point_index] = time
+                            #rift_beta[point_index] = crustal_stretching_factor_forward_in_time
                         # Either we've found rift start (and end) times for the current point, or we've encountered compression (not extension).
                         # Either way we're finished with it.
                         finished_reconstructed_point_indices.add(reconstructed_point_index)
@@ -200,56 +198,13 @@ def find_continent_sediment_rift_start_end_times(
         if (rift_start_time is not None and
             rift_end_time is not None):
             initial_point = initial_points[point_index]
-            continent_sediment_rift_start_end_points.append(
+            continent_sediment_rift_parameter_points.append(
                     (initial_point[0], initial_point[1], rift_start_time, rift_end_time))
 
-    return continent_sediment_rift_start_end_points
+    return continent_sediment_rift_parameter_points
 
 
-def _grd2xyz(
-        grid_filename):
-    """
-    Run 'gmt grd2xyz' on a grid file and return grid locations/values.
-    
-    Returns a list of (longitude, latitude, grid_value) tuples.
-    """
-
-    # The command-line strings to execute GMT 'grd2xyz'.
-    grd2xyz_command_line = ["gmt", "grd2xyz", "-s", grid_filename]
-    
-    # Call the system command.
-    stdout_data = pybacktrack.util.call_system_command.call_system_command(grd2xyz_command_line, return_stdout=True)
-
-    # Extract the sampled values.
-    output_values = []
-    for line in stdout_data.splitlines():
-        # Each line returned by GMT grd2xyz contains "longitude latitude grid_value".
-        output_value = tuple(float(value) for value in line.split())
-        output_values.append(output_value)
-    
-    return output_values
-
-
-def _xyz2grd(
-        input,
-        grid_filename):
-    """
-    Run 'gmt xyz2grd' on grid locations/values to output a grid file.
-    """
-    
-    # Create a multiline string (one line per lon/lat/value1/etc row).
-    location_data = ''.join(
-            ' '.join(str(item) for item in row) + '\n' for row in input)
-
-    # The command-line strings to execute GMT 'xyz2grd'.
-    xyz2grd_command_line = ["gmt", "xyz2grd", "-Rg", "-I5m"]
-    xyz2grd_command_line.append("-G{0}".format(grid_filename))
-    
-    # Call the system command.
-    pybacktrack.util.call_system_command.call_system_command(xyz2grd_command_line, stdin=location_data)
-
-
-def _grdtrack(
+def _gmt_grdtrack(
         input,
         *grid_filenames):
     """
@@ -287,6 +242,38 @@ def _grdtrack(
     return output_values
 
 
+def _gmt_nearneighbor(
+        input,
+        grid_spacing,
+        grid_filename):
+    """
+    Run 'gmt nearneighbor' on grid locations/values to output a grid file.
+    
+    'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
+    'grid_spacing' is spacing of output grid points in degrees.
+    """
+    
+    # Create a multiline string (one line per lon/lat/value row).
+    input_data = ''.join(
+            ' '.join(str(item) for item in row) + '\n' for row in input)
+
+    # The command-line strings to execute GMT 'nearneighbor'.
+    nearneighbor_command_line = [
+        "gmt",
+        "nearneighbor",
+        "-N4/1", # Divide search radius into 4 sectors but only require a value in 1 sector.
+        "-S{0}d".format(0.7 * grid_spacing),
+        "-I{0}".format(grid_spacing),
+        # Use GMT gridline registration since our input point grid has data points on the grid lines.
+        # Gridline registration is the default so we don't need to force pixel registration...
+        # "-r", # Force pixel registration since data points are at centre of cells.
+        "-Rg",
+        "-G{0}".format(grid_filename)]
+    
+    # Call the system command.
+    pybacktrack.util.call_system_command.call_system_command(nearneighbor_command_line, stdin=input_data)
+
+
 def _read_topological_model(
         model_name):
     """
@@ -310,6 +297,33 @@ def _read_topological_model(
                 for filename in rotation_files_list_file.read().splitlines()]
 
     return pygplates.TopologicalModel(topology_filenames, rotation_filenames)
+
+
+def generate_input_points_grid(grid_spacing_degrees):
+    """
+    Generate a global grid of points uniformly spaced in latitude and longitude.
+
+    Returns a list of (longitude, latitude) tuples.
+    """
+    
+    if grid_spacing_degrees == 0:
+        raise ValueError('Grid spacing cannot be zero.')
+    
+    input_points = []
+    
+    # Data points start *on* dateline (-180).
+    # If 180 is an integer multiple of grid spacing then final longitude also lands on dateline (+180).
+    num_latitudes = int(math.floor(180.0 / grid_spacing_degrees)) + 1
+    num_longitudes = int(math.floor(360.0 / grid_spacing_degrees)) + 1
+    for lat_index in range(num_latitudes):
+        lat = -90 + lat_index * grid_spacing_degrees
+        
+        for lon_index in range(num_longitudes):
+            lon = -180 + lon_index * grid_spacing_degrees
+            
+            input_points.append((lon, lat))
+    
+    return input_points
 
 
 if __name__ == '__main__':
@@ -336,6 +350,11 @@ if __name__ == '__main__':
     def main():
         
         __description__ = """Create rift start and end time grids from a deforming plate model.
+    
+    NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
+    For example...
+
+    python generate_rift_grids.py ... --use_all_cpus -g 0.2 -- rift_start_grid.nc rift_end_grid.nc
     """
     
         #
@@ -344,6 +363,16 @@ if __name__ == '__main__':
         
         # The command-line parser.
         parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+            
+        grid_spacing_argument_group = parser.add_mutually_exclusive_group()
+        grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
+                default=DEFAULT_GRID_SPACING_DEGREES,
+                help='The grid spacing (in degrees) of generate points in lon/lat space. '
+                    'Defaults to {0} degrees.'.format(DEFAULT_GRID_SPACING_DEGREES))
+        grid_spacing_argument_group.add_argument('-gm', '--grid_spacing_minutes', type=float,
+                default=DEFAULT_GRID_SPACING_MINUTES,
+                help='The grid spacing (in minutes) of generate points in lon/lat space. '
+                    'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
         
         # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
         parser.add_argument(
@@ -363,28 +392,51 @@ if __name__ == '__main__':
                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
         
         parser.add_argument(
-            '--rift_start_time_grid_filename', type=argparse_unicode,
-            default=DEFAULT_RIFT_START_TIME_GRID_FILENAME,
-            metavar='rift_start_time_grid_filename',
-            help='The output grid filename containing rift start times. '
-                'Defaults to "{0}".'.format(DEFAULT_RIFT_START_TIME_GRID_FILENAME))
+            '--use_all_cpus', action='store_true',
+            help='Use all CPUs (cores). Defaults to using a single CPU.')
         
         parser.add_argument(
-            '--rift_end_time_grid_filename', type=argparse_unicode,
-            default=DEFAULT_RIFT_END_TIME_GRID_FILENAME,
+            'rift_start_time_grid_filename', type=argparse_unicode,
+            metavar='rift_start_time_grid_filename',
+            help='The output grid filename containing rift start times.')
+        
+        parser.add_argument(
+            'rift_end_time_grid_filename', type=argparse_unicode,
             metavar='rift_end_time_grid_filename',
-            help='The output grid filename containing rift end times. '
-                'Defaults to "{0}".'.format(DEFAULT_RIFT_END_TIME_GRID_FILENAME))
+            help='The output grid filename containing rift end times.')
         
         # Parse command-line options.
         args = parser.parse_args()
+            
+        #
+        # Do any necessary post-processing/validation of parsed options.
+        #
+        if args.grid_spacing_degrees:
+            grid_spacing = args.grid_spacing_degrees
+        else:
+            grid_spacing = args.grid_spacing_minutes / 60.0
+    
+        # Generate a global latitude/longitude grid of points (with the requested grid spacing).
+        input_points = generate_input_points_grid(grid_spacing)
         
-        # Generate rift start/end times for each non-NaN grid sample in total sediment thickness grid.
-        find_rift_start_end_times(
+        # Generate rift parameter points (at non-NaN grid sample locations in total sediment thickness grid).
+        rift_parameter_points = generate_rift_parameter_points(
+                input_points,
                 args.total_sediment_thickness_filename,
                 args.age_grid_filename,
-                args.rift_start_time_grid_filename,
-                args.rift_end_time_grid_filename)
+                args.use_all_cpus)
+        
+        # Separate the combined rift parameters list into a separate list for each parameter.
+        rift_start_points = []
+        rift_end_points = []
+        for lon, lat, rift_start_time, rift_end_time in rift_parameter_points:
+            rift_start_points.append((lon, lat, rift_start_time))
+            rift_end_points.append((lon, lat, rift_end_time))
+
+        # Create the rift start and end time grids.
+        #print ('Writing rift start/end grids...')
+        _gmt_nearneighbor(rift_start_points, grid_spacing, args.rift_start_time_grid_filename)
+        _gmt_nearneighbor(rift_end_points, grid_spacing, args.rift_end_time_grid_filename)
         
         sys.exit(0)
     
