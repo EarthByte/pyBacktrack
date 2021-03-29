@@ -202,8 +202,6 @@ def reconstruct_backtrack_bathymetry(
         # Clamp water depth so it's below sea level (ie, must be >= 0).
         water_depth = max(0, water_depth)
 
-        point_on_sphere = pygplates.PointOnSphere(latitude, longitude)
-
         # If sampled outside age grid then is on continental crust near a passive margin.
         if math.isnan(age):
             continental_grid_samples.append(
@@ -212,20 +210,25 @@ def reconstruct_backtrack_bathymetry(
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, age))
 
-    # Grid filenames for continental rifting start/end times.
+    # Grid filenames for continental rifting start/end times and rift beta.
     rift_start_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_start_grid.nc')
     rift_end_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_end_grid.nc')
+    rift_beta_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_beta_grid.nc')
 
-    # Add crustal thickness and rift start/end times to continental grid samples.
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename, rift_start_grid_filename, rift_end_grid_filename)
+    # Add crustal thickness and rift start/end times and beta to continental grid samples.
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples,
+            crustal_thickness_filename,
+            rift_start_grid_filename,
+            rift_end_grid_filename,
+            rift_beta_grid_filename)
 
-    # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
+    # Ignore continental samples with no rifting (no rift start/end times or beta) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
     #
-    # Note: The 6th and 7th values (indices 5 and 6) of each sample are the rift start and end ages.
+    # Note: The 6th, 7th and 8th values (indices 5, 6 and 7) of each sample are the rift start and end ages and rift beta.
     #       A value of NaN means there is no rifting at the sample location.
     continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
-                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
+                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]) or math.isnan(grid_sample[7]))]
     
     # Find the sea levels over the requested time period.
     if sea_level_model:
@@ -456,12 +459,10 @@ def _reconstruct_backtrack_continental_bathymetry(
     # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
 
-    num_ignored_continental_points = 0
-
     # Iterate over the *continental* grid samples.
     #count = 0
     #print('continent')
-    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
+    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age, rift_beta in continental_grid_samples:
         #if count % 1000 == 0:
         #    print(count, 'of', len(continental_grid_samples))
         #count += 1
@@ -480,23 +481,15 @@ def _reconstruct_backtrack_continental_bathymetry(
             continue
         present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
         
-        # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
-        beta, subsidence_residual = rifting.estimate_beta(present_day_tectonic_subsidence, present_day_crustal_thickness, rift_end_age)
-        
         # Initial (pre-rift) crustal thickness is beta times present day crustal thickness.
-        pre_rift_crustal_thickness = beta * present_day_crustal_thickness
+        pre_rift_crustal_thickness = rift_beta * present_day_crustal_thickness
+
+        # Calculate rifting subsidence at present day.
+        rift_present_day_tectonic_subsidence = rifting.total_subsidence(rift_beta, pre_rift_crustal_thickness, 0.0, rift_end_age, rift_start_age)
         
-        # Ignore locations where the rifting stretching factor (beta) estimate results in a
-        # tectonic subsidence inaccuracy (at present day) exceeding this amount (in metres).
-        #
-        # This can happen if the actual subsidence is quite deep and the beta value required to achieve
-        # this subsidence would be unrealistically large and result in a pre-rift crustal thickness that
-        # exceeds typical lithospheric thicknesses.
-        # In this case the beta factor is clamped to avoid this but, as a result, the calculated subsidence
-        # is not as deep as the actual subsidence.
-        if math.fabs(subsidence_residual) > _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR:
-            num_ignored_continental_points += 1
-            continue
+        # Present day tectonic subsidence from our rifting model will not equal the actual present day tectonic subsidence.
+        # So we'll need to apply an offset to our rift model (so that it matches at present day).
+        offset_rift_tectonic_subsidence = present_day_tectonic_subsidence - rift_present_day_tectonic_subsidence
         
         # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
         present_day_location = pygplates.PointOnSphere(latitude, longitude)
@@ -515,8 +508,8 @@ def _reconstruct_backtrack_continental_bathymetry(
                 break
 
             # Calculate rifting subsidence at decompaction time.
-            decompacted_well.tectonic_subsidence = rifting.total_subsidence(
-                beta, pre_rift_crustal_thickness, decompaction_time, rift_end_age, rift_start_age)
+            decompacted_well.tectonic_subsidence = offset_rift_tectonic_subsidence + rifting.total_subsidence(
+                    rift_beta, pre_rift_crustal_thickness, decompaction_time, rift_end_age, rift_start_age)
             
             # If we have sea levels then store the sea level (relative to present day) at current decompaction time
             # in the decompacted well (it'll get used later when calculating water depth).
@@ -534,8 +527,6 @@ def _reconstruct_backtrack_continental_bathymetry(
 
             # Add the bathymetry (and its reconstructed location) to the list of bathymetry points for the current decompaction time.
             paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
-    
-    #print('num_ignored_continental_points', num_ignored_continental_points)
 
     return paleo_bathymetry
 
@@ -707,13 +698,9 @@ def main():
         
     grid_spacing_argument_group = parser.add_mutually_exclusive_group()
     grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
-            default=DEFAULT_GRID_SPACING_DEGREES,
-            help='The grid spacing (in degrees) of sample points in lon/lat space. '
-                'Defaults to {0} degrees.'.format(DEFAULT_GRID_SPACING_DEGREES))
+            help='The grid spacing (in degrees) of sample points in lon/lat space.')
     grid_spacing_argument_group.add_argument('-gm', '--grid_spacing_minutes', type=float,
-            default=DEFAULT_GRID_SPACING_MINUTES,
-            help='The grid spacing (in minutes) of sample points in lon/lat space. '
-                'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
+            help='The grid spacing (in minutes) of sample points in lon/lat space.')
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
@@ -905,7 +892,7 @@ def main():
             num_cpus = 1
         # Distribute writing of each grid to a different CPU.
         with multiprocessing.Pool(num_cpus) as pool:
-            oceanic_paleo_bathymetry_dict_list = pool.map(
+            pool.map(
                     partial(
                         _gmt_nearneighbor_multiprocessing,
                         grid_spacing=grid_spacing_degrees,
