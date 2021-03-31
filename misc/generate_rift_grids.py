@@ -226,7 +226,11 @@ def _gmt_grdtrack(
             ' '.join(str(item) for item in row) + '\n' for row in input)
 
     # The command-line strings to execute GMT 'grdtrack'.
-    grdtrack_command_line = ["gmt", "grdtrack", "-fg"]
+    grdtrack_command_line = ["gmt", "grdtrack",
+        # Geographic input/output coordinates...
+        "-fg",
+        # Use linear interpolation, and avoid anti-aliasing...
+        "-nl+a+bg+t0.5"]
     # One or more grid filenames to sample.
     for grid_filename in grid_filenames:
         grdtrack_command_line.append("-G{0}".format(grid_filename))
