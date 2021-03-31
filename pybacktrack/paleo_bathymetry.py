@@ -214,26 +214,24 @@ def reconstruct_backtrack_bathymetry(
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, age))
 
-    # Grid filenames for continental rifting start/end times and rift beta.
+    # Grid filenames for continental rifting start/end times.
     rift_start_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_start_grid.nc')
     rift_end_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_end_grid.nc')
-    rift_beta_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_beta_grid.nc')
 
-    # Add crustal thickness and rift start/end times and beta to continental grid samples.
+    # Add crustal thickness and rift start/end times to continental grid samples.
     #
     # Note: For some reason we get a GMT error if we combine these grids in a single 'grdtrack' call, so we separate them instead.
     continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename)
     continental_grid_samples = _gmt_grdtrack(continental_grid_samples, rift_start_grid_filename)
     continental_grid_samples = _gmt_grdtrack(continental_grid_samples, rift_end_grid_filename)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, rift_beta_grid_filename)
 
-    # Ignore continental samples with no rifting (no rift start/end times or beta) since there is no sediment deposition without rifting and
+    # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
     #
-    # Note: The 6th, 7th and 8th values (indices 5, 6 and 7) of each sample are the rift start and end ages and rift beta.
+    # Note: The 6th and 7th values (indices 5 and 6) of each sample are the rift start and end ages.
     #       A value of NaN means there is no rifting at the sample location.
     continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
-                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]) or math.isnan(grid_sample[7]))]
+                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
     
     # Find the sea levels over the requested time period.
     if sea_level_model:
@@ -460,7 +458,7 @@ def _reconstruct_backtrack_continental_bathymetry(
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
 
     # Iterate over the *continental* grid samples.
-    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age, rift_beta in continental_grid_samples:
+    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -586,7 +584,7 @@ def _gmt_grdtrack(
     grdtrack_command_line = ["gmt", "grdtrack",
         # Geographic input/output coordinates...
         "-fg",
-        # Use linear interpolation, and avoid anti-aliasing (since can result in beta factor < 1)...
+        # Use linear interpolation, and avoid anti-aliasing...
         "-nl+a+bg+t0.5"]
     # One or more grid filenames to sample.
     for grid_filename in grid_filenames:
