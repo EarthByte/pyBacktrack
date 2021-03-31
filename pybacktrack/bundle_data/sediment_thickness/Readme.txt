@@ -1,6 +1,4 @@
-Wobbe, Florian; Lindeque, Ansa; Gohl, Karsten (2014): Total sediment thickness grid of the Southern Pacific Ocean off West Antarctica, links to NetCDF files. PANGAEA, doi:10.1594/PANGAEA.835589, Supplement to: Wobbe, F et al. (2014): Anomalous South Pacific lithosphere dynamics derived from new total sediment thickness estimates off the West Antarctic margin. Global and Planetary Change, 123, 139-149, doi:10.1016/j.gloplacha.2014.09.006
+Straume, E.O., Gaina, C., Medvedev, S., Hochmuth, K., Gohl, K., Whittaker, J. M., et al. (2019). GlobSed: Updated total sediment thickness in the world's oceans. Geochemistry, Geophysics, Geosystems, 20. DOI: 10.1029/2018GC008115
 
-Total sediment thickness grid "sedthick_world_v3_5min_epsg4326.nc" was downloaded from here:
-https://doi.pangaea.de/10.1594/PANGAEA.835589?format=html#download
-
-...and converted from NetCDF 3 to NetCDF 4 using "grdconvert".
+Total sediment thickness grid "GlobSed.nc" was downloaded from here:
+https://www.ngdc.noaa.gov/mgg/sedthick/

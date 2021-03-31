@@ -112,9 +112,9 @@ own grid by using the ``-s`` command-line option in the :ref:`backtrack <pygplat
 
 The default total sediment thickness grid is:
 
-* Wobbe, Florian; Lindeque, Ansa; Gohl, Karsten (2014):
-  `Total sediment thickness grid of the Southern Pacific Ocean off West Antarctica, links to NetCDF files <https://doi.org/10.1594/PANGAEA.835589>`_,
-  PANGAEA, doi:10.1594/PANGAEA.835589
+* Straume, E.O., Gaina, C., Medvedev, S., Hochmuth, K., Gohl, K., Whittaker, J. M., et al. (2019).
+  `GlobSed: Updated total sediment thickness in the world's oceans. <https://doi.org/10.1029/2018GC008115>`_
+  Geochemistry, Geophysics, Geosystems, 20. DOI: 10.1029/2018GC008115
 
 .. warning:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
              and a warning is emitted to ``standard error`` on the console.
