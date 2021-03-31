@@ -193,9 +193,9 @@ will automatically use the oceanic subsidence model whereas a drill site outside
 The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution grid of the age of the world's ocean crust:
 
-* Müller, R.D., Seton, M., Zahirovic, S., Williams, S.E., Matthews, K.J., Wright, N.M., Shephard, G.E., Maloney, K.T., Barnett-Moore, N., Hosseinpour, M., Bower, D.J. & Cannon, J. 2016,
-  `Ocean Basin Evolution and Global-Scale Plate Reorganization Events Since Pangea Breakup <https://doi.org/10.1146/annurev-earth-060115-012211>`_,
-  Annual Review of Earth and Planetary Sciences, vol. 44, pp. 107 .DOI: 10.1146/annurev-earth-060115-012211
+* Seton, M., Müller, R. D., Zahirovic, S., Williams, S., Wright, N., Cannon, J., Whittaker, J., Matthews, K., McGirr, R., (2020),
+  `A global dataset of present-day oceanic crustal age and seafloor spreading parameters <https://doi.org/10.1029/2020GC009214>`_,
+  Geochemistry, Geophysics, Geosystems, doi: 10.1029/2020GC009214
 
 .. note:: You can optionally specify your own age grid using the ``-a`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *age_grid_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.

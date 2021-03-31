@@ -117,7 +117,9 @@ BUNDLE_LITHOLOGY_FILENAMES = [
 # Default lithologies file is the primary lithologies file.
 DEFAULT_BUNDLE_LITHOLOGY_FILENAME = PRIMARY_BUNDLE_LITHOLOGY_FILENAME
 
-BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.grd')
+BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.nc')
+
+BUNDLE_RIFTING_PATH = os.path.join(BUNDLE_PATH, 'rifting')
 
 BUNDLE_TOPOGRAPHY_FILENAME = os.path.join(BUNDLE_PATH, 'topography', 'ETOPO1_0.1.grd')
 
@@ -220,5 +222,3 @@ BUNDLE_SEA_LEVEL_MODELS = {
 }
 
 BUNDLE_SEA_LEVEL_MODEL_NAMES = BUNDLE_SEA_LEVEL_MODELS.keys()
-
-BUNDLE_RIFTING_PATH = os.path.join(BUNDLE_PATH, 'rifting')
