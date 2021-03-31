@@ -197,6 +197,8 @@ The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_dat
   `A global dataset of present-day oceanic crustal age and seafloor spreading parameters <https://doi.org/10.1029/2020GC009214>`_,
   Geochemistry, Geophysics, Geosystems, doi: 10.1029/2020GC009214
 
+.. note:: The default present-day age grid was updated in pyBacktrack version 1.4.
+
 .. note:: You can optionally specify your own age grid using the ``-a`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *age_grid_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 

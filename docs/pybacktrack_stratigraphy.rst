@@ -116,6 +116,8 @@ The default total sediment thickness grid is:
   `GlobSed: Updated total sediment thickness in the world's oceans. <https://doi.org/10.1029/2018GC008115>`_
   Geochemistry, Geophysics, Geosystems, 20. DOI: 10.1029/2018GC008115
 
+.. note:: The default total sediment thickness grid was updated in pyBacktrack version 1.4.
+
 .. warning:: If the drill site thickness happens to exceed the total sediment thickness then no base layer is added,
              and a warning is emitted to ``standard error`` on the console.
              This can happen as a result of uncertainties in the sediment thickness grid.
