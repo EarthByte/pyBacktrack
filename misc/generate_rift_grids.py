@@ -30,8 +30,8 @@ import sys
 
 
 # Required pygplates version.
-# Need version 30 to be able to reconstruct 'using topologies'.
-PYGPLATES_VERSION_REQUIRED = pygplates.Version(30)
+# Need version 31 to be able to reconstruct 'using topologies' (and to enable strain rate clamping).
+PYGPLATES_VERSION_REQUIRED = pygplates.Version(31)
 
 # Currently using the 2019 v2 deforming model.
 DEFORMING_MODEL_NAME = '2019_v2'
@@ -304,7 +304,11 @@ def _read_topological_model(
         rotation_filenames = [os.path.join(deforming_model_path, filename)
                 for filename in rotation_files_list_file.read().splitlines()]
 
-    return pygplates.TopologicalModel(topology_filenames, rotation_filenames)
+    return pygplates.TopologicalModel(
+            topology_filenames,
+            rotation_filenames,
+            # Enable strain rate clamping to better control crustal stretching factors...
+            default_resolve_topology_parameters=pygplates.ResolveTopologyParameters(enable_strain_rate_clamping=True))
 
 
 def generate_input_points_grid(grid_spacing_degrees):
