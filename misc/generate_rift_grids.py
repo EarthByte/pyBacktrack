@@ -135,7 +135,9 @@ def find_continent_sediment_rift_parameters(
                 initial_time=initial_time,
                 oldest_time=final_time,
                 youngest_time=initial_time,
-                initial_scalars={pygplates.ScalarType.gpml_crustal_stretching_factor : reconstructed_crustal_stretching_factors})
+                initial_scalars={pygplates.ScalarType.gpml_crustal_stretching_factor : reconstructed_crustal_stretching_factors},
+                # All our points are on continental crust so we keep them active through time (ie, never deactivate them)...
+                deactivate_points=None)
         
         # Keep track of which points have found their rift start/end times (we'll remove these from subsequent time intervals).
         finished_reconstructed_point_indices = set()
