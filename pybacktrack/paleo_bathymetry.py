@@ -607,12 +607,14 @@ def _gmt_grdtrack(
 def _gmt_nearneighbor(
         input,
         grid_spacing_degrees,
-        grid_filename):
+        grid_filename,
+        xyz_filename=None):
     """
     Run 'gmt nearneighbor' on grid locations/values to output a grid file.
     
     'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
     'grid_spacing_degrees' is spacing of output grid points in degrees.
+    If 'xyz_filename' is specified then an xyz file is also created (from 'input').
     """
     
     # Create a multiline string (one line per lon/lat/value row).
@@ -632,6 +634,11 @@ def _gmt_nearneighbor(
         "-Rg",
         "-fg",
         "-G{0}".format(grid_filename)]
+    
+    # Also create an xyz file (from 'input') if requested.
+    if xyz_filename is not None:
+        with open(xyz_filename, 'w') as xyz_file:
+            xyz_file.write(input_data)
     
     # Call the system command.
     call_system_command(nearneighbor_command_line, stdin=input_data)
@@ -815,6 +822,12 @@ def main():
     parser.add_argument(
         '--use_all_cpus', action='store_true',
         help='Use all CPUs (cores). Defaults to using a single CPU.')
+    
+    parser.add_argument(
+        '--output_xyz', action='store_true',
+        help='Also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid. '
+             'Each row of each xyz file contains "longitude latitude bathymetry". '
+             'Default is to only create grid files (no xyz).')
 
     parser.add_argument('oldest_time', type=parse_positive_integer,
             metavar='oldest_time',
@@ -892,8 +905,13 @@ def main():
             # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
             paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
             # Generate paleo bathymetry grid from list of reconstructed points.
-            paleo_bathymetry_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
-            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_filename)
+            paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
+            # Also create xyz file if requested.
+            paleo_bathymetry_xyz_filename = None
+            if args.output_xyz:
+                paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
+                paleo_bathymetry_xyz_filename += '.xyz'
+            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
         try:
             num_cpus = multiprocessing.cpu_count()
@@ -905,7 +923,8 @@ def main():
                     partial(
                         _gmt_nearneighbor_multiprocessing,
                         grid_spacing=grid_spacing_degrees,
-                        grid_file_prefix=args.output_file_prefix),
+                        grid_file_prefix=args.output_file_prefix,
+                        output_xyz=args.output_xyz),
                     (
                         (paleo_bathymetry[reconstruction_time], reconstruction_time)
                                     for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment)
@@ -916,12 +935,18 @@ def main():
 def _gmt_nearneighbor_multiprocessing(
         paleo_bathymetry_and_reconstruction_time,
         grid_spacing,
-        grid_file_prefix):
+        grid_file_prefix,
+        output_xyz):
     
     paleo_bathymetry, reconstruction_time = paleo_bathymetry_and_reconstruction_time
     # Generate paleo bathymetry grid from list of reconstructed points.
-    paleo_bathymetry_filename = '{0}_{1}.nc'.format(grid_file_prefix, reconstruction_time)
-    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_filename)
+    paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(grid_file_prefix, reconstruction_time)
+    # Also create xyz file if requested.
+    paleo_bathymetry_xyz_filename = None
+    if output_xyz:
+        paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
+        paleo_bathymetry_xyz_filename += '.xyz'
+    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
 
 
 if __name__ == '__main__':
