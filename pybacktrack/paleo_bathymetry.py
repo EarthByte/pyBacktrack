@@ -622,11 +622,26 @@ def _gmt_nearneighbor(
             ' '.join(str(item) for item in row) + '\n' for row in input)
 
     # The command-line strings to execute GMT 'nearneighbor'.
+    #
+    # As the present day grid of points is rotated/reconstructed, it sweeps across the static output grid
+    # (used by GMT nearneighbor) and should be sampled/filtered appropriately for the high spatial-frequency
+    # bathymetry elevations (due to present day bathymetry grid). If it's not then bathymetry peaks/hills
+    # (especially really spikey ones) appear to bob up and down as you animate the paleobathymetry grids through time.
+    #
+    # It seems a search radius of 3.0 (times grid spacing) works well, although it does wash/blur the detail out a little
+    # (conversely 1.5 retains more detail but still has a little too much aliasing). And with 3.0, specifying -N8+m6 looks
+    # less aliased than -N4+m3, probably due to averaging/smoothing over 8 sectors instead of 4.
+    # This was gleamed from looking for pixels, at bathymetry peaks/hills, that have a flickering colour as the grids are
+    # animated through time in GPlates (loaded as a time-dependent raster).
+    #
+    # And using a 75% min-sector/total-sector ratio (eg, -N8+m6) rather than 100% means the bathymetry boundary
+    # (between non-NaN and NaN) isn't brought too far inward towards the interior non-NaN regions since not
+    # all sectors are required to contain data (bathymetry).
     nearneighbor_command_line = [
         "gmt",
         "nearneighbor",
-        "-N4/1", # Divide search radius into 4 sectors but only require a value in 1 sector.
-        "-S{0}d".format(0.7 * grid_spacing_degrees),
+        "-N8+m6", # Divide search radius into 8 sectors but only require values in 6 sectors.
+        "-S{0}d".format(3.0 * grid_spacing_degrees), # Search radius is 3.0 times the grid spacing.
         "-I{0}".format(grid_spacing_degrees),
         # Use GMT gridline registration since our input point grid has data points on the grid lines.
         # Gridline registration is the default so we don't need to force pixel registration...
