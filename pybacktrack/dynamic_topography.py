@@ -310,8 +310,8 @@ class DynamicTopography(object):
         
         Notes
         -----
-        This function is useful when :meth:`pybacktrack.DynamicTopography.sample` has already been called but returns ``float('NaN')``
-        due to the specific time having bounding grid times older than the ocean floor at that location.
+        This function is useful when :meth:`pybacktrack.DynamicTopography.sample_interpolated` has already been called but
+        returns ``float('NaN')`` due to the specific time having bounding grid times older than the ocean floor at that location.
         """
         
         # Search backward until we find a grid age younger than the age of the internal location.
@@ -410,39 +410,6 @@ class TimeDependentGrid(object):
         if len(self.grid_ages_and_filenames) < 2:
             raise ValueError(u'The grid list file "{0}" contains fewer than two grids.'.format(grid_list_filename))
     
-    def sample(self, longitude, latitude, time):
-        """
-        Samples the time-dependent grid files at 'time' and the 'longitude' / 'latitude' location (in degrees).
-        
-        Returns sampled float value (which can be NaN if location is in a masked region of grid).
-        """
-        
-        # Search for ages neighbouring 'time'.
-        grids_bounding_time = self.get_grids_bounding_time(time)
-        # Return NaN if 'time' outside age range of grids.
-        if grids_bounding_time is None:
-            return float('nan')
-        
-        (grid_age_0, grid_filename_0), (grid_age_1, grid_filename_1) = grids_bounding_time
-        
-        # If 'time' matches either grid age then sample associated grid.
-        if math.fabs(time - grid_age_0) < 1e-6:
-            return self._sample_grid(longitude, latitude, grid_filename_0)
-        if math.fabs(time - grid_age_1) < 1e-6:
-            return self._sample_grid(longitude, latitude, grid_filename_1)
-        
-        grid_value_0 = self._sample_grid(longitude, latitude, grid_filename_0)
-        grid_value_1 = self._sample_grid(longitude, latitude, grid_filename_1)
-        
-        # If either value is NaN then return NaN.
-        if math.isnan(grid_value_0) or math.isnan(grid_value_1):
-            # Need to interpolate between grids but one grid's value is invalid.
-            return float('nan')
-        
-        # Linearly interpolate.
-        # We've already verified in constructor that no two ages are the same (so divide-by-zero is not possible).
-        return ((grid_age_1 - time) * grid_value_0 + (time - grid_age_0) * grid_value_1) / (grid_age_1 - grid_age_0)
-    
     def get_grids_bounding_time(self, time):
         """
         Returns the two adjacent grid files (and associated times) that surround 'time' as the 2-tuple
@@ -469,47 +436,3 @@ class TimeDependentGrid(object):
         
         # Time is outside grid age range ('time' is greater than last grid age).
         return None
-    
-    def sample_oldest_unmasked(self, longitude, latitude):
-        """
-        Samples the oldest grid file that gives an unmasked value (non-NaN) at the 'longitude' / 'latitude' location (in degrees).
-        
-        This function is useful when 'sample_interpolated()' has already been called but returns NaN due to the specific time being
-        older than the ocean floor at that location (or the plate frame grids were reconstructed using static polygons
-        but without using age grid, resulting in static-polygon-sized chunks of the grid disappearing back through time rather
-        than the more gradual disappearance due to using age grid for appearance times in reconstruction as opposed to using
-        appearance times from static polygons).
-        
-        Returns 2-tuple (value, age) where sampled value can be still be NaN if present-day grid does not have full global coverage.
-        """
-        
-        # Search backward until we sample a non-NaN grid value at requested location.
-        for index in range(len(self.grid_ages_and_filenames) - 1, -1, -1):
-            grid_age, grid_filename = self.grid_ages_and_filenames[index]
-            
-            grid_value = self._sample_grid(longitude, latitude, grid_filename)
-            if not math.isnan(grid_value):
-                return grid_value, grid_age
-            
-        # Unable to sample a non-NaN grid value, so just return NaN.
-        first_grid_age = self.grid_ages_and_filenames[0][0]
-        return float('nan'), first_grid_age
-
-    def _sample_grid(self, longitude, latitude, grid_filename):
-        """
-        Samples the grid file 'grid_filename' at the longitude/latitude location (in degrees).
-        
-        Returns sampled float value (which can be NaN if location is in a masked region of grid).
-        """
-        
-        location_data = '{0} {1}\n'.format(longitude, latitude)
-
-        # The command-line strings to execute GMT 'grdtrack'.
-        grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename)]
-        
-        # Call the system command.
-        stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
-        
-        # GMT grdtrack returns a single line containing "longitude latitude sampled_value".
-        # Note that if GMT returns "NaN" then we'll return float('nan').
-        return float(stdout_data.split()[2])
