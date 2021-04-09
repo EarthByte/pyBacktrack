@@ -657,6 +657,8 @@ class Well(object):
             If 'age' is specified then returns the decompacted well at that age (or None if 'age' is not younger than bottom age of well),
             otherwise a list of decompacted wells with one per age in same order (and ages) as the well units (youngest to oldest).
         
+        Notes
+        -----
         .. versionchanged:: 1.4
            Added the 'age' parameter.
         """

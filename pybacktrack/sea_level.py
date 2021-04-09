@@ -79,6 +79,8 @@ class SeaLevel(object):
         ValueError
             If ``sea_level_model_name`` is not the name of a bundled sea level model.
         
+        Notes
+        -----
         .. versionadded:: 1.2
         """
         
@@ -104,6 +106,8 @@ class SeaLevel(object):
         :class:`pybacktrack.SeaLevel`
             The sea level model loaded from a user-provided model or from a bundled model.
         
+        Notes
+        -----
         .. versionadded:: 1.4
         """
         

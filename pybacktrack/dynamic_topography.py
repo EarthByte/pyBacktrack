@@ -196,6 +196,8 @@ class DynamicTopography(object):
         ValueError
             If ``dynamic_topography_model_name`` is not the name of a bundled dynamic topography model.
         
+        Notes
+        -----
         .. versionadded:: 1.2
         """
         
@@ -234,6 +236,8 @@ class DynamicTopography(object):
         :class:`pybacktrack.DynamicTopography`
             The dynamic topography model loaded from a user-provided model or from a bundled model.
         
+        Notes
+        -----
         .. versionadded:: 1.4
         """
         
