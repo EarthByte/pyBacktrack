@@ -75,10 +75,13 @@ class DynamicTopography(object):
         
         Notes
         -----
+        Each dynamic topography grid should be in the *mantle* reference frame (not *plate* reference frame) and
+        should have global coverage (such that no sample location will return NaN).
+        
         Each row in the grid list file should contain two columns. First column containing
         filename (relative to directory of list file) of a dynamic topography grid at a particular time.
         Second column containing associated time (in Ma).
-        
+
         Each present day location is also assigned a plate ID using the static polygons,
         and the rotations are used to reconstruct each location when sampling the grids at a reconstructed time.
         """
@@ -254,9 +257,10 @@ class DynamicTopography(object):
         Raises
         ------
         AssertionError
-            If dynamic topography model does not cover point location(s) at any time.
-            This should not happen if the dynamic topography grids have global coverage
-            (which they should since they are in the *mantle* reference frame, not plate reference frame).
+            If dynamic topography model does include the point location(s).
+            This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
+            The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
+            therefore should have global coverage (such that no sample location will return NaN).
         
         Notes
         -----
@@ -377,7 +381,7 @@ class DynamicTopography(object):
         if self.is_sequence_of_locations:
             grid_sample = [float('nan')] * len(self.location)
 
-            gmt_location_data = []
+            gmt_locations = []
             gmt_location_point_indices = []  # Keep track of where to write GMT sampled locations back to.
             for point_index in range(len(self.location)):
                 # Skip locations that appear after the grid age (leave them as NaN to indicate this).
@@ -389,18 +393,19 @@ class DynamicTopography(object):
                 rotation = self.rotation_model.get_rotation(grid_age, self.reconstruction_plate_id[point_index])
                 
                 # Reconstruct location to 'grid_age'.
-                reconstructed_location = rotation * self.location[point_index]
-                reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
+                gmt_location = rotation * self.location[point_index]
+                gmt_latitude, gmt_longitude = gmt_location.to_lat_lon()
 
-                gmt_location_data.append('{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude))
+                gmt_locations.append((gmt_longitude, gmt_latitude))
                 gmt_location_point_indices.append(point_index)
 
             # If there are no locations to sample.
-            if not gmt_location_data:
+            if not gmt_locations:
                 return grid_sample  # All NaNs.
             
             # Create a single multiline string (one line per lon/lat row).
-            gmt_location_data = ''.join(gmt_location_data)
+            gmt_location_data = ''.join(
+                    '{0} {1}\n'.format(gmt_longitude, gmt_latitude) for gmt_longitude, gmt_latitude in gmt_locations)
         else:
             # Skip locations that appear after the grid age (leave them as NaN to indicate this).
             # This is because we should not reconstruct to times earlier than the location's appearance age.
@@ -411,10 +416,10 @@ class DynamicTopography(object):
             rotation = self.rotation_model.get_rotation(grid_age, self.reconstruction_plate_id)
             
             # Reconstruct location to 'grid_age'.
-            reconstructed_location = rotation * self.location
-            reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
+            gmt_location = rotation * self.location
+            gmt_latitude, gmt_longitude = gmt_location.to_lat_lon()
 
-            gmt_location_data = '{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude)
+            gmt_location_data = '{0} {1}\n'.format(gmt_longitude, gmt_latitude)
         
         #
         # Sample mantle frame grid.
@@ -424,14 +429,21 @@ class DynamicTopography(object):
         grdtrack_command_line = ["gmt", "grdtrack", "-Z", "-G{0}".format(grid_filename)]
         
         # Call the system command.
-        stdout_data = call_system_command(grdtrack_command_line, stdin=gmt_location_data, return_stdout=True)
+        gmt_output_data = call_system_command(grdtrack_command_line, stdin=gmt_location_data, return_stdout=True)
         
         if self.is_sequence_of_locations:
             # Extract the sampled values (and write them back to correct index in returned grid sample).
-            for line_index, line in enumerate(stdout_data.splitlines()):
+            for line_index, line in enumerate(gmt_output_data.splitlines()):
                 # Due to "-Z" option each line returned by GMT grdtrack contains only the sampled value.
                 # Note that if GMT returns "NaN" then we'll return float('nan').
                 sample_value = float(line)
+
+                # Raise error if grid returns NaN at reconstructed location.
+                # This shouldn't happen with *mantle* frame grids (typically have global coverage).
+                if math.isnan(sample_value):
+                    gmt_longitude, gmt_latitude = gmt_locations[line_index]
+                    raise AssertionError(u'Internal error: Dynamic topography model "{0}" has grid at {1}Ma that does not include location ({2}, {3}).'.format(
+                        self.grids.grid_list_filename, grid_age, gmt_longitude, gmt_latitude))
 
                 # The GMT output data should be in the same order as the GMT input data.
                 point_index = gmt_location_point_indices[line_index]
@@ -442,7 +454,13 @@ class DynamicTopography(object):
         else:
             # Due to "-Z" option the single line returned by GMT grdtrack contains only the sampled value.
             # Note that if GMT returns "NaN" then we'll return float('nan').
-            grid_sample = float(stdout_data)
+            grid_sample = float(gmt_output_data)
+
+            # Raise error if grid returns NaN at reconstructed location.
+            # This shouldn't happen with *mantle* frame grids (typically have global coverage).
+            if math.isnan(grid_sample):
+                raise AssertionError(u'Internal error: Dynamic topography model "{0}" has grid at {1}Ma that does not include location ({2}, {3}).'.format(
+                    self.grids.grid_list_filename, grid_age, gmt_longitude, gmt_latitude))
 
             return grid_sample
 
