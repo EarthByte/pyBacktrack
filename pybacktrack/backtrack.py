@@ -559,7 +559,7 @@ def _add_oceanic_tectonic_subsidence(
     # Assume this offset is constant for all ages and use it to adjust the subsidence obtained from age-to-depth model for other ages.
     tectonic_subsidence_model_adjustment = present_day_tectonic_subsidence - present_day_tectonic_subsidence_from_model
     
-    # Get present-day dynamic topography (if requested).
+    # Get present-day dynamic topography (if we have dynamic topography).
     if dynamic_topography:
         dynamic_topography_at_present_day = dynamic_topography.sample(0.0)
     
@@ -600,7 +600,7 @@ def _add_continental_tectonic_subsidence(
     to each decompacted well.
     """
     
-    # Get dynamic topography (if requested) at rift start and remove contribution of dynamic topography
+    # Get dynamic topography (if we have dynamic topography) at rift start and remove contribution of dynamic topography
     # to subsidence at present day so we can estimate subsidence due to stretching and thermal effects only.
     if dynamic_topography:
         dynamic_topography_at_present_day = dynamic_topography.sample(0.0)

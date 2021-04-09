@@ -257,6 +257,7 @@ def reconstruct_backtrack_bathymetry(
                 ocean_age_to_depth_model,
                 lithologies,
                 base_lithology_components,
+                dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
                 static_polygon_filename)
@@ -267,6 +268,7 @@ def reconstruct_backtrack_bathymetry(
                 time_increment,
                 lithologies,
                 base_lithology_components,
+                dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
                 static_polygon_filename)
@@ -302,6 +304,7 @@ def reconstruct_backtrack_bathymetry(
                     ocean_age_to_depth_model=ocean_age_to_depth_model,
                     lithologies=lithologies,
                     base_lithology_components=base_lithology_components,
+                    dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
                     static_polygon_filename=static_polygon_filename),
@@ -326,6 +329,7 @@ def reconstruct_backtrack_bathymetry(
                     time_increment=time_increment,
                     lithologies=lithologies,
                     base_lithology_components=base_lithology_components,
+                    dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
                     static_polygon_filename=static_polygon_filename),
@@ -354,6 +358,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         ocean_age_to_depth_model,
         lithologies,
         base_lithology_components,
+        dynamic_topography_model,
         sea_levels,
         rotation_filenames,
         static_polygon_filename):
@@ -365,11 +370,29 @@ def _reconstruct_backtrack_oceanic_bathymetry(
     # Static polygons partitioner used to assign plate IDs to the grid points.
     plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
+    # Create time-dependent grid object for sampling dynamic topography (if requested).
+    if dynamic_topography_model:
+        # Gather all the sample positions and their ages.
+        longitudes, latitudes, ages = [], [], []
+        for longitude, latitude, _, _, age in oceanic_grid_samples:
+            longitudes.append(longitude)
+            latitudes.append(latitude)
+            ages.append(age)
+        dynamic_topography_model = DynamicTopography.create_from_model_or_bundled_model_name(dynamic_topography_model, longitudes, latitudes, ages)
+
+        # Pre-calculate dynamic topography for all decompaction times (including present day) and all ocean sample points.
+        # At each time we have a list of dynamic topographies (one per ocean sample point) which is stored in a dictionary (keyed by time).
+        dynamic_topography = {}
+        for decompaction_time in range(0, oldest_time + 1, time_increment):
+            dynamic_topography[decompaction_time] = dynamic_topography_model.sample(decompaction_time)
+    else:
+        dynamic_topography = None
+    
     # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
 
     # Iterate over the *oceanic* grid samples.
-    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age in oceanic_grid_samples:
+    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age) in enumerate(oceanic_grid_samples):
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
@@ -400,6 +423,10 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         else:
             reconstruction_plate_id = 0
         
+        # If we have dynamic topography then get present-day dynamic topography.
+        if dynamic_topography:
+            dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
+        
         for decompaction_time in range(0, oldest_time + 1, time_increment):
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
@@ -416,6 +443,13 @@ def _reconstruct_backtrack_oceanic_bathymetry(
             
             # We add in the constant offset between the age-to-depth model (at age of well) and unloaded water depth at present day.
             decompacted_well.tectonic_subsidence = tectonic_subsidence_from_model + tectonic_subsidence_model_adjustment
+            
+            # If we have dynamic topography then add in the difference at current decompaction time compared to present-day.
+            if dynamic_topography:
+                dynamic_topography_at_decompaction_time = dynamic_topography[decompaction_time][grid_sample_index]
+                
+                # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
+                decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_present_day
             
             # If we have sea levels then store the sea level (relative to present day) at current decompaction time
             # in the decompacted well (it'll get used later when calculating water depth).
@@ -443,6 +477,7 @@ def _reconstruct_backtrack_continental_bathymetry(
         time_increment,
         lithologies,
         base_lithology_components,
+        dynamic_topography_model,
         sea_levels,
         rotation_filenames,
         static_polygon_filename):
@@ -454,11 +489,46 @@ def _reconstruct_backtrack_continental_bathymetry(
     # Static polygons partitioner used to assign plate IDs to the grid points.
     plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
+    # Use integral rift start ages when caching dynamic topography to avoid an excessive number of dynamic topography samples
+    # (which can happen since the rift start ages are linearly filtered from rift start age grid and can therefore have many different values).
+    def get_dynamic_topography_rift_start_age(rift_start_age):
+        return math.ceil(rift_start_age)
+    
+    # Create time-dependent grid object for sampling dynamic topography (if requested).
+    if dynamic_topography_model:
+        # Gather all the sample positions and their ages.
+        longitudes, latitudes, ages = [], [], []
+        dynamic_topography_rift_start_ages = set()
+        for longitude, latitude, _, _, _, rift_start_age, _ in continental_grid_samples:
+            longitudes.append(longitude)
+            latitudes.append(latitude)
+            ages.append(rift_start_age)
+            dynamic_topography_rift_start_ages.add(get_dynamic_topography_rift_start_age(rift_start_age))
+        dynamic_topography_model = DynamicTopography.create_from_model_or_bundled_model_name(dynamic_topography_model, longitudes, latitudes, ages)
+
+        # Pre-calculate dynamic topography for all decompaction times (including present day) and all continent sample points.
+        # At each time we have a list of dynamic topographies (one per continent sample point) which is stored in a dictionary (keyed by time).
+        dynamic_topography = {}
+        for decompaction_time in range(0, oldest_time + 1, time_increment):
+            dynamic_topography[decompaction_time] = dynamic_topography_model.sample(decompaction_time)
+        
+        # Also make sure we have dynamic topography for all the (integral) rift start ages since they can be outside
+        # the range (and time increment) of present day to oldest time.
+        #
+        # Note that we use integral ages to avoid an excessive number of dynamic topography samples
+        # (which can happen since the rift start ages are linearly filtered from the rift start age grid and
+        # therefore we can get a lot of different values).
+        for dynamic_topography_rift_start_age in dynamic_topography_rift_start_ages:
+            if dynamic_topography_rift_start_age not in dynamic_topography:
+                dynamic_topography[dynamic_topography_rift_start_age] = dynamic_topography_model.sample(dynamic_topography_rift_start_age)
+    else:
+        dynamic_topography = None
+    
     # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
     paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
 
     # Iterate over the *continental* grid samples.
-    for longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age in continental_grid_samples:
+    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age) in enumerate(continental_grid_samples):
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -473,6 +543,19 @@ def _reconstruct_backtrack_continental_bathymetry(
             # Skip current grid sample, 'rift_start_age' must be zero and so there has been no time for sediment deposition (which happens when rifting starts).
             continue
         present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
+        
+        # If we have dynamic topography then get dynamic topography at rift start and at present day.
+        if dynamic_topography:
+            dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
+            # Note that we only guaranteed to have dynamic topography values at *integral* rift start ages
+            # (and obtained using 'get_dynamic_topography_rift_start_age').
+            dynamic_topography_at_rift_start = dynamic_topography[get_dynamic_topography_rift_start_age(rift_start_age)][grid_sample_index]
+            
+            # Estimate how much of present-day subsidence is due to dynamic topography.
+            # We crudely remove the relative difference of dynamic topography between rift start and present day
+            # so we can see how much subsidence between those two times is due to stretching and thermal subsidence.
+            # Dynamic topography is elevation but we want depth (subsidence) so add (instead of subtract).
+            present_day_tectonic_subsidence += dynamic_topography_at_present_day - dynamic_topography_at_rift_start
 
         # Attempt to estimate rifting stretching factor (beta) that generates the present day tectonic subsidence.
         rift_beta, subsidence_residual = rifting.estimate_beta(
@@ -514,6 +597,14 @@ def _reconstruct_backtrack_continental_bathymetry(
             # Calculate rifting subsidence at decompaction time.
             decompacted_well.tectonic_subsidence = rifting.total_subsidence(
                     rift_beta, pre_rift_crustal_thickness, decompaction_time, rift_end_age, rift_start_age)
+        
+            # If we have dynamic topography then add in the difference at current decompaction time compared to rift start.
+            if dynamic_topography:
+                dynamic_topography_at_decompaction_time = dynamic_topography[decompaction_time][grid_sample_index]
+                
+                # Account for any change in dynamic topography between rift start and current decompaction time.
+                # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
+                decompacted_well.tectonic_subsidence -= dynamic_topography_at_decompaction_time - dynamic_topography_at_rift_start
             
             # If we have sea levels then store the sea level (relative to present day) at current decompaction time
             # in the decompacted well (it'll get used later when calculating water depth).
