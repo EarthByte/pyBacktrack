@@ -38,19 +38,19 @@ import warnings
 
 class DynamicTopography(object):
     """
-    Class to reconstruct ocean point location and sample the time-dependent dynamic topography *mantle* frame grid files.
+    Class to reconstruct a point location (or locations) and sample the time-dependent dynamic topography *mantle* frame grid files.
     
     Attributes
     ----------
-    longitude : float
-        Longitude of the ocean point location.
-    latitude : float
-        Latitude of the ocean point location.
-    age : float
-        The age of the crust that the ocean point location is on.
+    longitude : float or list of float
+        Longitude of the point location, or list of longitudes (if multiple point locations).
+    latitude : float or list of float
+        Latitude of the point location, or list of latitudes (if multiple point locations).
+    age : float or list of float
+        The age of the crust that the point location is on, or list of ages (if multiple point locations).
         
-        .. note:: If no age was supplied and the location is on continental crust then the age of the static polygon
-                  containing location is used (or zero if no polygon contains location).
+        .. note:: If no age(s) was supplied and the location(s) is on continental crust then the age(s) of the static polygon(s)
+                  containing location(s) is used (or zero when no polygon contains a location).
     """
     
     def __init__(self, grid_list_filename, static_polygon_filename, rotation_filenames, longitude, latitude, age=None):
@@ -65,13 +65,13 @@ class DynamicTopography(object):
             The filename of the static polygons file.
         rotation_filenames : list of str
             The list of rotation filenames.
-        longitude : float
-            Longitude of the ocean point location.
-        latitude : float
-            Latitude of the ocean point location.
-        age : float, optional
-            The age of the crust that the point location is on.
-            If not specified then the appearance age of the static polygon containing the point is used.
+        longitude : float or list of float
+            Longitude of the point location, or list of longitudes (if multiple point locations).
+        latitude : float or list of float
+            Latitude of the point location, or list of latitudes (if multiple point locations).
+        age : float or list of float, optional
+            The age of the crust that the point location is on, or list of ages (if multiple point locations).
+            If not specified then the appearance age(s) of the static polygon(s) containing the point(s) is used.
         
         Notes
         -----
@@ -79,32 +79,74 @@ class DynamicTopography(object):
         filename (relative to directory of list file) of a dynamic topography grid at a particular time.
         Second column containing associated time (in Ma).
         
-        The present day location ('longitude' / 'latitude' in degrees) is also assigned a plate ID using the static polygons,
-        and the rotations are used to reconstruct the location when sampling the grids at a reconstructed time.
+        Each present day location is also assigned a plate ID using the static polygons,
+        and the rotations are used to reconstruct each location when sampling the grids at a reconstructed time.
         """
-        
-        self.latitude = latitude
-        self.longitude = longitude
-        self.location = pygplates.PointOnSphere((latitude, longitude))
-        self.age = age
         
         self.grids = TimeDependentGrid(grid_list_filename)
         self.rotation_model = pygplates.RotationModel(rotation_filenames)
         
         # Find the plate ID of the static polygon containing the location (or zero if not in any plates).
         plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, self.rotation_model)
-        partitioning_plate = plate_partitioner.partition_point(self.location)
-        if partitioning_plate:
-            self.reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-        else:
-            self.reconstruction_plate_id = 0
+
+        # Cache the sample grids on demand with a dictionary mapping each grid index to its sampled grid values.
+        self.grid_samples = {}
         
-        # Use the age of the containing static polygon if location is None (ie, outside age grid).
-        if self.age is None:
+        self.latitude = latitude
+        self.longitude = longitude
+        self.age = age
+
+        # See if we've been provided a single location or a sequence of locations (by seeing if we can iterate over latitude or not).
+        try:
+            iter(latitude)
+        except TypeError:
+            # A single location.
+            self.is_sequence_of_locations = False
+
+            self.location = pygplates.PointOnSphere(self.latitude, self.longitude)
+            partitioning_plate = plate_partitioner.partition_point(self.location)
             if partitioning_plate:
-                self.age, _ = partitioning_plate.get_feature().get_valid_time()
+                self.reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
             else:
-                self.age = 0.0
+                self.reconstruction_plate_id = 0
+        
+            # Use the age of the containing static polygon if age is None (eg, outside age grid).
+            if self.age is None:
+                if partitioning_plate:
+                    self.age, _ = partitioning_plate.get_feature().get_valid_time()
+                else:
+                    self.age = 0.0
+        else:
+            # A sequence of locations.
+            self.is_sequence_of_locations = True
+
+            self.location = []
+            self.reconstruction_plate_id =  []
+
+            if self.age is None:
+                self.age = []
+                find_age = True
+            else:
+                find_age = False
+
+            for latitude, longitude in zip(self.latitude, self.longitude):
+                location = pygplates.PointOnSphere(latitude, longitude)
+                self.location.append(location)
+
+                partitioning_plate = plate_partitioner.partition_point(location)
+                if partitioning_plate:
+                    reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+                else:
+                    reconstruction_plate_id = 0
+                self.reconstruction_plate_id.append(reconstruction_plate_id)
+            
+                # Use the age of the containing static polygon if age no provided (eg, outside age grid).
+                if find_age:
+                    if partitioning_plate:
+                        age, _ = partitioning_plate.get_feature().get_valid_time()
+                    else:
+                        age = 0.0
+                    self.age.append(age)
     
     @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
@@ -116,13 +158,13 @@ class DynamicTopography(object):
         dynamic_topography_model_name : string
             Name of a bundled dynamic topography model.
             Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
-        longitude : float
-            Longitude of the ocean point location.
-        latitude : float
-            Latitude of the ocean point location.
-        age : float, optional
-            The age of the crust that the point location is on.
-            If not specified then the appearance age of the static polygon containing the point is used.
+        longitude : float or list of float
+            Longitude of the point location, or list of longitudes (if multiple point locations).
+        latitude : float or list of float
+            Latitude of the point location, or list of latitudes (if multiple point locations).
+        age : float or list of float, optional
+            The age of the crust that the point location is on, or list of ages (if multiple point locations).
+            If not specified then the appearance age(s) of the static polygon(s) containing the point(s) is used.
         
         Returns
         -------
@@ -159,13 +201,13 @@ class DynamicTopography(object):
             Either a user-provided model specified as a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames)
             (see first three parameters of :meth:`pybacktrack.DynamicTopography.__init__`), or name of a bundled dynamic topography model
             (see :meth:`pybacktrack.DynamicTopography.create_from_bundled_model`), .
-        longitude : float
-            Longitude of the ocean point location.
-        latitude : float
-            Latitude of the ocean point location.
-        age : float, optional
-            The age of the crust that the point location is on.
-            If not specified then the appearance age of the static polygon containing the point is used.
+        longitude : float or list of float
+            Longitude of the point location, or list of longitudes (if multiple point locations).
+        latitude : float or list of float
+            Latitude of the point location, or list of latitudes (if multiple point locations).
+        age : float or list of float, optional
+            The age of the crust that the point location is on, or list of ages (if multiple point locations).
+            If not specified then the appearance age(s) of the static polygon(s) containing the point(s) is used.
         
         Returns
         -------
@@ -183,172 +225,226 @@ class DynamicTopography(object):
             dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model_or_bundled_model_name
             return DynamicTopography(dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames, longitude, latitude, age)
     
-    def sample(self, time):
+    def sample(self, time, fallback=True):
         """
-        Samples the time-dependent dynamic topography grid files at ``time``, but falls back to a
+        Samples the time-dependent dynamic topography grid files at ``time``, but optionally falls back to a
         non-optimal sampling if necessary (depending on ``time``).
         
         Parameters
         ----------
         time : float
             Time to sample dynamic topography.
+        fallback : bool
+            Whether to fall back to a non-optimal sampling if neccessary (see notes below).
+            Defaults to ``True``.
         
         Returns
         -------
-        float
-            The sampled dynamic topography value.
+        float or list of float
+            The sampled dynamic topography value or list of values.
+            If constructed with a single location then returns a single value, otherwise
+            returns a list of values (one per location).
+            
+            When ``fallback`` is ``True`` then ``float('NaN`)`` will never be returned.
+            When ``fallback`` is ``False`` then ``float('NaN`)`` will be returned for each point location where:
+            
+            - ``time`` is outside age range of grids, or
+            - the age of either (of two) interpolated grids is older than the age of that point location.
         
         Raises
         ------
         AssertionError
-            If dynamic topography model does not cover well location at any time.
+            If dynamic topography model does not cover point location(s) at any time.
+            This should not happen if the dynamic topography grids have global coverage
+            (which they should since they are in the *mantle* reference frame, not plate reference frame).
         
         Notes
         -----
-        The location is first reconstructed to the two grid ages bounding ``time`` before sampling
-        the two grids (and interpolating between them) using :meth:`pybacktrack.DynamicTopography.sample_interpolated`.
-        
-        However if ``time`` is outside the age range of grids, or the age of either (of two) interpolated grids
-        is older than age of the ocean point location, then the oldest grid file that is younger than the
-        age-of-appearance of the ocean point location is sampled using :meth:`pybacktrack.DynamicTopography.sample_oldest`.
-        
-        .. versionadded:: 1.2
-           Renamed previous *sample* method to :meth:`sample_interpolated <pybacktrack.DynamicTopography.sample_interpolated>`.
-        """
-        
-        dynamic_topography = self.sample_interpolated(time)
-        if math.isnan(dynamic_topography):
-            # The specified time is between two dynamic topography grids where one grid (or both) is older
-            # than the ocean floor at the well location and hence we cannot interpolate between the two grids.
-            #
-            # So we'll just sample the oldest dynamic topography grid that is younger than the ocean floor.
-            dynamic_topography, dynamic_topography_age = self.sample_oldest()
-            if math.isnan(dynamic_topography):
-                # This shouldn't happen unless there are no grids for some strange reason.
-                raise AssertionError(u'Internal error: Dynamic topography model "{0}" does not cover well location ({1}, {2}) at any time.'.format(
-                    self.grids.grid_list_filename, self.longitude, self.latitude))
-            
-            # Warn the user if the dynamic topography model does not include the specified time.
-            warnings.warn(u'Dynamic topography model "{0}" does not cover, or cannot interpolate, well location ({1}, {2}) at '
-                          'time {3}. Using dynamic topography grid at {4}.'.format(
-                              self.grids.grid_list_filename,
-                              self.longitude, self.latitude,
-                              time, dynamic_topography_age))
-        
-        return dynamic_topography
-    
-    def sample_interpolated(self, time):
-        """
-        Samples the time-dependent grid files at 'time' at the internal location.
-        
-        Parameters
-        ----------
-        time : float
-            Time to sample dynamic topography.
-        
-        Returns
-        -------
-        float
-            The sampled dynamic topography value.
-            
-            This will be ``float('NaN`)`` if:
-            
-            - ``time`` is outside age range of grids, or
-            - the age of either (of two) interpolated grids is older than age of the ocean point location.
-        
-        Notes
-        -----
-        The location is first reconstructed to the two grid ages bounding 'time' before sampling
+        The point location(s) is first reconstructed to the two grid ages bounding ``time`` before sampling
         the two grids (and interpolating between them).
         
-        .. versionadded:: 1.2
-           Used to be called *sample*, but that's now a new :meth:`method <pybacktrack.DynamicTopography.sample>`.
+        However if ``time`` is outside the age range of grids, or the age of either (of two) interpolated grids
+        is older than age(s) of the point location(s), then the oldest grid file that is younger than the
+        age-of-appearance of the point location(s) is sampled (if ``fallback`` is ``True``).
+        
+        .. versionchanged:: 1.2
+           Previously this method was called *sample_interpolated* and did not fall back to non-optimal sampling when necessary.
+        
+        .. versionchanged:: 1.4
+           Merged *sample*, *sample_interpolated* and *sample_oldest* methods into one method (this method).
+           Added *fallback* parameter (when ``False`` behaves like removed *sample_interpolated* method).
+           Added ability to specify a list of point locations (as an alternative to specifying a single location).
         """
         
         # Search for the two grids bounding 'time'.
         grids_bounding_time = self.grids.get_grids_bounding_time(time)
-        # Return NaN if 'time' outside age range of grids.
+        
+        # If there are no grids bounding 'time'.
         if grids_bounding_time is None:
-            return float('nan')
+            if self.is_sequence_of_locations:
+                sample = [float('nan')] * len(self.location)
+
+                # Optionally fall back to the oldest samples that are after/younger than the appearances of the locations.
+                if fallback:
+                    num_grids = len(self.grids.grid_ages_and_filenames)
+                    for sample_index in range(len(sample)):
+                        for grid_index in range(num_grids-1, -1, -1):
+                            grid_sample = self._get_grid_sample(grid_index)
+                            # NaN indicates sample is older than location.
+                            if not math.isnan(grid_sample[sample_index]):
+                                sample[sample_index] = grid_sample[sample_index]
+                                break
+                
+                return sample
+            else:
+                # Optionally fall back to the oldest sample that is after/younger the appearance of the location.
+                if fallback:
+                    num_grids = len(self.grids.grid_ages_and_filenames)
+                    for grid_index in range(num_grids-1, -1, -1):
+                        grid_sample = self._get_grid_sample(grid_index)
+                        # NaN indicates sample is older than location.
+                        if not math.isnan(grid_sample):
+                            return grid_sample
+                
+                return float('nan')
         
-        (grid_age_0, grid_filename_0), (grid_age_1, grid_filename_1) = grids_bounding_time
+        grid_index_younger, grid_index_older = grids_bounding_time
+
+        grid_age_younger, _ = self.grids.grid_ages_and_filenames[grid_index_younger]
+        grid_age_older, _ = self.grids.grid_ages_and_filenames[grid_index_older]
         
-        # If the age of the older grid is prior to appearance of location then return NaN.
-        if grid_age_1 > self.age + 1e-6:
-            return float('nan')
+        # Sample both grids (we'll attempt to interpolate between them).
+        grid_sample_younger = self._get_grid_sample(grid_index_younger)
+        grid_sample_older = self._get_grid_sample(grid_index_older)
         
-        # If 'time' matches either grid age then sample associated grid.
-        if math.fabs(time - grid_age_0) < 1e-6:
-            return self._sample_grid(grid_age_0, grid_filename_0)
-        if math.fabs(time - grid_age_1) < 1e-6:
-            return self._sample_grid(grid_age_1, grid_filename_1)
-        
-        # Sample both grids (we'll interpolate between them).
-        grid_value_0 = self._sample_grid(grid_age_0, grid_filename_0)
-        grid_value_1 = self._sample_grid(grid_age_1, grid_filename_1)
-        
-        # If either value is NaN then return NaN.
-        # This shouldn't happen since mantle-frame grids have global coverage.
-        if math.isnan(grid_value_0) or math.isnan(grid_value_1):
-            return float('nan')
-        
-        # Linearly interpolate.
-        # We already know that no two ages are the same (from TimeDependentGrid constructor).
-        # So divide-by-zero is not possible.
-        return ((grid_age_1 - time) * grid_value_0 + (time - grid_age_0) * grid_value_1) / (grid_age_1 - grid_age_0)
+        if self.is_sequence_of_locations:
+            sample = [float('nan')] * len(self.location)
+
+            for sample_index in range(len(sample)):
+                # If age of sample in older grid is prior/older to appearance of location then optionally
+                # fall back to the oldest sample that is after/younger than appearance of location.
+                if math.isnan(grid_sample_older[sample_index]):
+                    if fallback:
+                        for grid_index in range(grid_index_younger, -1, -1):
+                            grid_sample = self._get_grid_sample(grid_index)
+                            # NaN indicates sample is older than location.
+                            if not math.isnan(grid_sample[sample_index]):
+                                sample[sample_index] = grid_sample[sample_index]
+                                break
+                    
+                    continue
+                
+                # Linearly interpolate between the older and younger grids.
+                # We already know that no two ages are the same (from TimeDependentGrid constructor), so divide-by-zero is not possible.
+                sample[sample_index] = (
+                    ((grid_age_older - time) * grid_sample_younger[sample_index] +
+                     (time - grid_age_younger) * grid_sample_older[sample_index])
+                        / (grid_age_older - grid_age_younger))
+
+            return sample
+        else:
+            # If age of sample in older grid is prior/older to appearance of location then optionally
+            # fall back to the oldest sample that is after/younger than appearance of location.
+            if math.isnan(grid_sample_older):
+                if fallback:
+                    for grid_index in range(grid_index_younger, -1, -1):
+                        grid_sample = self._get_grid_sample(grid_index)
+                        # NaN indicates sample is older than location.
+                        if not math.isnan(grid_sample):
+                            return grid_sample
+                
+                return float('nan')
+            
+            # Linearly interpolate between the older and younger grids.
+            # We already know that no two ages are the same (from TimeDependentGrid constructor), so divide-by-zero is not possible.
+            return (
+                ((grid_age_older - time) * grid_sample_younger +
+                 (time - grid_age_younger) * grid_sample_older)
+                    / (grid_age_older - grid_age_younger))
     
-    def sample_oldest(self):
-        """
-        Samples the oldest grid file that is younger than the age-of-appearance of the ocean point location.
-        
-        Returns
-        -------
-        grid_value : float
-            The sampled dynamic topography value.
-        grid_age : float
-            The age of the oldest grid file that is younger than the age-of-appearance of the ocean point location.
-        
-        Notes
-        -----
-        This function is useful when :meth:`pybacktrack.DynamicTopography.sample_interpolated` has already been called but
-        returns ``float('NaN')`` due to the specific time having bounding grid times older than the ocean floor at that location.
-        """
-        
-        # Search backward until we find a grid age younger than the age of the internal location.
-        for index in range(len(self.grids.grid_ages_and_filenames) - 1, -1, -1):
-            grid_age, grid_filename = self.grids.grid_ages_and_filenames[index]
-            if grid_age < self.age + 1e-6:
-                grid_value = self._sample_grid(grid_age, grid_filename)
-                return grid_value, grid_age
-        
-        # Unable to sample a non-NaN grid value, so just return NaN.
-        first_grid_age, _ = self.grids.grid_ages_and_filenames[0]
-        return float('nan'), first_grid_age
+    def _get_grid_sample(self, grid_index):
+
+        # If we have *not* sampled this before then sample it now and cache the results.
+        if grid_index not in self.grid_samples:
+            self.grid_samples[grid_index] = self._sample_grid(grid_index)
+
+        return self.grid_samples[grid_index]
     
-    def _sample_grid(self, grid_age, grid_filename):
+    def _sample_grid(self, grid_index):
         
-        # Get rotation from present day to 'grid_age' using the reconstruction plate ID of the location.
-        rotation = self.rotation_model.get_rotation(grid_age, self.reconstruction_plate_id)
-        
-        # Reconstruct location to 'grid_age'.
-        reconstructed_location = rotation * self.location
-        reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
+        grid_age, grid_filename = self.grids.grid_ages_and_filenames[grid_index]
+
+        if self.is_sequence_of_locations:
+            grid_sample = [float('nan')] * len(self.location)
+
+            gmt_location_data = []
+            gmt_location_point_indices = []  # Keep track of where to write GMT sampled locations back to.
+            for point_index in range(len(self.location)):
+                # Skip locations that appear after the grid age (leave them as NaN to indicate this).
+                # This is because we should not reconstruct to times earlier than the location's appearance age.
+                if grid_age > self.age[point_index] + 1e-6:
+                    continue
+                
+                # Get rotation from present day to 'grid_age' using the reconstruction plate ID of the location.
+                rotation = self.rotation_model.get_rotation(grid_age, self.reconstruction_plate_id[point_index])
+                
+                # Reconstruct location to 'grid_age'.
+                reconstructed_location = rotation * self.location[point_index]
+                reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
+
+                gmt_location_data.append('{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude))
+                gmt_location_point_indices.append(point_index)
+
+            # If there are no locations to sample.
+            if not gmt_location_data:
+                return grid_sample  # All NaNs.
+            
+            # Create a single multiline string (one line per lon/lat row).
+            gmt_location_data = ''.join(gmt_location_data)
+        else:
+            # Skip locations that appear after the grid age (leave them as NaN to indicate this).
+            # This is because we should not reconstruct to times earlier than the location's appearance age.
+            if grid_age > self.age + 1e-6:
+                return float('nan')
+            
+            # Get rotation from present day to 'grid_age' using the reconstruction plate ID of the location.
+            rotation = self.rotation_model.get_rotation(grid_age, self.reconstruction_plate_id)
+            
+            # Reconstruct location to 'grid_age'.
+            reconstructed_location = rotation * self.location
+            reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
+
+            gmt_location_data = '{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude)
         
         #
         # Sample mantle frame grid.
         #
-        
-        location_data = '{0} {1}\n'.format(reconstructed_longitude, reconstructed_latitude)
 
         # The command-line strings to execute GMT 'grdtrack'.
-        grdtrack_command_line = ["gmt", "grdtrack", "-G{0}".format(grid_filename)]
+        grdtrack_command_line = ["gmt", "grdtrack", "-Z", "-G{0}".format(grid_filename)]
         
         # Call the system command.
-        stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
+        stdout_data = call_system_command(grdtrack_command_line, stdin=gmt_location_data, return_stdout=True)
         
-        # GMT grdtrack returns a single line containing "longitude latitude sampled_value".
-        # Note that if GMT returns "NaN" then we'll return float('nan').
-        return float(stdout_data.split()[2])
+        if self.is_sequence_of_locations:
+            # Extract the sampled values (and write them back to correct index in returned grid sample).
+            for line_index, line in enumerate(stdout_data.splitlines()):
+                # Due to "-Z" option each line returned by GMT grdtrack contains only the sampled value.
+                # Note that if GMT returns "NaN" then we'll return float('nan').
+                sample_value = float(line)
+
+                # The GMT output data should be in the same order as the GMT input data.
+                point_index = gmt_location_point_indices[line_index]
+                grid_sample[point_index] = sample_value
+            
+            return grid_sample
+        
+        else:
+            # Due to "-Z" option the single line returned by GMT grdtrack contains only the sampled value.
+            # Note that if GMT returns "NaN" then we'll return float('nan').
+            grid_sample = float(stdout_data)
+
+            return grid_sample
 
 
 class TimeDependentGrid(object):
@@ -412,8 +508,7 @@ class TimeDependentGrid(object):
     
     def get_grids_bounding_time(self, time):
         """
-        Returns the two adjacent grid files (and associated times) that surround 'time' as the 2-tuple
-        ((grid_age_0, grid_filename_0), (grid_age_1, grid_filename_1)).
+        Returns the two adjacent grid files (and associated times) that surround 'time' as the 2-tuple (grid_index_younger, grid_index_older).
         
         Returns None if 'time' is outside time range of grids.
         """
@@ -425,14 +520,10 @@ class TimeDependentGrid(object):
             return None
         
         for grid_index in range(1, len(self.grid_ages_and_filenames)):
-            grid_age_1, grid_filename_1 = self.grid_ages_and_filenames[grid_index]
+            grid_age_older, _ = self.grid_ages_and_filenames[grid_index]
             
-            if time < grid_age_1 + 1e-6:
-                grid_age_0, grid_filename_0 = self.grid_ages_and_filenames[grid_index - 1]
-                return (
-                    (grid_age_0, grid_filename_0),
-                    (grid_age_1, grid_filename_1)
-                )
+            if time < grid_age_older + 1e-6:
+                return grid_index - 1, grid_index
         
         # Time is outside grid age range ('time' is greater than last grid age).
         return None
