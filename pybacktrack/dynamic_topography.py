@@ -291,6 +291,9 @@ class DynamicTopography(object):
         However if ``time`` is outside the age range of grids, or the age of either (of two) interpolated grids
         is older than age(s) of the point location(s), then the oldest grid file that is younger than the
         age-of-appearance of the point location(s) is sampled (if ``fallback`` is ``True``).
+        If this happens and we were constructed with a *single* location (not a sequence of locations) then a
+        warning is also emitted to notify user (since a single location is likely a well site, as opposed to
+        paleo bathymetry gridding which uses a sequence of locations).
         
         .. versionchanged:: 1.2
            Previously this method was called *sample_interpolated* and did not fall back to non-optimal sampling when necessary.
@@ -330,6 +333,16 @@ class DynamicTopography(object):
                     for grid_index in range(len(self.grids.grid_ages_and_filenames)-1, -1, -1):
                         grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
                         if grid_age < self.age + 1e-6:
+                            # Warn user that dynamic topography model requires sampling a grid prior (older) than crustal appearance age at location.
+                            #
+                            # Note: We only warn for the single location case (not for the sequence of locations case above) since that
+                            #       typically means a well location where we'd like to inform the user (rather than paleo bathymetry
+                            #       gridding where it's expected that this will happen, a lot).
+                            warnings.warn(u'Dynamic topography model "{0}" cannot interpolate between two grids at time {1} because grids only go back to time {2}. '
+                                          'Using dynamic topography grid at time {3} which is younger than crustal appearance age {4} at well location ({5}, {6}).'.format(
+                                            self.grids.grid_list_filename,
+                                            time, self.grids.grid_ages_and_filenames[-1][0], grid_age, self.age,
+                                            self.longitude, self.latitude))
                             grid_sample = self._get_grid_sample(grid_index)
                             # Note: We should arrive here since there is always a grid at present day
                             #       and location ages can never be negative.
@@ -386,6 +399,18 @@ class DynamicTopography(object):
                     for grid_index in range(grid_index_younger, -1, -1):
                         grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
                         if grid_age < self.age + 1e-6:
+                            # Warn user that dynamic topography model requires sampling a grid prior (older) than crustal appearance age at location.
+                            #
+                            # Note: We only warn for the single location case (not for the sequence of locations case above) since that
+                            #       typically means a well location where we'd like to inform the user (rather than paleo bathymetry
+                            #       gridding where it's expected that this will happen, a lot).
+                            warnings.warn(u'Dynamic topography model "{0}" cannot interpolate between two grids at time {1} because older grid '
+                                          'at time {2} is prior (older) to crustal appearance age {3} at well location ({4}, {5}). '
+                                          'Using dynamic topography grid at time {6} instead.'.format(
+                                            self.grids.grid_list_filename,
+                                            time, grid_age_older, self.age,
+                                            self.longitude, self.latitude,
+                                            grid_age))
                             grid_sample = self._get_grid_sample(grid_index)
                             # Note: We should arrive here since there is always a grid at present day
                             #       and location ages can never be negative.
@@ -574,6 +599,9 @@ class TimeDependentGrid(object):
         first_grid_age, _ = self.grid_ages_and_filenames[0]
         if time < first_grid_age - 1e-6:
             # Time is outside grid age range ('time' is less than first grid age).
+            #
+            # Note: This shouldn't happen since the first grid should be at present day and
+            #       'time' should be non-negative.
             return None
         
         for grid_index in range(1, len(self.grid_ages_and_filenames)):
