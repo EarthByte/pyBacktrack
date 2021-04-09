@@ -73,6 +73,16 @@ class DynamicTopography(object):
             The age of the crust that the point location is on, or list of ages (if multiple point locations).
             If not specified then the appearance age(s) of the static polygon(s) containing the point(s) is used.
         
+        Raises
+        ------
+        ValueError
+            If any ``age`` is negative (if specified).
+        ValueError
+            If ``grid_list_filename`` does not contain a grid at present day, or
+            ``grid_list_filename`` contains fewer than two grids, or
+            not all rows in ``grid_list_filename`` contain a grid filename followed by an age, or
+            there are two ages in ``grid_list_filename`` with same age.
+        
         Notes
         -----
         Each dynamic topography grid should be in the *mantle* reference frame (not *plate* reference frame) and
@@ -119,6 +129,10 @@ class DynamicTopography(object):
                     self.age, _ = partitioning_plate.get_feature().get_valid_time()
                 else:
                     self.age = 0.0
+            
+            if self.age < 0:
+                raise ValueError('Dynamic topography: age values must not be negative')
+            
         else:
             # A sequence of locations.
             self.is_sequence_of_locations = True
@@ -150,6 +164,9 @@ class DynamicTopography(object):
                     else:
                         age = 0.0
                     self.age.append(age)
+            
+            if any(age < 0 for age in self.age):
+                raise ValueError('Dynamic topography: age values must not be negative')
     
     @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
@@ -290,24 +307,28 @@ class DynamicTopography(object):
 
                 # Optionally fall back to the oldest samples that are after/younger than the appearances of the locations.
                 if fallback:
-                    num_grids = len(self.grids.grid_ages_and_filenames)
-                    for sample_index in range(len(sample)):
-                        for grid_index in range(num_grids-1, -1, -1):
-                            grid_sample = self._get_grid_sample(grid_index)
-                            # NaN indicates sample is older than location.
-                            if not math.isnan(grid_sample[sample_index]):
-                                sample[sample_index] = grid_sample[sample_index]
+                    for point_index in range(len(self.location)):
+                        # Search backwards (from oldest to youngest) until find a younger grid.
+                        for grid_index in range(len(self.grids.grid_ages_and_filenames)-1, -1, -1):
+                            grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
+                            if grid_age < self.age[point_index] + 1e-6:
+                                grid_sample = self._get_grid_sample(grid_index)
+                                sample[point_index] = grid_sample[point_index]
+                                # Note: We should arrive here for every location since there is always
+                                #       a grid at present day and location ages can never be negative.
                                 break
                 
                 return sample
             else:
                 # Optionally fall back to the oldest sample that is after/younger the appearance of the location.
                 if fallback:
-                    num_grids = len(self.grids.grid_ages_and_filenames)
-                    for grid_index in range(num_grids-1, -1, -1):
-                        grid_sample = self._get_grid_sample(grid_index)
-                        # NaN indicates sample is older than location.
-                        if not math.isnan(grid_sample):
+                    # Search backwards (from oldest to youngest) until find a younger grid.
+                    for grid_index in range(len(self.grids.grid_ages_and_filenames)-1, -1, -1):
+                        grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
+                        if grid_age < self.age + 1e-6:
+                            grid_sample = self._get_grid_sample(grid_index)
+                            # Note: We should arrive here since there is always a grid at present day
+                            #       and location ages can never be negative.
                             return grid_sample
                 
                 return float('nan')
@@ -324,37 +345,46 @@ class DynamicTopography(object):
         if self.is_sequence_of_locations:
             sample = [float('nan')] * len(self.location)
 
-            for sample_index in range(len(sample)):
+            for point_index in range(len(self.location)):
                 # If age of sample in older grid is prior/older to appearance of location then optionally
                 # fall back to the oldest sample that is after/younger than appearance of location.
-                if math.isnan(grid_sample_older[sample_index]):
+                # NaN indicates sample is older than location.
+                if math.isnan(grid_sample_older[point_index]):
                     if fallback:
+                        # Search backwards (from oldest to youngest) until find a younger grid.
                         for grid_index in range(grid_index_younger, -1, -1):
-                            grid_sample = self._get_grid_sample(grid_index)
-                            # NaN indicates sample is older than location.
-                            if not math.isnan(grid_sample[sample_index]):
-                                sample[sample_index] = grid_sample[sample_index]
+                            grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
+                            if grid_age < self.age[point_index] + 1e-6:
+                                grid_sample = self._get_grid_sample(grid_index)
+                                sample[point_index] = grid_sample[point_index]
+                                # Note: We should arrive here for every location since there is always
+                                #       a grid at present day and location ages can never be negative.
                                 break
                     
+                    # If we didn't fall back then leave sample value as NaN.
                     continue
                 
                 # Linearly interpolate between the older and younger grids.
                 # We already know that no two ages are the same (from TimeDependentGrid constructor), so divide-by-zero is not possible.
-                sample[sample_index] = (
-                    ((grid_age_older - time) * grid_sample_younger[sample_index] +
-                     (time - grid_age_younger) * grid_sample_older[sample_index])
+                sample[point_index] = (
+                    ((grid_age_older - time) * grid_sample_younger[point_index] +
+                     (time - grid_age_younger) * grid_sample_older[point_index])
                         / (grid_age_older - grid_age_younger))
 
             return sample
         else:
             # If age of sample in older grid is prior/older to appearance of location then optionally
             # fall back to the oldest sample that is after/younger than appearance of location.
+            # NaN indicates sample is older than location.
             if math.isnan(grid_sample_older):
                 if fallback:
+                    # Search backwards (from oldest to youngest) until find a younger grid.
                     for grid_index in range(grid_index_younger, -1, -1):
-                        grid_sample = self._get_grid_sample(grid_index)
-                        # NaN indicates sample is older than location.
-                        if not math.isnan(grid_sample):
+                        grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
+                        if grid_age < self.age + 1e-6:
+                            grid_sample = self._get_grid_sample(grid_index)
+                            # Note: We should arrive here since there is always a grid at present day
+                            #       and location ages can never be negative.
                             return grid_sample
                 
                 return float('nan')
@@ -475,9 +505,10 @@ class TimeDependentGrid(object):
         Load grid filenames and associated ages from grid list file 'grid_list_filename'.
         
         Raises ValueError if:
+        - list file does not contain a grid at present day, or
+        - list file contains fewer than two grids, or
         - not all rows contain a grid filename followed by age, or
-        - there are two ages in list file with same age, or
-        - list file contains fewer than two grids.
+        - there are two ages in list file with same age.
         """
         
         self.grid_list_filename = grid_list_filename
@@ -523,6 +554,10 @@ class TimeDependentGrid(object):
         # Need at least two grids.
         if len(self.grid_ages_and_filenames) < 2:
             raise ValueError(u'The grid list file "{0}" contains fewer than two grids.'.format(grid_list_filename))
+        
+        # Need a present day grid.
+        if self.grid_ages_and_filenames[0][0] != 0:
+            raise ValueError(u'The grid list file "{0}" does not contain a grid at present day.'.format(grid_list_filename))
     
     def get_grids_bounding_time(self, time):
         """
