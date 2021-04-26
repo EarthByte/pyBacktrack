@@ -71,6 +71,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        anchor_plate_id = 0,
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
@@ -86,7 +87,9 @@ def reconstruct_backtrack_bathymetry(
         dynamic_topography_model=None,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
-        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL)
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
+        anchor_plate_id=0,\
+        use_all_cpus=False)
     Reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
     
     Parameters
@@ -144,7 +147,9 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
-    use_all_cpus: bool
+    anchor_plate_id: int, optional
+        The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
+    use_all_cpus: bool, optional
         If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
     
     Returns
@@ -260,7 +265,8 @@ def reconstruct_backtrack_bathymetry(
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
-                static_polygon_filename)
+                static_polygon_filename,
+                anchor_plate_id)
         
         continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
                 continental_grid_samples,
@@ -271,7 +277,8 @@ def reconstruct_backtrack_bathymetry(
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
-                static_polygon_filename)
+                static_polygon_filename,
+                anchor_plate_id)
         
         # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
         paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
@@ -307,7 +314,8 @@ def reconstruct_backtrack_bathymetry(
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename),
+                    static_polygon_filename=static_polygon_filename,
+                    anchor_plate_id=anchor_plate_id),
                 (
                     oceanic_grid_samples[
                         oceanic_grid_sample_group_index * num_oceanic_grid_samples_per_group :
@@ -332,7 +340,8 @@ def reconstruct_backtrack_bathymetry(
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename),
+                    static_polygon_filename=static_polygon_filename,
+                    anchor_plate_id=anchor_plate_id),
                 (
                     continental_grid_samples[
                         continental_grid_sample_group_index * num_continental_grid_samples_per_group :
@@ -361,7 +370,8 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
-        static_polygon_filename):
+        static_polygon_filename,
+        anchor_plate_id):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
@@ -460,7 +470,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
             bathymetry = decompacted_well.get_water_depth()
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
-            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id)
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
             # Reconstruct location to current decompaction time.
             reconstructed_location = rotation * present_day_location
             reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
@@ -480,7 +490,8 @@ def _reconstruct_backtrack_continental_bathymetry(
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
-        static_polygon_filename):
+        static_polygon_filename,
+        anchor_plate_id):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
@@ -615,7 +626,7 @@ def _reconstruct_backtrack_continental_bathymetry(
             bathymetry = decompacted_well.get_water_depth()
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
-            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id)
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
             # Reconstruct location to current decompaction time.
             reconstructed_location = rotation * present_day_location
             reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
@@ -817,6 +828,10 @@ def main():
     
     parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
             help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
+    
+    parser.add_argument('--anchor', type=parse_positive_integer, default=0,
+            dest='anchor_plate_id',
+            help='Anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.')
         
     grid_spacing_argument_group = parser.add_mutually_exclusive_group()
     grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
@@ -1003,6 +1018,7 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model,
+        args.anchor_plate_id,
         args.use_all_cpus)
     
     # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
