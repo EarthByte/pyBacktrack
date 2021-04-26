@@ -71,7 +71,8 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
-        anchor_plate_id = 0,
+        region_plate_ids=None,
+        anchor_plate_id=0,
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
@@ -88,6 +89,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
+        region_plate_ids=None,\
         anchor_plate_id=0,\
         use_all_cpus=False)
     Reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
@@ -147,6 +149,9 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    region_plate_ids : list of int, optional
+        Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
+        Defaults to global.
     anchor_plate_id: int, optional
         The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
     use_all_cpus: bool, optional
@@ -184,22 +189,54 @@ def reconstruct_backtrack_bathymetry(
     # All sediment is represented as a single lithology (of total sediment thickness) using the base lithology.
     base_lithology_components = [(base_lithology_name, 1.0)]
 
+    # Rotation files used to reconstruct the grid points.
+    rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
+
+    # Static polygons used to assign plate IDs to the grid points.
+    static_polygon_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'static_polygons.shp')
+
     # Sample the total sediment thickness grid.
-    total_sediment_thickness_grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
+    grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
 
     # Ignore samples outside total sediment thickness grid (masked region) since we can only backtrack where there's sediment.
     #
     # Note: The 3rd value (index 2) of each sample is the total sediment thickness (first two values are longitude and latitude).
     #       A value of NaN means the sample is outside the masked region of the grid.
-    total_sediment_thickness_grid_samples = [grid_sample for grid_sample in total_sediment_thickness_grid_samples if not math.isnan(grid_sample[2])]
+    grid_samples = [grid_sample for grid_sample in grid_samples if not math.isnan(grid_sample[2])]
+
+    # If any regions were specified then skip any grid samples outside all specified regions.
+    if region_plate_ids:
+        # Static polygons partitioner used to assign plate IDs to the grid points.
+        plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_filenames)
+
+        _grid_samples = []
+        for grid_sample in grid_samples:
+            # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+            longitude, latitude = grid_sample[0], grid_sample[1]
+            present_day_location = pygplates.PointOnSphere(latitude, longitude)
+            partitioning_plate = plate_partitioner.partition_point(present_day_location)
+            if not partitioning_plate:
+                # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
+                # but might if there's tiny cracks between polygons).
+                continue
+
+            plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+
+            # Skip current grid sample if outside all specified regions.
+            if plate_id not in region_plate_ids:
+                continue
+            
+            _grid_samples.append(grid_sample)
+
+        grid_samples = _grid_samples
 
     # Add age and topography to the total sediment thickness grid samples.
-    total_sediment_thickness_and_age_and_topography_grid_samples = _gmt_grdtrack(total_sediment_thickness_grid_samples, age_grid_filename, topography_filename)
+    grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, topography_filename)
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
     oceanic_grid_samples = []
-    for longitude, latitude, total_sediment_thickness, age, topography in total_sediment_thickness_and_age_and_topography_grid_samples:
+    for longitude, latitude, total_sediment_thickness, age, topography in grid_samples:
 
         # If topography sampled outside grid then set topography to zero.
         # Shouldn't happen since topography grid is not masked anywhere.
@@ -246,12 +283,6 @@ def reconstruct_backtrack_bathymetry(
         sea_levels = {time : _sea_level.get_average_level(time + time_increment, time) for time in range(0, oldest_time + 1, time_increment)}
     else:
         sea_levels = None
-
-    # Rotation files used to reconstruct the grid points.
-    rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
-
-    # Static polygons used to assign plate IDs to the grid points.
-    static_polygon_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'static_polygons.shp')
 
     # If using a single CPU then just process all ocean/continent points in one call.
     if not use_all_cpus:
@@ -428,11 +459,12 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
         present_day_location = pygplates.PointOnSphere(latitude, longitude)
         partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if partitioning_plate:
-            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-        else:
-            reconstruction_plate_id = 0
-        
+        if not partitioning_plate:
+            # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
+            # but might if there's tiny cracks between polygons).
+            continue
+        reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+
         # If we have dynamic topography then get present-day dynamic topography.
         if dynamic_topography:
             dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
@@ -592,10 +624,12 @@ def _reconstruct_backtrack_continental_bathymetry(
         # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
         present_day_location = pygplates.PointOnSphere(latitude, longitude)
         partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if partitioning_plate:
-            reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-        else:
-            reconstruction_plate_id = 0
+        if not partitioning_plate:
+            # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
+            # but might if there's tiny cracks between polygons).
+            continue
+        reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+
         
         for decompaction_time in range(0, oldest_time + 1, time_increment):
             # Decompact at the current time.
@@ -828,16 +862,21 @@ def main():
     
     parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
             help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
-    
-    parser.add_argument('--anchor', type=parse_positive_integer, default=0,
-            dest='anchor_plate_id',
-            help='Anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.')
         
     grid_spacing_argument_group = parser.add_mutually_exclusive_group()
     grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
             help='The grid spacing (in degrees) of sample points in lon/lat space.')
     grid_spacing_argument_group.add_argument('-gm', '--grid_spacing_minutes', type=float,
             help='The grid spacing (in minutes) of sample points in lon/lat space.')
+    
+    parser.add_argument('--anchor', type=parse_positive_integer, default=0,
+            dest='anchor_plate_id',
+            help='Anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.')
+    
+    parser.add_argument('--region', type=parse_positive_integer, nargs='+',
+            metavar='PLATE_ID',
+            dest='region_plate_ids',
+            help='Plate IDs of one or more plates to restrict paleobathymetry reconstruction to. Defaults to global.')
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
@@ -1018,6 +1057,7 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model,
+        args.region_plate_ids,
         args.anchor_plate_id,
         args.use_all_cpus)
     
