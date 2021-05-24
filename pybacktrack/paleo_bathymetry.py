@@ -189,12 +189,6 @@ def reconstruct_backtrack_bathymetry(
     # All sediment is represented as a single lithology (of total sediment thickness) using the base lithology.
     base_lithology_components = [(base_lithology_name, 1.0)]
 
-    # Rotation files used to reconstruct the grid points.
-    rotation_filenames = [os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rotations_250-0Ma.rot')]
-
-    # Static polygons used to assign plate IDs to the grid points.
-    static_polygon_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'static_polygons.shp')
-
     # Sample the total sediment thickness grid.
     grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
 
@@ -207,7 +201,9 @@ def reconstruct_backtrack_bathymetry(
     # If any regions were specified then skip any grid samples outside all specified regions.
     if region_plate_ids:
         # Static polygons partitioner used to assign plate IDs to the grid points.
-        plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_filenames)
+        plate_partitioner = pygplates.PlatePartitioner(
+                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES)
 
         _grid_samples = []
         for grid_sample in grid_samples:
@@ -256,16 +252,12 @@ def reconstruct_backtrack_bathymetry(
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, age))
 
-    # Grid filenames for continental rifting start/end times.
-    rift_start_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_start_grid.nc')
-    rift_end_grid_filename = os.path.join(pybacktrack.bundle_data.BUNDLE_RIFTING_PATH, '2019_v2', 'rift_end_grid.nc')
-
-    # Add crustal thickness and rift start/end times to continental grid samples.
+    # Add crustal thickness and builtin rift start/end times to continental grid samples.
     #
     # Note: For some reason we get a GMT error if we combine these grids in a single 'grdtrack' call, so we separate them instead.
     continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, rift_start_grid_filename)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, rift_end_grid_filename)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME)
 
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
@@ -295,8 +287,8 @@ def reconstruct_backtrack_bathymetry(
                 base_lithology_components,
                 dynamic_topography_model,
                 sea_levels,
-                rotation_filenames,
-                static_polygon_filename,
+                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
                 anchor_plate_id)
         
         continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
@@ -307,8 +299,8 @@ def reconstruct_backtrack_bathymetry(
                 base_lithology_components,
                 dynamic_topography_model,
                 sea_levels,
-                rotation_filenames,
-                static_polygon_filename,
+                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
                 anchor_plate_id)
         
         # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
@@ -344,8 +336,8 @@ def reconstruct_backtrack_bathymetry(
                     base_lithology_components=base_lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
-                    rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename,
+                    rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+                    static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
                     anchor_plate_id=anchor_plate_id),
                 (
                     oceanic_grid_samples[
@@ -370,8 +362,8 @@ def reconstruct_backtrack_bathymetry(
                     base_lithology_components=base_lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
-                    rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename,
+                    rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+                    static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
                     anchor_plate_id=anchor_plate_id),
                 (
                     continental_grid_samples[
@@ -956,6 +948,7 @@ def main():
         help='Optional dynamic topography through time. '
              'Can be used both for oceanic floor and continental passive margin. '
              'First filename contains a list of dynamic topography grids (and associated times). '
+             'Note that each grid must be in the mantle reference frame. '
              'Second filename contains static polygons associated with dynamic topography model '
              '(used to assign plate ID to well location so it can be reconstructed). '
              'Third filename (and optional fourth, etc) are the rotation files associated with model '

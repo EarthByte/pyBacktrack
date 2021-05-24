@@ -150,9 +150,9 @@ def backtrack_well(
         Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
         If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
         (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
-        If specified then overrides value in well file.
-        If well is on continental passive margin then at least rift end age should be specified
-        either here or in well file.
+        If specified then overrides value in well file (and value from builtin rift start/end grids).
+        If well is on continental passive margin then at least rift end age should be specified either here or in well file, or
+        well location must be inside rifting region of builtin rift start/end grids, otherwise a ValueError exception will be raised.
     well_location : tuple, optional
         Optional location of well.
         If not provided then is extracted from the ``well_filename`` file.
@@ -180,6 +180,9 @@ def backtrack_well(
         If ``lithology_column`` is not the largest column number (must be last column).
     ValueError
         If ``well_location`` is not specified *and* the well location was not extracted from the well file.
+    ValueError
+        If well is on continental passive margin but rift end age was not specified by user and was not extracted from well file,
+        and well location was not inside rifting region of builtin rift start/end grids.
     
     Notes
     -----
@@ -206,7 +209,6 @@ def backtrack_well(
     well = load_well(
         well_filename,
         lithologies,
-        rifting_period,
         well_location,
         well_bottom_age_column,
         well_bottom_depth_column,
@@ -229,13 +231,33 @@ def backtrack_well(
         # (so they specified None for 'age_grid_filename').
         age = None
     
-    # If well is on continental passive margin then rift end age needs to be
-    # specified by user or obtained from well file.
+    # If well is on continental passive margin then rift end age needs to be specified by user or
+    # obtained from well file or from builtin rift start/end grids (prioritized in that order).
     if age is None:
-        if well.rift_end_age is None:
-            raise ValueError('Well is on continental passive margin but rift end age was '
-                             'not extracted from well file and was not specified by user. '
-                             'Either add RiftEndAge to the well file or specify rift end age on command-line.')
+        # If the rifting period was specified then override the value read from the well file (if read) and builtin grids.
+        # The rift end time must be provided but the rift start time is optional.
+        if rifting_period is not None:
+            rift_start_age, rift_end_age = rifting_period
+            if rift_end_age is None:
+                raise ValueError('If rifting period is specified then rifting end time must not be None')
+            well.rift_start_age, well.rift_end_age = rift_start_age, rift_end_age
+        elif well.rift_start_age is not None or well.rift_end_age is not None:
+            # The well file has provided the rift end time (and optional rift start time).
+            if well.rift_end_age is None:
+                raise ValueError('Well file provides a rift start age but not a rift end age')
+        else:
+            # Attempt to get rift start/end from builtin rift start/end grids.
+            rift_end_age = _sample_grid(well.longitude, well.latitude, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME)
+            if math.isnan(rift_end_age):
+                rift_end_age = None
+            if rift_end_age is None:
+                raise ValueError('Well is on continental passive margin but rift end age was not specified by user and was not extracted from well file, '
+                                'and well location was not inside rifting region of builtin rift start/end grids. '
+                                'Either specify rift end age (on command-line) or add RiftEndAge to the well file.')
+            rift_start_age = _sample_grid(well.longitude, well.latitude, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME)
+            if math.isnan(rift_start_age):
+                rift_start_age = None
+            well.rift_start_age, well.rift_end_age = rift_start_age, rift_end_age
     
     # Sample topography grid at well location.
     present_day_topography = _sample_grid(well.longitude, well.latitude, topography_filename)
@@ -341,7 +363,6 @@ def backtrack_well(
 def load_well(
         well_filename,
         lithologies,
-        rifting_period=None,
         well_location=None,
         well_bottom_age_column=0,
         well_bottom_depth_column=1,
@@ -352,13 +373,6 @@ def load_well(
     well_filename: Name of well text file.
     
     lithologies: a dict mapping lithology names to lithology.Lithology objects.
-    
-    rifting_period: Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
-                    If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
-                    (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
-                    If specified then overrides value in well file.
-                    If well is on continental passive margin then at least rift end age should be specified
-                    either here or in well file.
     
     well_location: Optional location of well. If not provided then is extracted from 'well_filename' file.
                    If specified then overrides value in well file.
@@ -423,14 +437,6 @@ def load_well(
     # Needs to be specified by user or obtained from well file.
     if well.longitude is None or well.latitude is None:
         raise ValueError('Well location was not extracted from well file and was not specified by user.')
-    
-    # If the rifting period was specified then override the value read from the well file (if read).
-    if rifting_period is not None:
-        rift_start_age, rift_end_age = rifting_period
-        if rift_start_age is not None:
-            well.rift_start_age = rift_start_age
-        if rift_end_age is not None:
-            well.rift_end_age = rift_end_age
     
     return well
 
@@ -980,9 +986,9 @@ def backtrack_and_write_well(
         Optional time period of rifting (if on continental passive margin - not used for oceanic floor).
         If specified then should be a 2-tuple (rift_start_age, rift_end_age) where rift_start_age can be None
         (in which case rifting is considered instantaneous from a stretching point-of-view, not thermal).
-        If specified then overrides value in well file.
-        If well is on continental passive margin then at least rift end age should be specified
-        either here or in well file.
+        If specified then overrides value in well file (and value from builtin rift start/end grids).
+        If well is on continental passive margin then at least rift end age should be specified either here or in well file, or
+        well location must be inside rifting region of builtin rift start/end grids, otherwise a ValueError exception will be raised.
     decompacted_columns : list of columns, optional
         The decompacted columns (and their order) to output to ``decompacted_wells_filename``.
         
@@ -1020,6 +1026,9 @@ def backtrack_and_write_well(
         If ``lithology_column`` is not the largest column number (must be last column).
     ValueError
         If ``well_location`` is not specified *and* the well location was not extracted from the well file.
+    ValueError
+        If well is on continental passive margin but rift end age was not specified by user and was not extracted from well file,
+        and well location was not inside rifting region of builtin rift start/end grids.
     
     Notes
     -----
@@ -1298,18 +1307,18 @@ def main():
         '-rs', '--rift_start_time', type=argparse_non_negative_float,
         metavar='rift_start_time',
         help='Optional start time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid), '
-             'in which case it is not required (even if also not provided inside the well file as '
-             '"# RiftStartTime = <rift_start_time>") because it will essentially default to '
-             'the rift "end" time. However providing a start time will result in more accurate '
-             'subsidence values generated during rifting.')
+             'Only used if well is located on continental passive margin (outside age grid). '
+             'If not specified (but "rift_end_time" is specified) then it defaults to "rift_end_time". '
+             'However providing a rift start time will result in more accurate subsidence values generated during rifting. '
+             'If it is specified then "rift_end_time" must also be specified.')
     parser.add_argument(
         '-re', '--rift_end_time', type=argparse_non_negative_float,
         metavar='rift_end_time',
         help='Optional end time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid), '
-             'in which case it must be specified if it is not provided inside the well file '
-             '(as "# RiftEndTime = <rift_end_time>"). Overrides well file if both specified.')
+             'Only used if well is located on continental passive margin (outside age grid), in which case it '
+             'must be specified if it is not provided inside the well file (as "# RiftEndTime = <rift_end_time>") '
+             'and well location is not inside rifting region of builtin rift start/end grids. '
+             'Overrides well file (and builtin rifting start/end grids) if specified.')
     
     parser.add_argument(
         '-o', '--output_well_filename', type=argparse_unicode,
@@ -1381,6 +1390,7 @@ def main():
              'Can be used both for oceanic floor and continental passive margin '
              '(ie, well location inside or outside age grid). '
              'First filename contains a list of dynamic topography grids (and associated times). '
+             'Note that each grid must be in the mantle reference frame. '
              'Second filename contains static polygons associated with dynamic topography model '
              '(used to assign plate ID to well location so it can be reconstructed). '
              'Third filename (and optional fourth, etc) are the rotation files associated with model '
@@ -1424,6 +1434,16 @@ def main():
         age_grid_filename = None
     else:
         age_grid_filename = args.age_grid_filename
+    
+    # If rifting end time (and optional start time) was specified then we have a rifting period.
+    if args.rift_end_time is not None:
+        # Rifting start time is optional (can be None).
+        rifting_period = args.rift_start_time, args.rift_end_time
+    else:
+        # Rifting end time was not specified so rifting start time should not have been either.
+        if args.rift_start_time is not None:
+            raise ValueError('Cannot specify rift start time without also specifying rift end time')
+        rifting_period = None
     
     # See if user overrode the total sediment thickness grid (because they know well site was drilled to basement depth).
     if args.no_total_sediment_thickness:
@@ -1478,7 +1498,7 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model,
-        (args.rift_start_time, args.rift_end_time),
+        rifting_period,
         decompacted_columns,
         args.well_location,
         args.well_columns[0],  # well_bottom_age_column

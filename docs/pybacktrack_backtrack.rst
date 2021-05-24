@@ -311,6 +311,11 @@ the same regardless of whether a rift *start* time was specified or not.
           (run ``python -m pybacktrack.backtrack_cli --help`` to see all options). Or using the *rifting_period* argument
           of the :func:`pybacktrack.backtrack_and_write_well` function.
 
+.. note:: If the rift end time (and optional start time) is not explicitly specified in the drill site file or explicitly on the ``backtrack`` command-line
+          (or explicitly via the :func:`pybacktrack.backtrack_and_write_well` function) then both the rift start and end times are obtained implicitly from the
+          builtin rift start/end time grids. However it is possible that the well location is not inside the rifting region of the rift start/end time grids,
+          in which case an error is generated and you must then explicitly provide the rift end time (and optionally the rift start time).
+
 If a rift *start* time is specified, then the stretching factor varies exponentially between the rift *start* and *end* times (assuming a constant strain rate).
 The stretching factor at the rift *start* time is ``1.0`` (since the lithosphere has not yet stretched). The stretching factor at the rift *end* time is
 estimated such that our model produces a subsidence matching the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day, while

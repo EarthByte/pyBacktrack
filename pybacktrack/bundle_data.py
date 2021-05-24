@@ -119,7 +119,10 @@ DEFAULT_BUNDLE_LITHOLOGY_FILENAME = PRIMARY_BUNDLE_LITHOLOGY_FILENAME
 
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.nc')
 
-BUNDLE_RIFTING_PATH = os.path.join(BUNDLE_PATH, 'rifting')
+BUNDLE_RIFTING_START_FILENAME = os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'rift_start_grid.nc')
+BUNDLE_RIFTING_END_FILENAME = os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'rift_end_grid.nc')
+BUNDLE_RIFTING_ROTATION_FILENAMES = [os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'rotations_250-0Ma.rot')]
+BUNDLE_RIFTING_STATIC_POLYGON_FILENAME = os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'static_polygons.shp')
 
 BUNDLE_TOPOGRAPHY_FILENAME = os.path.join(BUNDLE_PATH, 'topography', 'ETOPO1_0.1.grd')
 
