@@ -124,7 +124,7 @@ BUNDLE_RIFTING_END_FILENAME = os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'r
 BUNDLE_RIFTING_ROTATION_FILENAMES = [os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'rotations_250-0Ma.rot')]
 BUNDLE_RIFTING_STATIC_POLYGON_FILENAME = os.path.join(BUNDLE_PATH, 'rifting', '2019_v2', 'static_polygons.shp')
 
-BUNDLE_AGE_TO_DEPTH_MODEL_RICHARDS_FILENAME = os.path.join(BUNDLE_PATH, 'ocean_age_to_depth', 'Richards_2020', 'depth-1333-130-2500.dat')
+BUNDLE_AGE_TO_DEPTH_MODEL_RHCW18_FILENAME = os.path.join(BUNDLE_PATH, 'ocean_age_to_depth', 'RHCW18', 'depth-1333-130-2500.dat')
 
 BUNDLE_TOPOGRAPHY_FILENAME = os.path.join(BUNDLE_PATH, 'topography', 'ETOPO1_0.1.grd')
 

@@ -152,7 +152,7 @@ Converting oceanic age to depth
 Constants
 ^^^^^^^^^
 
-``pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020``
+``pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18``
     Richards et al. (2020) ``Structure and dynamics of the oceanic lithosphere-asthenosphere system``.
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007``

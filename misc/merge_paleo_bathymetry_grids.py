@@ -12,8 +12,8 @@ import sys
 
 
 # PyBacktrack paleobathymetry grids.
-paleo_bathymetry_pybacktrack_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_output\paleo_bathymetry_12m_M7'
-paleo_bathymetry_pybacktrack_basename = 'paleo_bathymetry_12m_M7'
+paleo_bathymetry_pybacktrack_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_output\paleo_bathymetry_12m_M7_RHCW18'
+paleo_bathymetry_pybacktrack_basename = 'paleo_bathymetry'
 paleo_bathymetry_pybacktrack_extension = 'nc'
 
 # Wright paleobathymetry grids.
@@ -33,8 +33,8 @@ max_time = 140
 merged_grid_spacing_degrees = 0.2
 
 # Merged grids.
-merged_grid_directory = os.path.join('paleo_bathymetry_output', 'merged', 'RHCW18')
-merged_grid_basename = 'paleo_bathymetry_{0:.0f}m_M7'.format(merged_grid_spacing_degrees * 60.0)  # Insert grid spacing (in minutes) in output filename.
+merged_grid_directory = os.path.join('paleo_bathymetry_output', 'merged', 'paleo_bathymetry_{0:.0f}m_M7_RHCW18'.format(merged_grid_spacing_degrees * 60.0))  # Insert grid spacing (in minutes) in output directory.
+merged_grid_basename = 'paleo_bathymetry'
 
 # Use multiple CPUs (if True then make sure you don't interrupt the process).
 use_multiple_cpus = True

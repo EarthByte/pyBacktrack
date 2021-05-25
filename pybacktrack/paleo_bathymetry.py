@@ -145,7 +145,7 @@ def reconstruct_backtrack_bathymetry(
         Lithology name of the all sediment (must be present in lithologies file).
         The total sediment thickness at all sediment locations is consists of a single lithology.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
