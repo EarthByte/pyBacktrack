@@ -114,14 +114,18 @@ If they had been in another column, for example if there were other unused colum
 The output file ``test_ages_and_depths.txt`` contains ages in the first column and depths in the second column.
 To reverse this order you can use the ``-r`` option.
 
-There are two built-in age-to-depth ocean models:
+There are three built-in age-to-depth ocean models:
 
-* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+* ``RICHARDS_2020`` - Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_
 
 * ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
 
-Here the conversion was performed using the *default* model ``GDH1`` since the ``-m`` command-line option was not specified.
-However you can specify the alternate ``CROSBY_2007`` model using ``-m CROSBY_2007``.
+* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+
+Here the conversion was performed using the *default* model ``RICHARDS_2020`` since the ``-m`` command-line option was not specified.
+However you can specify the alternate ``CROSBY_2007`` model using ``-m CROSBY_2007`` (or ``GDH1`` using ``-m GDH1``).
+
+.. note:: The default age-to-depth model was updated in pyBacktrack version 1.4. It is now ``RICHARDS_2020``. Previously it was ``GDH1``.
 
 Or you can use your own age-to-depth model by specifying a file containing an age column and a depth column
 followed by two integers representing the age and depth column indices. For example, if you have your own age-to-depth file

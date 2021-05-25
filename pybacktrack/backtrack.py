@@ -142,7 +142,7 @@ def backtrack_well(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
@@ -978,7 +978,7 @@ def backtrack_and_write_well(
         The stratigraphic units in the well might not record the full depth of sedimentation.
         The base unit covers the remaining depth from bottom of well to the total sediment thickness.
         Defaults to ``Shale``.
-    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).

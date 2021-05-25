@@ -152,11 +152,14 @@ Converting oceanic age to depth
 Constants
 ^^^^^^^^^
 
-``pybacktrack.AGE_TO_DEPTH_MODEL_GDH1``
-    Stein and Stein (1992) ``Model for the global variation in oceanic depth and heat flow with lithospheric age``.
+``pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020``
+    Richards et al. (2020) ``Structure and dynamics of the oceanic lithosphere-asthenosphere system``.
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007``
     Crosby et al. (2006) ``The relationship between depth, age and gravity in the oceans``.
+
+``pybacktrack.AGE_TO_DEPTH_MODEL_GDH1``
+    Stein and Stein (1992) ``Model for the global variation in oceanic depth and heat flow with lithospheric age``.
 
 ``pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL``
     The age-to-depth model to use by default.

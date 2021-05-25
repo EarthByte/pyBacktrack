@@ -68,6 +68,7 @@ from .age_to_depth import \
     convert_age_to_depth_files, \
     MODEL_GDH1 as AGE_TO_DEPTH_MODEL_GDH1, \
     MODEL_CROSBY_2007 as AGE_TO_DEPTH_MODEL_CROSBY_2007, \
+    MODEL_RICHARDS_2020 as AGE_TO_DEPTH_MODEL_RICHARDS_2020, \
     DEFAULT_MODEL as AGE_TO_DEPTH_DEFAULT_MODEL
 
 from .rifting import \
@@ -156,6 +157,7 @@ __all__ = [
     'convert_age_to_depth_files',
     'AGE_TO_DEPTH_MODEL_GDH1',
     'AGE_TO_DEPTH_MODEL_CROSBY_2007',
+    'AGE_TO_DEPTH_MODEL_RICHARDS_2020',
     'AGE_TO_DEPTH_DEFAULT_MODEL',
     # From rifting module...
     'estimate_rift_beta',

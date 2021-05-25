@@ -30,6 +30,7 @@ from __future__ import print_function
 
 import argparse
 import math
+import pybacktrack.bundle_data
 import pybacktrack.version
 from pybacktrack.util.interpolate import read_curve_function
 import sys
@@ -45,17 +46,22 @@ MODEL_GDH1 = 0
 # Crosby short PDF on 22 May 2007 uses function which best-fits all the data in
 # Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans".
 MODEL_CROSBY_2007 = 1
+# Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system".
+MODEL_RICHARDS_2020 = 2
 
-    
+
 # List of 3-tuples (model, model_name, model_desc).
 # Only used by command-line script (at bottom of this file).
 ALL_MODELS = [
     (MODEL_GDH1, 'GDH1', 'Stein and Stein (1992) "Model for the global variation in oceanic depth and heat flow with lithospheric age"'),
-    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans"')]
+    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans"'),
+    (MODEL_RICHARDS_2020, 'RICHARDS_2020', 'Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system"')]
 
 
 # The model to use by default (if no 'model' parameter passed to function).
-DEFAULT_MODEL = MODEL_GDH1
+#
+# Note: This was changed in pyBacktrack version 1.4. It is now 'RICHARDS_2020'. Previously it was 'GDH1'.
+DEFAULT_MODEL = MODEL_RICHARDS_2020
 
 
 def convert_age_to_depth(
@@ -68,7 +74,7 @@ def convert_age_to_depth(
     ----------
     age : float
         The age in Ma.
-    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to basement depth.
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     
@@ -92,6 +98,8 @@ def convert_age_to_depth(
         return _age_to_depth_GDH1(age)
     elif model == MODEL_CROSBY_2007:
         return _age_to_depth_CROSBY_2007(age)
+    elif model == MODEL_RICHARDS_2020:
+        return _age_to_depth_RICHARDS_2020(age)
     else:
         return model(age)
 
@@ -113,7 +121,7 @@ def convert_age_to_depth_files(
     output_filename : string
         Name of output text file containing `age` and `depth` values.
         Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
-    model : {pybacktrack.AGE_TO_DEPTH_MODEL_GDH1, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007} or function, optional
+    model : {pybacktrack.AGE_TO_DEPTH_MODEL_RICHARDS_2020, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to basement depth.
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     age_column_index : int, optional
@@ -254,6 +262,24 @@ def _CROSBY_2007_pert(age):
     ptb *= _CROSBY_2007_PERT_A
 
     return ptb
+
+
+#############################################################################
+# Richards et al. (2020)                                                    #
+# "Structure and dynamics of the oceanic lithosphere-asthenosphere system". #
+#############################################################################
+
+_RICHARDS_2020_age_to_depth_function = None
+
+def _age_to_depth_RICHARDS_2020(age):
+
+    # Create the model function the first time we're called.
+    global _RICHARDS_2020_age_to_depth_function
+    if _RICHARDS_2020_age_to_depth_function is None:
+        # Read the age-to-depth curve depth=function(age) from age-to-depth data file.
+        _RICHARDS_2020_age_to_depth_function, _, _ = read_curve_function(pybacktrack.bundle_data.BUNDLE_AGE_TO_DEPTH_MODEL_RICHARDS_FILENAME)
+
+    return _RICHARDS_2020_age_to_depth_function(age)
 
 
 model_dict = dict((model_name, model) for model, model_name, _ in ALL_MODELS)

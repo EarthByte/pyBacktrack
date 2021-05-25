@@ -263,13 +263,17 @@ Oceanic subsidence
 Oceanic subsidence is somewhat simpler and more accurately modelled than continental subsidence (due to *no* lithospheric stretching).
 
 The age of oceanic crust at the drill site (sampled from the oceanic age grid) can be converted to tectonic subsidence (depth with sediment removed)
-by using an age-to-depth model. There are two models built into ``backtrack``:
+by using an age-to-depth model. There are three models built into ``backtrack``:
 
-* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+* ``RICHARDS_2020`` - Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_
 
 * ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
 
-The default model is ``GDH1``.
+* ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
+
+The default model is ``RICHARDS_2020``.
+
+.. note:: The default age-to-depth model was updated in pyBacktrack version 1.4. It is now ``RICHARDS_2020``. Previously it was ``GDH1``.
 
 .. note:: These oceanic subsidence models can be specified using the ``-m`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *ocean_age_to_depth_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.

@@ -38,6 +38,7 @@ def test_backtrack_script(tmpdir):
     #     python -m pybacktrack.backtrack_cli
     #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
+    #         -m GDH1
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
@@ -49,6 +50,7 @@ def test_backtrack_script(tmpdir):
                                      '-d', 'age', 'compacted_depth', 'compacted_thickness', 'decompacted_thickness',
                                      'decompacted_density', 'decompacted_sediment_rate', 'decompacted_depth',
                                      'dynamic_topography', 'water_depth', 'tectonic_subsidence', 'lithology',
+                                     '-m', 'GDH1',
                                      '-ym', 'M2',
                                      '-slm', 'Haq87_SealevelCurve_Longterm',
                                      '-o', str(test_ammended_well_output_filename),
@@ -83,6 +85,7 @@ def test_backtrack_ODP(tmpdir):
     #     python -m pybacktrack.backtrack_cli
     #         -w test_data/ODP-114-699-Lithology.txt
     #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology
+    #         -m GDH1
     #         -ym M2
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
@@ -92,6 +95,7 @@ def test_backtrack_ODP(tmpdir):
     pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),
         str(input_well_filename),
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_MODEL_GDH1,
         dynamic_topography_model='M2',
         sea_level_model='Haq87_SealevelCurve_Longterm',
         decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE, pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH, pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS,
