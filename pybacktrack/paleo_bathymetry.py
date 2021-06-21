@@ -30,6 +30,7 @@ from __future__ import print_function
 from functools import partial
 import math
 import multiprocessing
+import numpy as np
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
@@ -179,6 +180,10 @@ def reconstruct_backtrack_bathymetry(
     if time_increment <= 0:
         raise ValueError("'time_increment' should be positive")
     
+    # Create times from present day to the oldest requested time in the requested time increments.
+    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
+    time_range = [float(time) for time in np.arange(0, oldest_time + 1e-6, time_increment)]
+    
     # Read the lithologies from one or more text files.
     #
     # Read all the lithology files and merge their dicts.
@@ -272,7 +277,7 @@ def reconstruct_backtrack_bathymetry(
         _sea_level = SeaLevel.create_from_model_or_bundled_model_name(sea_level_model)
         # Calculate sea level (relative to present day) that is an average over each time increment in the requested time period.
         # This is a dict indexed by time.
-        sea_levels = {time : _sea_level.get_average_level(time + time_increment, time) for time in range(0, oldest_time + 1, time_increment)}
+        sea_levels = {time : _sea_level.get_average_level(time + time_increment, time) for time in time_range}
     else:
         sea_levels = None
 
@@ -280,8 +285,7 @@ def reconstruct_backtrack_bathymetry(
     if not use_all_cpus:
         oceanic_paleo_bathymetry = _reconstruct_backtrack_oceanic_bathymetry(
                 oceanic_grid_samples,
-                oldest_time,
-                time_increment,
+                time_range,
                 ocean_age_to_depth_model,
                 lithologies,
                 base_lithology_components,
@@ -293,8 +297,7 @@ def reconstruct_backtrack_bathymetry(
         
         continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
                 continental_grid_samples,
-                oldest_time,
-                time_increment,
+                time_range,
                 lithologies,
                 base_lithology_components,
                 dynamic_topography_model,
@@ -304,7 +307,7 @@ def reconstruct_backtrack_bathymetry(
                 anchor_plate_id)
         
         # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
-        paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+        paleo_bathymetry = {time : [] for time in time_range}
         for paleo_bathymetry_dict in (oceanic_paleo_bathymetry, continental_paleo_bathymetry):
             for time, bathymetries in paleo_bathymetry_dict.items():
                 paleo_bathymetry[time].extend(bathymetries)
@@ -329,8 +332,7 @@ def reconstruct_backtrack_bathymetry(
         oceanic_paleo_bathymetry_dict_list = pool.map(
                 partial(
                     _reconstruct_backtrack_oceanic_bathymetry,
-                    oldest_time=oldest_time,
-                    time_increment=time_increment,
+                    time_range=time_range,
                     ocean_age_to_depth_model=ocean_age_to_depth_model,
                     lithologies=lithologies,
                     base_lithology_components=base_lithology_components,
@@ -356,8 +358,7 @@ def reconstruct_backtrack_bathymetry(
         continental_paleo_bathymetry_dict_list = pool.map(
                 partial(
                     _reconstruct_backtrack_continental_bathymetry,
-                    oldest_time=oldest_time,
-                    time_increment=time_increment,
+                    time_range=time_range,
                     lithologies=lithologies,
                     base_lithology_components=base_lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
@@ -374,7 +375,7 @@ def reconstruct_backtrack_bathymetry(
                 1) # chunksize
     
     # Combine the pool bathymetry dicts into a single bathymetry dict.
-    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+    paleo_bathymetry = {time : [] for time in time_range}
     for paleo_bathymetry_dict_list in (oceanic_paleo_bathymetry_dict_list, continental_paleo_bathymetry_dict_list):
         for paleo_bathymetry_dict in paleo_bathymetry_dict_list:
             for time, bathymetries in paleo_bathymetry_dict.items():
@@ -385,8 +386,7 @@ def reconstruct_backtrack_bathymetry(
 
 def _reconstruct_backtrack_oceanic_bathymetry(
         oceanic_grid_samples,
-        oldest_time,
-        time_increment,
+        time_range,
         ocean_age_to_depth_model,
         lithologies,
         base_lithology_components,
@@ -398,7 +398,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
-    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = math.ceil(oldest_time) + 1)
+    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = len(time_range))
 
     # Static polygons partitioner used to assign plate IDs to the grid points.
     plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
@@ -416,13 +416,15 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         # Pre-calculate dynamic topography for all decompaction times (including present day) and all ocean sample points.
         # At each time we have a list of dynamic topographies (one per ocean sample point) which is stored in a dictionary (keyed by time).
         dynamic_topography = {}
-        for decompaction_time in range(0, oldest_time + 1, time_increment):
+        for decompaction_time in time_range:
             dynamic_topography[decompaction_time] = dynamic_topography_model.sample(decompaction_time)
+        if 0.0 not in dynamic_topography:  # present day
+            dynamic_topography[0.0] = dynamic_topography_model.sample(0.0)
     else:
         dynamic_topography = None
     
-    # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
-    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+    # Paleo bathymetry is stored as a dictionary mapping each age in time range to a list of 3-tuples (lon, lat, bathymetry).
+    paleo_bathymetry = {time : [] for time in time_range}
 
     # Iterate over the *oceanic* grid samples.
     for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age) in enumerate(oceanic_grid_samples):
@@ -461,7 +463,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         if dynamic_topography:
             dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
         
-        for decompaction_time in range(0, oldest_time + 1, time_increment):
+        for decompaction_time in time_range:
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
 
@@ -507,8 +509,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
 
 def _reconstruct_backtrack_continental_bathymetry(
         continental_grid_samples,
-        oldest_time,
-        time_increment,
+        time_range,
         lithologies,
         base_lithology_components,
         dynamic_topography_model,
@@ -519,7 +520,7 @@ def _reconstruct_backtrack_continental_bathymetry(
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
-    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = math.ceil(oldest_time) + 1)
+    rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = len(time_range))
 
     # Static polygons partitioner used to assign plate IDs to the grid points.
     plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
@@ -544,8 +545,10 @@ def _reconstruct_backtrack_continental_bathymetry(
         # Pre-calculate dynamic topography for all decompaction times (including present day) and all continent sample points.
         # At each time we have a list of dynamic topographies (one per continent sample point) which is stored in a dictionary (keyed by time).
         dynamic_topography = {}
-        for decompaction_time in range(0, oldest_time + 1, time_increment):
+        for decompaction_time in time_range:
             dynamic_topography[decompaction_time] = dynamic_topography_model.sample(decompaction_time)
+        if 0.0 not in dynamic_topography:  # present day
+            dynamic_topography[0.0] = dynamic_topography_model.sample(0.0)
         
         # Also make sure we have dynamic topography for all the (integral) rift start ages since they can be outside
         # the range (and time increment) of present day to oldest time.
@@ -559,8 +562,8 @@ def _reconstruct_backtrack_continental_bathymetry(
     else:
         dynamic_topography = None
     
-    # Paleo bathymetry is stored as a dictionary mapping each age in [0, oldest_time] to a list of 3-tuples (lon, lat, bathymetry).
-    paleo_bathymetry = {time : [] for time in range(0, oldest_time + 1, time_increment)}
+    # Paleo bathymetry is stored as a dictionary mapping each age in time range to a list of 3-tuples (lon, lat, bathymetry).
+    paleo_bathymetry = {time : [] for time in time_range}
 
     # Iterate over the *continental* grid samples.
     for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age) in enumerate(continental_grid_samples):
@@ -623,7 +626,7 @@ def _reconstruct_backtrack_continental_bathymetry(
         reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
 
         
-        for decompaction_time in range(0, oldest_time + 1, time_increment):
+        for decompaction_time in time_range:
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
 
@@ -826,6 +829,17 @@ def main():
             raise argparse.ArgumentTypeError("%g is not a positive integer" % value)
         
         return value
+        
+    def parse_positive_float(value_string):
+        try:
+            value = float(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a (floating-point) number" % value_string)
+        
+        if value <= 0:
+            raise argparse.ArgumentTypeError("%g is not a positive (floating-point) number" % value)
+        
+        return value
 
     # Action to parse dynamic topography model information.
     class ArgParseDynamicTopographyAction(argparse.Action):
@@ -852,8 +866,8 @@ def main():
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
-    parser.add_argument('-i', '--time_increment', type=parse_positive_integer, default=1,
-            help='The time increment in My. Value must be a positive integer. Defaults to 1 My.')
+    parser.add_argument('-i', '--time_increment', type=parse_positive_float, default=1,
+            help='The time increment in My. Value must be positive (and can be non-integral). Defaults to 1 My.')
         
     grid_spacing_argument_group = parser.add_mutually_exclusive_group()
     grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
@@ -982,7 +996,7 @@ def main():
              'Each row of each xyz file contains "longitude latitude bathymetry". '
              'Default is to only create grid files (no xyz).')
 
-    parser.add_argument('oldest_time', type=parse_positive_integer,
+    parser.add_argument('oldest_time', type=parse_positive_float,
             metavar='oldest_time',
             help='Output is generated from present day back to the oldest time (in Ma). Value must be a positive integer.')
     
@@ -1054,9 +1068,13 @@ def main():
         args.anchor_plate_id,
         args.use_all_cpus)
     
+    # Create times from present day to the oldest requested time in the requested time increments.
+    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
+    time_range = [float(time) for time in np.arange(0, args.oldest_time + 1e-6, args.time_increment)]
+    
     # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
     if not args.use_all_cpus:
-        for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment):
+        for reconstruction_time in time_range:
             # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
             paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
             # Generate paleo bathymetry grid from list of reconstructed points.
@@ -1081,8 +1099,7 @@ def main():
                         grid_file_prefix=args.output_file_prefix,
                         output_xyz=args.output_xyz),
                     (
-                        (paleo_bathymetry[reconstruction_time], reconstruction_time)
-                                    for reconstruction_time in range(0, args.oldest_time + 1, args.time_increment)
+                        (paleo_bathymetry[reconstruction_time], reconstruction_time) for reconstruction_time in time_range
                     ),
                     1) # chunksize
 
