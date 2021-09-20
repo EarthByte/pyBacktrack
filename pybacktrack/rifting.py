@@ -132,16 +132,21 @@ def total_subsidence(
         Total subsidence (in metres).
     """
     
-    if time < rift_end_time:
+    if time <= rift_end_time:
         # Initial rifting plus subsequent thermal subsidence.
+        #
+        # Note that this "if" branch includes 'time == rift_end_time' which is important since we might have
+        # instantaneous rifting (rift_start_time == rift_end_time) and we want to return a *non-zero* syn-rift value.
+        # If we had taken the other branch we could get a *zero* syn-rift value.
         return syn_rift_subsidence(beta, pre_rift_crustal_thickness) + post_rift_subsidence(beta, rift_end_time - time)
     
-    else:  # Time is prior to rift end (so no thermal subsidence)...
+    else:  # Time is prior to rift end (time > rift_end_time) so no thermal subsidence...
         
         # If rift start time is not specified then assume rifting happened instantaneously
         # (from the view of crustal thickness, not thermal subsidence).
         if rift_start_time is None:
-            # In this case, since 'time' is prior to rifting (time >= rift_end_time), subsidence has not yet happened.
+            # In this case 'time' is prior to rifting (because 'time > rift_end_time' also means 'time > rift_start_time').
+            # So subsidence has not yet happened.
             return 0.0
         
         if rift_start_time <= rift_end_time:
