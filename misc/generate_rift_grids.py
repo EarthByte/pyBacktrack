@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from functools import partial
 import itertools
 import math
 import multiprocessing
@@ -33,10 +34,11 @@ import sys
 # Need version 31 to be able to reconstruct 'using topologies' (and to enable strain rate clamping).
 PYGPLATES_VERSION_REQUIRED = pygplates.Version(31)
 
-# Currently using the 2019 v2 deforming model.
-DEFORMING_MODEL_NAME = '2019_v2'
+# Default to the 2019 v2 deforming model (in 'deforming_model/2019_v2/' sub-directory).
+DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES = os.path.join('deforming_model', '2019_v2', 'topology_files.txt')
+DEFAULT_DEFORMING_MODEL_ROTATION_FILES = os.path.join('deforming_model', '2019_v2', 'rotation_files.txt')
 # We only go back to 250Ma. Rifting since Pangea began at 240Ma.
-DEFORMING_MODEL_OLDEST_TIME = 250
+DEFAULT_OLDEST_RIFT_START_TIME = 250
 
 # Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
 DEFAULT_GRID_SPACING_DEGREES = 1.0
@@ -47,16 +49,53 @@ def generate_rift_parameter_points(
         input_points,
         total_sediment_thickness_filename,
         age_grid_filename,
+        topology_filenames=None,
+        rotation_filenames=None,
+        oldest_rift_start_time=DEFAULT_OLDEST_RIFT_START_TIME,
         use_all_cpus=False):
     """Generate rift parameter grids (at non-NaN grid sample locations in total sediment thickness grid).
+    
+    Parameters
+    ----------
+    input_points : sequence of (longitude, latitude) tuples
+        The point locations to generate rift grid points.
+    total_sediment_thickness_filename : string
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at present day.
+    age_grid_filename : string
+        Age grid filename.
+        Used to obtain location of continental crust (where age grid is NaN).
+    topology_filenames : list of string, optional
+        List of filenames containing topological features (to create a topological model with).
+        If not specified then defaults to the 'deforming_model/2019_v2/' topological model.
+    rotation_filenames : list of string, optional
+        List of filenames containing rotation features (to create a topological model with).
+        If not specified then defaults to the 'deforming_model/2019_v2/' topological model.
+    oldest_rift_start_time : int, optional
+        How far to go back in time when searching for the beginning of rifting.
+        Defaults to 250 Ma.
 
-    Returns a list of tuples (longitude, latitude, rift_start_time, rift_end_time)
+    The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "deforming_model/" directory).
+    use_all_cpus: bool, optional
+        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    
+    Returns
+    -------
+    list of tuples (longitude, latitude, rift_start_time, rift_end_time)
     """
     
     # Check the imported pygplates version.
     if pygplates.Version.get_imported_version() < PYGPLATES_VERSION_REQUIRED:
         raise RuntimeError('Using pygplates version {0} but version {1} or greater is required'.format(
                 pygplates.Version.get_imported_version(), PYGPLATES_VERSION_REQUIRED))
+    
+    # If topology filenames not specified then read the list of default topology filenames.
+    if topology_filenames is None:
+        topology_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES)
+    
+    # If rotation filenames not specified then read the list of default rotation filenames.
+    if rotation_filenames is None:
+        rotation_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_ROTATION_FILES)
 
     # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
     #print ('Reading sediment points...')
@@ -70,7 +109,11 @@ def generate_rift_parameter_points(
     # If using a single CPU then just process all ocean/continent points in one call.
     #print ('Reconstructing', num_continent_sediment_points, 'continent sediment points...')
     if not use_all_cpus:
-        continent_sediment_rift_parameter_point_list = find_continent_sediment_rift_parameters(continent_sediment_points)
+        continent_sediment_rift_parameter_point_list = find_continent_sediment_rift_parameters(
+                continent_sediment_points,
+                topology_filenames,
+                rotation_filenames,
+                oldest_rift_start_time)
         return continent_sediment_rift_parameter_point_list
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
@@ -87,7 +130,11 @@ def generate_rift_parameter_points(
         # Distribute the groups of points across the multiprocessing pool.
         with multiprocessing.Pool(num_cpus) as pool:
             continent_sediment_rift_parameter_point_lists = pool.map(
-                    find_continent_sediment_rift_parameters,
+                    partial(
+                        find_continent_sediment_rift_parameters,
+                        topology_filenames=topology_filenames,
+                        rotation_filenames=rotation_filenames,
+                        oldest_rift_start_time=oldest_rift_start_time),
                     (
                         continent_sediment_points[
                             continent_sediment_point_group_index * num_continent_sediment_point_per_group :
@@ -100,14 +147,34 @@ def generate_rift_parameter_points(
 
 
 def find_continent_sediment_rift_parameters(
-        initial_points):
+        initial_points,
+        topology_filenames,
+        rotation_filenames,
+        oldest_rift_start_time):
     """Find rift parameters for each continent-sediment input point that undergoes rift deformation.
+    
+    Parameters
+    ----------
+    input_points : sequence of (longitude, latitude) tuples
+        The point locations to generate rift grid points.
+    topology_filenames : list of string, optional
+        List of filenames containing topological features (to create a topological model with).
+    rotation_filenames : list of string, optional
+        List of filenames containing rotation features (to create a topological model with).
+    oldest_rift_start_time : int, optional
+        How far to go back in time when searching for the beginning of rifting.
 
-    Returns a list of tuples (lon, lat, rift_start_time, rift_end_time).
+    Returns
+    -------
+    list of tuples (lon, lat, rift_start_time, rift_end_time).
     """
 
     # Load the deforming (topological) model.
-    topological_model = _read_topological_model(DEFORMING_MODEL_NAME)
+    topological_model = pygplates.TopologicalModel(
+            topology_filenames,
+            rotation_filenames,
+            # Enable strain rate clamping to better control crustal stretching factors...
+            default_resolve_topology_parameters=pygplates.ResolveTopologyParameters(enable_strain_rate_clamping=True))
 
     num_continent_sediment_points = len(initial_points)
 
@@ -125,7 +192,7 @@ def find_continent_sediment_rift_parameters(
     # Iterate over time intervals.
     # In each time interval some points might have their rift start/end times found and hence do not need to be
     # reconstructed in subsequent time intervals (thus improving processing time).
-    for initial_time in range(0, DEFORMING_MODEL_OLDEST_TIME, 10):
+    for initial_time in range(0, oldest_rift_start_time, 10):
         final_time = initial_time + 10
         #print ('     reconstructing time', initial_time, final_time)
 
@@ -280,33 +347,16 @@ def _gmt_nearneighbor(
     pybacktrack.util.call_system_command.call_system_command(nearneighbor_command_line, stdin=input_data)
 
 
-def _read_topological_model(
-        model_name):
+def _read_list_of_files(
+        list_filename):
     """
-    Create a topological model given a file listing topological files and another file listing rotation files.
-
-    The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "deforming_model/" directory).
-    
-    Returns a pygplates.TopologicalModel (requires pyGPlates revision 30 or above).
+    Read the filenames listed in a file.
     """
+
+    with open(list_filename, 'r') as list_file:
+        filenames = list_file.read().splitlines()
     
-    deforming_model_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'deforming_model')
-
-    topology_files_list_filename = os.path.join(deforming_model_path, '{0}_topology_files.txt'.format(model_name))
-    with open(topology_files_list_filename, 'r') as topology_files_list_file:
-        topology_filenames = [os.path.join(deforming_model_path, filename)
-                for filename in topology_files_list_file.read().splitlines()]
-
-    rotation_files_list_filename = os.path.join(deforming_model_path, '{0}_rotation_files.txt'.format(model_name))
-    with open(rotation_files_list_filename, 'r') as rotation_files_list_file:
-        rotation_filenames = [os.path.join(deforming_model_path, filename)
-                for filename in rotation_files_list_file.read().splitlines()]
-
-    return pygplates.TopologicalModel(
-            topology_filenames,
-            rotation_filenames,
-            # Enable strain rate clamping to better control crustal stretching factors...
-            default_resolve_topology_parameters=pygplates.ResolveTopologyParameters(enable_strain_rate_clamping=True))
+    return filenames
 
 
 def generate_input_points_grid(grid_spacing_degrees):
@@ -399,6 +449,36 @@ if __name__ == '__main__':
                 'Crust is oceanic at locations inside masked age grid region, and continental outside. '
                 'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
         
+        # Can optionally specify topology filenames.
+        topology_argument_group = parser.add_mutually_exclusive_group()
+        topology_argument_group.add_argument(
+            '-ml', '--topology_list_file', type=str,
+            metavar='topology_list_filename',
+            help='File containing list of topology filenames (to create topological model with). '
+                 'If no topology list file (or topology files) specified then defaults to {0}'.format(DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES))
+        topology_argument_group.add_argument(
+            '-m', '--topology_files', type=str, nargs='+',
+            metavar='topology_filename',
+            help='One or more topology files (to create topological model with).')
+        
+        # Can optionally specify rotation filenames.
+        rotation_argument_group = parser.add_mutually_exclusive_group()
+        rotation_argument_group.add_argument(
+            '-rl', '--rotation_list_file', type=str,
+            metavar='rotation_list_filename',
+            help='File containing list of rotation filenames (to create topological model with). '
+                 'If no rotation list file (or rotation files) specified then defaults to {0}'.format(DEFAULT_DEFORMING_MODEL_ROTATION_FILES))
+        rotation_argument_group.add_argument(
+            '-r', '--rotation_files', type=str, nargs='+',
+            metavar='rotation_filename',
+            help='One or more rotation files (to create topological model with).')
+
+        parser.add_argument(
+            '-t', '--oldest_rift_start_time', type=int, default=DEFAULT_OLDEST_RIFT_START_TIME,
+            metavar='oldest_rift_start_time',
+            help='How far to go back in time when searching for the beginning of rifting. '
+                 'Defaults to {0} Ma.'.format(DEFAULT_OLDEST_RIFT_START_TIME))
+            
         parser.add_argument(
             '--use_all_cpus', action='store_true',
             help='Use all CPUs (cores). Defaults to using a single CPU.')
@@ -425,6 +505,22 @@ if __name__ == '__main__':
             grid_spacing_degrees = args.grid_spacing_minutes / 60.0
         else:
             grid_spacing_degrees = DEFAULT_GRID_SPACING_DEGREES
+        
+        # Get topology files.
+        if args.topology_list_file is not None:
+            topology_filenames = _read_list_of_files(args.topology_list_file)
+        elif args.topology_files is not None:
+            topology_filenames = args.topology_files
+        else:
+            topology_filenames = None
+        
+        # Get rotation files.
+        if args.rotation_list_file is not None:
+            rotation_filenames = _read_list_of_files(args.rotation_list_file)
+        elif args.rotation_files is not None:
+            rotation_filenames = args.rotation_files
+        else:
+            rotation_filenames = None
     
         # Generate a global latitude/longitude grid of points (with the requested grid spacing).
         input_points = generate_input_points_grid(grid_spacing_degrees)
@@ -434,7 +530,10 @@ if __name__ == '__main__':
                 input_points,
                 args.total_sediment_thickness_filename,
                 args.age_grid_filename,
-                args.use_all_cpus)
+                topology_filenames,
+                rotation_filenames,
+                args.oldest_rift_start_time,
+                use_all_cpus=args.use_all_cpus)
         
         # Separate the combined rift parameters list into a separate list for each parameter.
         rift_start_points = []
