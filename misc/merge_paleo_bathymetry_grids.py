@@ -23,6 +23,7 @@ paleo_bathymetry_wright_extension = 'nc'
 
 # Dynamic topography grids.
 # These need to be applied to Wright paleobathymetry (pybacktrack already has it applied).
+apply_dynamic_topography = True
 dynamic_topography_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\interpolate_M7\output'
 dynamic_topography_basename = 'interp'
 dynamic_topography_extension = 'nc'
@@ -49,18 +50,23 @@ def merge_paleo_bathymetry_grids(
     paleo_bathymetry_pybacktrack_filename = os.path.join(paleo_bathymetry_pybacktrack_prefix, '{0}_{1}.{2}'.format(paleo_bathymetry_pybacktrack_basename, time, paleo_bathymetry_pybacktrack_extension))
     paleo_bathymetry_wright_filename = os.path.join(paleo_bathymetry_wright_prefix, '{0}_{1}.{2}'.format(paleo_bathymetry_wright_basename, time, paleo_bathymetry_wright_extension))
 
-    # Dynamic topography grids.
-    dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, time, dynamic_topography_extension))
-
     # Sample the paleo bathymetry grids that we're going to merge.
     paleo_bathymetry_points = _gmt_grdtrack(
             input_points,
             paleo_bathymetry_pybacktrack_filename,
-            paleo_bathymetry_wright_filename,
-            dynamic_topography_filename)
+            paleo_bathymetry_wright_filename)
+    
+    if apply_dynamic_topography:
+        # Dynamic topography grids.
+        dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, time, dynamic_topography_extension))
+        # Add dynamic topography to the samples.
+        paleo_bathymetry_points = _gmt_grdtrack(
+                paleo_bathymetry_points,
+                dynamic_topography_filename)
     
     merged_points = []
-    for point_index, (lon, lat, paleo_bathymetry_pybacktrack, paleo_bathymetry_wright, dynamic_topography) in enumerate(paleo_bathymetry_points):
+    for point_index, paleo_bathymetry_point in enumerate(paleo_bathymetry_points):
+        lon, lat, paleo_bathymetry_pybacktrack, paleo_bathymetry_wright, *optional_point_data = paleo_bathymetry_point
         if math.isnan(paleo_bathymetry_pybacktrack) and math.isnan(paleo_bathymetry_wright):
             # Skip point if no paleo bathymetry from pybacktrack or Wright.
             continue
@@ -72,10 +78,11 @@ def merge_paleo_bathymetry_grids(
             # Negate the Wright paleobathymetry. It is negative below sea level (whereas pybacktrack is positive).
             paleo_bathymetry = -paleo_bathymetry_wright
             # Also apply dynamic topography to Wright grids (pybacktrack already has it applied).
-            #
-            # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
-            _, _, dynamic_topography_at_present_day = present_day_dynamic_topography_points[point_index]
-            paleo_bathymetry -= dynamic_topography - dynamic_topography_at_present_day
+            if apply_dynamic_topography:
+                dynamic_topography = optional_point_data[0]
+                # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
+                _, _, dynamic_topography_at_present_day = present_day_dynamic_topography_points[point_index]
+                paleo_bathymetry -= dynamic_topography - dynamic_topography_at_present_day
 
         merged_points.append((lon, lat, paleo_bathymetry))
     
@@ -178,9 +185,12 @@ if __name__ == '__main__':
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
     input_points = _generate_input_points_grid(merged_grid_spacing_degrees)
 
-    # Sample the dynamic topography at present day.
-    present_day_dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, 0, dynamic_topography_extension))
-    present_day_dynamic_topography_points = _gmt_grdtrack(input_points, present_day_dynamic_topography_filename)
+    if apply_dynamic_topography:
+        # Sample the dynamic topography at present day.
+        present_day_dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, 0, dynamic_topography_extension))
+        present_day_dynamic_topography_points = _gmt_grdtrack(input_points, present_day_dynamic_topography_filename)
+    else:
+        present_day_dynamic_topography_points = None
     
     if use_multiple_cpus:
         try:
