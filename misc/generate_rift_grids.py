@@ -89,12 +89,15 @@ def generate_rift_parameter_points(
         raise RuntimeError('Using pygplates version {0} but version {1} or greater is required'.format(
                 pygplates.Version.get_imported_version(), PYGPLATES_VERSION_REQUIRED))
     
-    # If topology filenames not specified then read the list of default topology filenames.
-    if topology_filenames is None:
-        topology_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES)
+    # Must either provide both topology and rotation features or neither.
+    if (topology_filenames and not rotation_filenames) or (not topology_filenames and rotation_filenames):
+        raise ValueError('Must either provide both topology and rotation features or neither')
     
-    # If rotation filenames not specified then read the list of default rotation filenames.
-    if rotation_filenames is None:
+    # If caller did not provide a topological model.
+    if not topology_filenames and not rotation_filenames:
+        # Read the list of default topology filenames.
+        topology_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES)
+        # Read the list of default rotation filenames.
         rotation_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_ROTATION_FILES)
 
     # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
@@ -452,24 +455,24 @@ if __name__ == '__main__':
         # Can optionally specify topology filenames.
         topology_argument_group = parser.add_mutually_exclusive_group()
         topology_argument_group.add_argument(
-            '-ml', '--topology_list_file', type=str,
+            '-ml', '--topology_list_filename', type=str,
             metavar='topology_list_filename',
             help='File containing list of topology filenames (to create topological model with). '
                  'If no topology list file (or topology files) specified then defaults to {0}'.format(DEFAULT_DEFORMING_MODEL_TOPOLOGY_FILES))
         topology_argument_group.add_argument(
-            '-m', '--topology_files', type=str, nargs='+',
+            '-m', '--topology_filenames', type=str, nargs='+',
             metavar='topology_filename',
             help='One or more topology files (to create topological model with).')
         
         # Can optionally specify rotation filenames.
         rotation_argument_group = parser.add_mutually_exclusive_group()
         rotation_argument_group.add_argument(
-            '-rl', '--rotation_list_file', type=str,
+            '-rl', '--rotation_list_filename', type=str,
             metavar='rotation_list_filename',
             help='File containing list of rotation filenames (to create topological model with). '
                  'If no rotation list file (or rotation files) specified then defaults to {0}'.format(DEFAULT_DEFORMING_MODEL_ROTATION_FILES))
         rotation_argument_group.add_argument(
-            '-r', '--rotation_files', type=str, nargs='+',
+            '-r', '--rotation_filenames', type=str, nargs='+',
             metavar='rotation_filename',
             help='One or more rotation files (to create topological model with).')
 
@@ -507,18 +510,18 @@ if __name__ == '__main__':
             grid_spacing_degrees = DEFAULT_GRID_SPACING_DEGREES
         
         # Get topology files.
-        if args.topology_list_file is not None:
-            topology_filenames = _read_list_of_files(args.topology_list_file)
-        elif args.topology_files is not None:
-            topology_filenames = args.topology_files
+        if args.topology_list_filename is not None:
+            topology_filenames = _read_list_of_files(args.topology_list_filename)
+        elif args.topology_filenames is not None:
+            topology_filenames = args.topology_filenames
         else:
             topology_filenames = None
         
         # Get rotation files.
-        if args.rotation_list_file is not None:
-            rotation_filenames = _read_list_of_files(args.rotation_list_file)
-        elif args.rotation_files is not None:
-            rotation_filenames = args.rotation_files
+        if args.rotation_list_filename is not None:
+            rotation_filenames = _read_list_of_files(args.rotation_list_filename)
+        elif args.rotation_filenames is not None:
+            rotation_filenames = args.rotation_filenames
         else:
             rotation_filenames = None
     
