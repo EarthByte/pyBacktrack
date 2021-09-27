@@ -68,6 +68,8 @@ def reconstruct_backtrack_bathymetry(
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
         dynamic_topography_model=None,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -86,6 +88,8 @@ def reconstruct_backtrack_bathymetry(
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
         crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,\
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
@@ -97,14 +101,14 @@ def reconstruct_backtrack_bathymetry(
     
     Parameters
     ----------
-    input_points: sequence of (longitude, latitude) tuples
+    input_points : sequence of (longitude, latitude) tuples
         The point locations to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
-    oldest_time: int
+    oldest_time : int
         The oldest time (in Ma) that output is generated back to (from present day). Value must be positive.
     time_increment: int
         The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
-    lithology_filenames: list of string, optional
+    lithology_filenames : list of string, optional
         One or more text files containing lithologies.
     age_grid_filename : string, optional
         Age grid filename.
@@ -119,6 +123,14 @@ def reconstruct_backtrack_bathymetry(
     crustal_thickness_filename : string, optional
         Crustal thickness filename.
         Used to obtain crustal thickness at present day.
+    rotation_filenames : list of string, optional
+        List of filenames containing rotation features (to reconstruct sediment-deposited crust).
+        If not specified then defaults to the built-in global rotations associated with the topological model
+        used to generate the built-in rift start/end time grids.
+    static_polygon_filename : string, optional
+        Filename containing static polygon features (to assign plate IDs to points on sediment-deposited crust).
+        If not specified then defaults to the built-in static polygons associated with the topological model
+        used to generate the built-in rift start/end time grids.
     dynamic_topography_model : string or tuple, optional
         Represents a time-dependent dynamic topography raster grid (in *mantle* frame).
         
@@ -153,9 +165,9 @@ def reconstruct_backtrack_bathymetry(
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
-    anchor_plate_id: int, optional
+    anchor_plate_id : int, optional
         The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
-    use_all_cpus: bool, optional
+    use_all_cpus : bool, optional
         If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
     
     Returns
@@ -206,9 +218,7 @@ def reconstruct_backtrack_bathymetry(
     # If any regions were specified then skip any grid samples outside all specified regions.
     if region_plate_ids:
         # Static polygons partitioner used to assign plate IDs to the grid points.
-        plate_partitioner = pygplates.PlatePartitioner(
-                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
-                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES)
+        plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_filenames)
 
         _grid_samples = []
         for grid_sample in grid_samples:
@@ -291,8 +301,8 @@ def reconstruct_backtrack_bathymetry(
                 base_lithology_components,
                 dynamic_topography_model,
                 sea_levels,
-                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+                rotation_filenames,
+                static_polygon_filename,
                 anchor_plate_id)
         
         continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
@@ -302,8 +312,8 @@ def reconstruct_backtrack_bathymetry(
                 base_lithology_components,
                 dynamic_topography_model,
                 sea_levels,
-                pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-                pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+                rotation_filenames,
+                static_polygon_filename,
                 anchor_plate_id)
         
         # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
@@ -338,8 +348,8 @@ def reconstruct_backtrack_bathymetry(
                     base_lithology_components=base_lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
-                    rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-                    static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+                    rotation_filenames=rotation_filenames,
+                    static_polygon_filename=static_polygon_filename,
                     anchor_plate_id=anchor_plate_id),
                 (
                     oceanic_grid_samples[
@@ -363,8 +373,8 @@ def reconstruct_backtrack_bathymetry(
                     base_lithology_components=base_lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
-                    rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-                    static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+                    rotation_filenames=rotation_filenames,
+                    static_polygon_filename=static_polygon_filename,
                     anchor_plate_id=anchor_plate_id),
                 (
                     continental_grid_samples[
@@ -947,6 +957,28 @@ def main():
         help='Optional topography grid filename used to obtain water depth. '
              'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME))
     
+    # Allow user to override default rotation filenames (used to reconstruct sediment-deposited crust).
+    #
+    # Defaults to built-in global rotations associated with topological model used to generate built-in rift start/end time grids.
+    parser.add_argument(
+        '-r', '--rotation_filenames', type=str, nargs='+',
+        default=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+        metavar='rotation_filename',
+        help='One or more rotation files (to reconstruct sediment-deposited crust). '
+             'Defaults to the bundled global rotations associated with topological model '
+             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES))
+    
+    # Allow user to override default static polygon filename (to assign plate IDs to points on sediment-deposited crust).
+    #
+    # Defaults to built-in static polygons associated with topological model used to generate built-in rift start/end time grids.
+    parser.add_argument(
+        '-p', '--static_polygon_filename', type=str,
+        default=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+        metavar='static_polygon_filename',
+        help='File containing static polygons (to assign plate IDs to points on sediment-deposited crust). '
+             'Defaults to the bundled static polygons associated with topological model '
+             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME))
+    
     # Can optionally specify dynamic topography as a triplet of filenames or a model name (if using bundled data) but not both.
     dynamic_topography_argument_group = parser.add_mutually_exclusive_group()
     dynamic_topography_argument_group.add_argument(
@@ -1060,6 +1092,8 @@ def main():
         args.topography_filename,
         args.total_sediment_thickness_filename,
         args.crustal_thickness_filename,
+        args.rotation_filenames,
+        args.static_polygon_filename,
         dynamic_topography_model,
         sea_level_model,
         args.base_lithology_name,
