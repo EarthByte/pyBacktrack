@@ -27,6 +27,7 @@ import multiprocessing
 import os.path
 import pybacktrack
 import pygplates
+from ptt.utils import proximity_query
 import sys
 
 
@@ -111,12 +112,11 @@ def generate_rift_parameter_points(
     # If using a single CPU then just process all ocean/continent points in one call.
     #print ('Reconstructing', num_continent_points, 'continent points...'); sys.stdout.flush()
     if not use_all_cpus:
-        continent_rift_parameter_point_list = find_continent_rift_parameters(
+        continent_rift_parameter_points = find_continent_rift_parameters(
                 continent_points,
                 topology_filenames,
                 rotation_filenames,
                 oldest_rift_start_time)
-        return continent_rift_parameter_point_list
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
         # Number of CPUs for our multiprocessing pool.
@@ -144,8 +144,47 @@ def generate_rift_parameter_points(
                                     for continent_point_group_index in range(num_continent_point_groups)
                     ),
                     1) # chunksize
+
+        continent_rift_parameter_points = list(itertools.chain.from_iterable(continent_rift_parameter_point_lists))
+
+    #
+    # Expand the rift parameters in deforming regions to nearby non-deforming areas.
+    #
+
+    continent_parameter_points = []
+
+    continent_non_deforming_points = []
+    continent_deforming_points = []
+    continent_deforming_rift_start_end_times = []
     
-    return list(itertools.chain.from_iterable(continent_rift_parameter_point_lists))
+    # Separate deforming from non-deforming points.
+    for lon, lat, rift_start_end_times in continent_rift_parameter_points:
+        point = pygplates.PointOnSphere(lat, lon)
+        if rift_start_end_times is None:
+            continent_non_deforming_points.append(point)
+        else:
+            continent_deforming_points.append(point)
+            continent_deforming_rift_start_end_times.append(rift_start_end_times)
+            # Output the final deforming points.
+            rift_start_time, rift_end_time = rift_start_end_times
+            continent_parameter_points.append((lon, lat, rift_start_time, rift_end_time))
+
+    # For each non-deforming point find the closest deforming point (within threshold distance) and use its rift start/end times.
+    rift_expansion_degrees = 10.0
+    continent_non_deforming_rift_start_end_times = proximity_query.find_closest_points_to_geometries(
+            continent_non_deforming_points,
+            continent_deforming_points,
+            continent_deforming_rift_start_end_times,
+            distance_threshold_radians = math.radians(rift_expansion_degrees))
+
+    # Output the final non-deforming points near deforming regions (within threshold distance).
+    for point_index, rift_start_end_times in enumerate(continent_non_deforming_rift_start_end_times):
+        if rift_start_end_times is not None:
+            lat, lon = continent_non_deforming_points[point_index].to_lat_lon()
+            _, (rift_start_time, rift_end_time) = rift_start_end_times
+            continent_parameter_points.append((lon, lat, rift_start_time, rift_end_time))
+
+    return continent_parameter_points
 
 
 def find_continent_rift_parameters(
@@ -153,7 +192,10 @@ def find_continent_rift_parameters(
         topology_filenames,
         rotation_filenames,
         oldest_rift_start_time):
-    """Find rift parameters for each continent input point that undergoes rift deformation.
+    """Find rift parameters for each continent input point that undergoes deformation.
+
+    Deforming extensional points get the usual rift start/end times.
+    Deforming compressional points get the default rift start/end times (for regions that contract).
     
     Parameters
     ----------
@@ -168,7 +210,8 @@ def find_continent_rift_parameters(
 
     Returns
     -------
-    list of tuples (lon, lat, rift_start_time, rift_end_time).
+    list of tuples (lon, lat, rift_start_end_times) where rift_start_end_times is either
+    None (outside deforming networks) or tuple (rift_start_time, rift_end_time) inside deforming networks.
     """
 
     # Load the deforming (topological) model.
@@ -188,8 +231,6 @@ def find_continent_rift_parameters(
     reconstructed_points = [pygplates.PointOnSphere(lat, lon) for lon, lat in initial_points]
     reconstructed_point_indices = list(range(num_continent_points))
     reconstructed_crustal_stretching_factors = [1.0] * num_continent_points
-    
-    continent_rift_parameter_points = []
 
     # Iterate over time intervals.
     # In each time interval some points might have their rift start/end times found and hence do not need to be
@@ -267,23 +308,29 @@ def find_continent_rift_parameters(
             break
 
     
-    # Output points that we have found a rift end time for.
+    continent_rift_parameter_points = []
+    
+    # Output the continent points.
     #
-    # Points that encountered a rift end time entered a deforming network (we reconstruct backwards from present day),
-    # but if they don't have a rift start time then they compressed instead of stretched (going forward in time).
+    # Points that encountered a rift end time entered a deforming network (we reconstruct backwards from present day, so really exited),
+    # but if they don't have a rift start time then they contracted instead of extended (going forward in time).
     # In this case we just assume rifting and use a default rift start time. And we also set the rift end time to present day
     # (since these areas are close to active plate boundaries, meaning there is likely onging deformation).
     for point_index in range(num_continent_points):
+        initial_point = initial_points[point_index]
+
         rift_end_time = rift_end_times[point_index]
-        if rift_end_time is not None:
+        if rift_end_time is None:
+            # Outside deforming networks.
+            continent_rift_parameter_points.append((initial_point[0], initial_point[1], None))
+        else:
+            # Inside deforming networks.
             rift_start_time = rift_start_times[point_index]
             if rift_start_time is None:
                 # Use default rift start/end times for contracting areas (where rift start time not recorded).
                 rift_end_time = DEFAULT_RIFT_END_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT
                 rift_start_time = DEFAULT_RIFT_START_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT
-            initial_point = initial_points[point_index]
-            continent_rift_parameter_points.append(
-                    (initial_point[0], initial_point[1], rift_start_time, rift_end_time))
+            continent_rift_parameter_points.append((initial_point[0], initial_point[1], (rift_start_time, rift_end_time)))
 
     return continent_rift_parameter_points
 
