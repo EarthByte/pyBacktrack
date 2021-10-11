@@ -47,21 +47,17 @@ DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
 
 def generate_rift_parameter_points(
         input_points,
-        total_sediment_thickness_filename,
         age_grid_filename,
         topology_filenames=None,
         rotation_filenames=None,
         oldest_rift_start_time=DEFAULT_OLDEST_RIFT_START_TIME,
         use_all_cpus=False):
-    """Generate rift parameter grids (at non-NaN grid sample locations in total sediment thickness grid).
+    """Generate rift parameter points on continental crust (at NaN grid sample locations in age grid).
     
     Parameters
     ----------
     input_points : sequence of (longitude, latitude) tuples
         The point locations to generate rift grid points.
-    total_sediment_thickness_filename : string
-        Total sediment thickness filename.
-        Used to obtain total sediment thickness at present day.
     age_grid_filename : string
         Age grid filename.
         Used to obtain location of continental crust (where age grid is NaN).
@@ -100,24 +96,23 @@ def generate_rift_parameter_points(
         # Read the list of default rotation filenames.
         rotation_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_ROTATION_FILES)
 
-    # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
-    #print ('Reading sediment points...')
-    sediment_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, total_sediment_thickness_filename) if not math.isnan(sample[2])]
-
-    # Read the age grid file (at sediment locations) and only include those that have NaN values (representing non-oceanic points).
-    #print ('Reading continent sediment points...')
-    continent_sediment_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(sediment_points, age_grid_filename) if math.isnan(sample[2])]
-    num_continent_sediment_points = len(continent_sediment_points)
+    # Read the age grid file and only include those that have NaN values (representing non-oceanic points).
+    #
+    # Note: We used to also read the total sediment thickness grid just to get *submerged* crust locations (where grid is not NaN).
+    #       However now we generate rift start/end grid values at any continental crust location (regardless of submerged or not).
+    #print ('Reading continent points...'); sys.stdout.flush()
+    continent_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, age_grid_filename) if math.isnan(sample[2])]
+    num_continent_points = len(continent_points)
 
     # If using a single CPU then just process all ocean/continent points in one call.
-    #print ('Reconstructing', num_continent_sediment_points, 'continent sediment points...')
+    #print ('Reconstructing', num_continent_points, 'continent points...'); sys.stdout.flush()
     if not use_all_cpus:
-        continent_sediment_rift_parameter_point_list = find_continent_sediment_rift_parameters(
-                continent_sediment_points,
+        continent_rift_parameter_point_list = find_continent_rift_parameters(
+                continent_points,
                 topology_filenames,
                 rotation_filenames,
                 oldest_rift_start_time)
-        return continent_sediment_rift_parameter_point_list
+        return continent_rift_parameter_point_list
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
         # Number of CPUs for our multiprocessing pool.
@@ -127,34 +122,34 @@ def generate_rift_parameter_points(
             num_cpus = 1
         
         # Divide the points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
-        num_continent_sediment_point_groups = 2 * num_cpus
-        num_continent_sediment_point_per_group = math.ceil(float(num_continent_sediment_points) / num_continent_sediment_point_groups)
+        num_continent_point_groups = 2 * num_cpus
+        num_continent_point_per_group = math.ceil(float(num_continent_points) / num_continent_point_groups)
 
         # Distribute the groups of points across the multiprocessing pool.
         with multiprocessing.Pool(num_cpus) as pool:
-            continent_sediment_rift_parameter_point_lists = pool.map(
+            continent_rift_parameter_point_lists = pool.map(
                     partial(
-                        find_continent_sediment_rift_parameters,
+                        find_continent_rift_parameters,
                         topology_filenames=topology_filenames,
                         rotation_filenames=rotation_filenames,
                         oldest_rift_start_time=oldest_rift_start_time),
                     (
-                        continent_sediment_points[
-                            continent_sediment_point_group_index * num_continent_sediment_point_per_group :
-                            (continent_sediment_point_group_index + 1) * num_continent_sediment_point_per_group]
-                                    for continent_sediment_point_group_index in range(num_continent_sediment_point_groups)
+                        continent_points[
+                            continent_point_group_index * num_continent_point_per_group :
+                            (continent_point_group_index + 1) * num_continent_point_per_group]
+                                    for continent_point_group_index in range(num_continent_point_groups)
                     ),
                     1) # chunksize
     
-    return list(itertools.chain.from_iterable(continent_sediment_rift_parameter_point_lists))
+    return list(itertools.chain.from_iterable(continent_rift_parameter_point_lists))
 
 
-def find_continent_sediment_rift_parameters(
+def find_continent_rift_parameters(
         initial_points,
         topology_filenames,
         rotation_filenames,
         oldest_rift_start_time):
-    """Find rift parameters for each continent-sediment input point that undergoes rift deformation.
+    """Find rift parameters for each continent input point that undergoes rift deformation.
     
     Parameters
     ----------
@@ -179,25 +174,25 @@ def find_continent_sediment_rift_parameters(
             # Enable strain rate clamping to better control crustal stretching factors...
             default_resolve_topology_parameters=pygplates.ResolveTopologyParameters(enable_strain_rate_clamping=True))
 
-    num_continent_sediment_points = len(initial_points)
+    num_continent_points = len(initial_points)
 
-    rift_start_times = [None] * num_continent_sediment_points
-    rift_end_times = [None] * num_continent_sediment_points
+    rift_start_times = [None] * num_continent_points
+    rift_end_times = [None] * num_continent_points
     
     # We start with initial points and reconstruct them through multiple time intervals.
     # At each time interval some points find their rift start/end times and are removed from these lists.
     reconstructed_points = [pygplates.PointOnSphere(lat, lon) for lon, lat in initial_points]
-    reconstructed_point_indices = list(range(num_continent_sediment_points))
-    reconstructed_crustal_stretching_factors = [1.0] * num_continent_sediment_points
+    reconstructed_point_indices = list(range(num_continent_points))
+    reconstructed_crustal_stretching_factors = [1.0] * num_continent_points
     
-    continent_sediment_rift_parameter_points = []
+    continent_rift_parameter_points = []
 
     # Iterate over time intervals.
     # In each time interval some points might have their rift start/end times found and hence do not need to be
     # reconstructed in subsequent time intervals (thus improving processing time).
     for initial_time in range(0, oldest_rift_start_time, 10):
         final_time = initial_time + 10
-        #print ('     reconstructing time', initial_time, final_time)
+        #print ('     reconstructing time', initial_time, final_time); sys.stdout.flush()
 
         # Reconstruct (using topologies) the initial reconstructed points over the time interval.
         time_spans = topological_model.reconstruct_geometry(
@@ -263,16 +258,16 @@ def find_continent_sediment_rift_parameters(
 
     
     # Output points that we have found a rift start and end time for.
-    for point_index in range(num_continent_sediment_points):
+    for point_index in range(num_continent_points):
         rift_start_time = rift_start_times[point_index]
         rift_end_time = rift_end_times[point_index]
         if (rift_start_time is not None and
             rift_end_time is not None):
             initial_point = initial_points[point_index]
-            continent_sediment_rift_parameter_points.append(
+            continent_rift_parameter_points.append(
                     (initial_point[0], initial_point[1], rift_start_time, rift_end_time))
 
-    return continent_sediment_rift_parameter_points
+    return continent_rift_parameter_points
 
 
 def _gmt_grdtrack(
@@ -435,14 +430,6 @@ if __name__ == '__main__':
                 help='The grid spacing (in minutes) of generate points in lon/lat space. '
                     'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
         
-        # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
-        parser.add_argument(
-            '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
-            default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
-            metavar='total_sediment_thickness_filename',
-            help='Optional filename used to obtain total sediment thickness grid. '
-                    'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
-        
         # Allow user to override default age grid filename (if they don't want the one in the bundled data).
         parser.add_argument(
             '-a', '--age_grid_filename', type=argparse_unicode,
@@ -528,10 +515,9 @@ if __name__ == '__main__':
         # Generate a global latitude/longitude grid of points (with the requested grid spacing).
         input_points = generate_input_points_grid(grid_spacing_degrees)
         
-        # Generate rift parameter points (at non-NaN grid sample locations in total sediment thickness grid).
+        # Generate rift parameter points on continental crust (at NaN grid sample locations in age grid).
         rift_parameter_points = generate_rift_parameter_points(
                 input_points,
-                args.total_sediment_thickness_filename,
                 args.age_grid_filename,
                 topology_filenames,
                 rotation_filenames,
