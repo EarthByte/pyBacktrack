@@ -104,9 +104,9 @@ def reconstruct_backtrack_bathymetry(
     input_points : sequence of (longitude, latitude) tuples
         The point locations to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
-    oldest_time : int
+    oldest_time : float
         The oldest time (in Ma) that output is generated back to (from present day). Value must be positive.
-    time_increment: int
+    time_increment: float
         The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
     lithology_filenames : list of string, optional
         One or more text files containing lithologies.
@@ -180,7 +180,7 @@ def reconstruct_backtrack_bathymetry(
     Raises
     ------
     ValueError
-        If ``oldest_time`` is not a positive integer or if ``time_increment`` is not a positive integer.
+        If ``oldest_time`` is not positive or if ``time_increment`` is not positive.
 
     Notes
     -----
@@ -881,9 +881,11 @@ def main():
         
     grid_spacing_argument_group = parser.add_mutually_exclusive_group()
     grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
-            help='The grid spacing (in degrees) of sample points in lon/lat space.')
+            help='The grid spacing (in degrees) of sample points in lon/lat space. '
+                 'Defaults to {0} degrees.'.format(DEFAULT_GRID_SPACING_DEGREES))
     grid_spacing_argument_group.add_argument('-gm', '--grid_spacing_minutes', type=float,
-            help='The grid spacing (in minutes) of sample points in lon/lat space.')
+            help='The grid spacing (in minutes) of sample points in lon/lat space. '
+                 'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
     
     parser.add_argument('--anchor', type=parse_positive_integer, default=0,
             dest='anchor_plate_id',
@@ -1030,7 +1032,7 @@ def main():
 
     parser.add_argument('oldest_time', type=parse_positive_float,
             metavar='oldest_time',
-            help='Output is generated from present day back to the oldest time (in Ma). Value must be a positive integer.')
+            help='Output is generated from present day back to the oldest time (in Ma). Value must be positive.')
     
     parser.add_argument(
         'output_file_prefix', type=argparse_unicode,
