@@ -40,6 +40,10 @@ DEFAULT_DEFORMING_MODEL_ROTATION_FILES = os.path.join('deforming_model', '2019_v
 # We only go back to 250Ma. Rifting since Pangea began at 240Ma.
 DEFAULT_OLDEST_RIFT_START_TIME = 250
 
+# The rift start and end times for points inside deforming regions that have overall contraction (instead of extension).
+DEFAULT_RIFT_START_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT = 200
+DEFAULT_RIFT_END_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT = 0
+
 # Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
 DEFAULT_GRID_SPACING_DEGREES = 1.0
 DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
@@ -263,12 +267,20 @@ def find_continent_rift_parameters(
             break
 
     
-    # Output points that we have found a rift start and end time for.
+    # Output points that we have found a rift end time for.
+    #
+    # Points that encountered a rift end time entered a deforming network (we reconstruct backwards from present day),
+    # but if they don't have a rift start time then they compressed instead of stretched (going forward in time).
+    # In this case we just assume rifting and use a default rift start time. And we also set the rift end time to present day
+    # (since these areas are close to active plate boundaries, meaning there is likely onging deformation).
     for point_index in range(num_continent_points):
-        rift_start_time = rift_start_times[point_index]
         rift_end_time = rift_end_times[point_index]
-        if (rift_start_time is not None and
-            rift_end_time is not None):
+        if rift_end_time is not None:
+            rift_start_time = rift_start_times[point_index]
+            if rift_start_time is None:
+                # Use default rift start/end times for contracting areas (where rift start time not recorded).
+                rift_end_time = DEFAULT_RIFT_END_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT
+                rift_start_time = DEFAULT_RIFT_START_TIME_IN_DEFORMING_REGIONS_THAT_CONTRACT
             initial_point = initial_points[point_index]
             continent_rift_parameter_points.append(
                     (initial_point[0], initial_point[1], rift_start_time, rift_end_time))
