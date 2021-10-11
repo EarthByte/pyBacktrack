@@ -201,8 +201,14 @@ def find_continent_rift_parameters(
                 oldest_time=final_time,
                 youngest_time=initial_time,
                 initial_scalars={pygplates.ScalarType.gpml_crustal_stretching_factor : reconstructed_crustal_stretching_factors},
-                # All our points are on continental crust so we keep them active through time (ie, never deactivate them)...
-                deactivate_points=None)
+                # All our points are on continental crust so normally we would keep them active through time (ie, never deactivate them).
+                # However some points close to plate boundaries (such as near subduction zones) actually are on oceanic crust at present day
+                # (due to things like inaccuracies between deforming model and age grid, and large changes in plate shapes at certain times).
+                # And these points end up grouping at mid-ocean ridges (when reconstructed back in time) because they aren't deactivated, and
+                # eventually end up in some deforming network completely unrelated to the original continent they were on at present day, thus
+                # resulting in completely unrelated rift start/end times to their neighbouring points at present day. To rectify this we
+                # deactivate points so that they disappear when reaching a mid-ocean ridge (and cannot enter an unrelated deforming region).
+                deactivate_points=pygplates.ReconstructedGeometryTimeSpan.DefaultDeactivatePoints())
         
         # Keep track of which points have found their rift start/end times (we'll remove these from subsequent time intervals).
         finished_reconstructed_point_indices = set()
