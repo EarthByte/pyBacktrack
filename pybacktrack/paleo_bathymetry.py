@@ -105,7 +105,7 @@ def reconstruct_backtrack_bathymetry(
         The point locations to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
     oldest_time : float
-        The oldest time (in Ma) that output is generated back to (from present day). Value must be positive.
+        The oldest time (in Ma) that output is generated back to (from present day). Value must not be negative.
     time_increment: float
         The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
     lithology_filenames : list of string, optional
@@ -180,15 +180,15 @@ def reconstruct_backtrack_bathymetry(
     Raises
     ------
     ValueError
-        If ``oldest_time`` is not positive or if ``time_increment`` is not positive.
+        If ``oldest_time`` is negative or if ``time_increment`` is not positive.
 
     Notes
     -----
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
     """
     
-    if oldest_time <= 0:
-        raise ValueError("'oldest_time' should be positive")
+    if oldest_time < 0:
+        raise ValueError("'oldest_time' should not be negative")
     if time_increment <= 0:
         raise ValueError("'time_increment' should be positive")
     
@@ -850,6 +850,17 @@ def main():
             raise argparse.ArgumentTypeError("%g is not a positive (floating-point) number" % value)
         
         return value
+        
+    def parse_non_negative_float(value_string):
+        try:
+            value = float(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a (floating-point) number" % value_string)
+        
+        if value < 0:
+            raise argparse.ArgumentTypeError("%g is a negative (floating-point) number" % value)
+        
+        return value
 
     # Action to parse dynamic topography model information.
     class ArgParseDynamicTopographyAction(argparse.Action):
@@ -1030,9 +1041,9 @@ def main():
              'Each row of each xyz file contains "longitude latitude bathymetry". '
              'Default is to only create grid files (no xyz).')
 
-    parser.add_argument('oldest_time', type=parse_positive_float,
+    parser.add_argument('oldest_time', type=parse_non_negative_float,
             metavar='oldest_time',
-            help='Output is generated from present day back to the oldest time (in Ma). Value must be positive.')
+            help='Output is generated from present day back to the oldest time (in Ma). Value must not be negative.')
     
     parser.add_argument(
         'output_file_prefix', type=argparse_unicode,
