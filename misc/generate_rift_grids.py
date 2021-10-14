@@ -105,15 +105,22 @@ def generate_rift_parameter_points(
         # Read the list of default rotation filenames.
         rotation_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_ROTATION_FILES)
 
-    # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
-    #print ('Reading submerged points...'); sys.stdout.flush()
-    submerged_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, total_sediment_thickness_filename) if not math.isnan(sample[2])]
-
-    # Read the age grid file (at submerged locations) and only include those that have NaN values (representing non-oceanic points).
+    # Read the age grid file and only include those that have NaN values (representing non-oceanic points).
     #print ('Reading continent points...'); sys.stdout.flush()
-    continent_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(submerged_points, age_grid_filename) if math.isnan(sample[2])]
+    continent_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, age_grid_filename) if math.isnan(sample[2])]
 
-    # If using a single CPU then just process all ocean/continent points in one call.
+    # Read the total sediment thickness grid file (at continent locations) and mark whether location is submerged (has non-NaN grid value).
+    #print ('Reading submerged continent points...'); sys.stdout.flush()
+    continent_point_is_submerged = [not math.isnan(sample[2]) for sample in _gmt_grdtrack(continent_points, total_sediment_thickness_filename)]
+
+    #
+    # Calculate rift parameters in deforming regions on continental crust.
+    #
+    # We calculate at both submerged and non-submerged locations since we later expand these rift parameters to
+    # *submerged* locations outside (but near) deforming regions.
+    #
+
+    # If using a single CPU then just process all continent points in one call.
     #print ('Reconstructing', len(continent_points), 'continent points...'); sys.stdout.flush()
     if not use_all_cpus:
         continent_rift_parameter_points_in_deforming_regions = find_continent_rift_parameters_in_deforming_regions(
@@ -153,34 +160,37 @@ def generate_rift_parameter_points(
             itertools.chain.from_iterable(continent_rift_parameter_points_in_deforming_regions_lists))
 
     #
-    # Expand the rift parameters in deforming regions to nearby non-deforming areas.
+    # Expand the rift parameters in deforming regions to nearby non-deforming areas, and only consider *submerged* regions.
     #
 
-    continent_rift_parameter_points = []
+    submerged_continent_rift_parameter_points = []
 
-    continent_non_deforming_points = []
+    submerged_continent_non_deforming_points = []
+    # The rift parameters to be expanded are currently on submerged and non-submerged continental crust.
     continent_deforming_points = []
     continent_deforming_rift_start_end_times = []
     
     # Separate deforming from non-deforming points.
     # Non-deforming points have no rift start/end times.
-    for lon, lat, rift_start_end_times in continent_rift_parameter_points_in_deforming_regions:
+    for point_index, (lon, lat, rift_start_end_times) in enumerate(continent_rift_parameter_points_in_deforming_regions):
         if rift_start_end_times is None:
-            continent_non_deforming_points.append((lon, lat))
+            if continent_point_is_submerged[point_index]:
+                submerged_continent_non_deforming_points.append((lon, lat))
         else:
             continent_deforming_points.append((lon, lat))
             continent_deforming_rift_start_end_times.append(rift_start_end_times)
-            # Output the final deforming points.
-            rift_start_time, rift_end_time = rift_start_end_times
-            continent_rift_parameter_points.append((lon, lat, rift_start_time, rift_end_time))
+            # Output the final rift parameters on submerged continental crust in deforming regions.
+            if continent_point_is_submerged[point_index]:
+                rift_start_time, rift_end_time = rift_start_end_times
+                submerged_continent_rift_parameter_points.append((lon, lat, rift_start_time, rift_end_time))
 
     #
     # For each non-deforming point find the closest deforming point (within threshold distance) and use its rift start/end times.
     #
     rift_expansion_degrees = 10.0
     if not use_all_cpus:
-        continent_rift_parameter_points_in_non_deforming_regions = expand_continent_rift_parameters_into_non_deforming_regions(
-                continent_non_deforming_points,
+        submerged_continent_rift_parameter_points_in_non_deforming_regions = expand_continent_rift_parameters_into_non_deforming_regions(
+                submerged_continent_non_deforming_points,
                 continent_deforming_points,
                 continent_deforming_rift_start_end_times,
                 rift_expansion_degrees)
@@ -195,29 +205,30 @@ def generate_rift_parameter_points(
         # Divide the non-deforming points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
         # Update: Using 8 times num_cpus since some point groups take quite a bit longer than others.
         num_point_groups = 8 * num_cpus
-        num_points_per_group = math.ceil(float(len(continent_non_deforming_points)) / num_point_groups)
+        num_points_per_group = math.ceil(float(len(submerged_continent_non_deforming_points)) / num_point_groups)
 
         # Distribute the groups of points across the multiprocessing pool.
         with multiprocessing.Pool(num_cpus) as pool:
-            continent_rift_parameter_points_in_non_deforming_regions_lists = pool.map(
+            submerged_continent_rift_parameter_points_in_non_deforming_regions_lists = pool.map(
                     partial(
                         expand_continent_rift_parameters_into_non_deforming_regions,
                         continent_deforming_points=continent_deforming_points,
                         continent_deforming_rift_start_end_times=continent_deforming_rift_start_end_times,
                         rift_expansion_degrees=rift_expansion_degrees),
                     (
-                        continent_non_deforming_points[
+                        submerged_continent_non_deforming_points[
                             group_index * num_points_per_group :
                             (group_index + 1) * num_points_per_group]
                                     for group_index in range(num_point_groups)
                     ),
                     1) # chunksize
 
-        continent_rift_parameter_points_in_non_deforming_regions = list(itertools.chain.from_iterable(continent_rift_parameter_points_in_non_deforming_regions_lists))
+        submerged_continent_rift_parameter_points_in_non_deforming_regions = list(
+            itertools.chain.from_iterable(submerged_continent_rift_parameter_points_in_non_deforming_regions_lists))
 
-    continent_rift_parameter_points.extend(continent_rift_parameter_points_in_non_deforming_regions)
+    submerged_continent_rift_parameter_points.extend(submerged_continent_rift_parameter_points_in_non_deforming_regions)
 
-    return continent_rift_parameter_points
+    return submerged_continent_rift_parameter_points
 
 
 def find_continent_rift_parameters_in_deforming_regions(
