@@ -52,17 +52,21 @@ DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
 
 def generate_rift_parameter_points(
         input_points,
+        total_sediment_thickness_filename,
         age_grid_filename,
         topology_filenames=None,
         rotation_filenames=None,
         oldest_rift_start_time=DEFAULT_OLDEST_RIFT_START_TIME,
         use_all_cpus=False):
-    """Generate rift parameter points on continental crust (at NaN grid sample locations in age grid).
+    """Generate rift parameter points on submerged continental crust (at non-NaN grid sample locations in total sediment thickness grid).
     
     Parameters
     ----------
     input_points : sequence of (longitude, latitude) tuples
         The point locations to generate rift grid points.
+    total_sediment_thickness_filename : string
+        Total sediment thickness filename.
+        Used to determine which points on continental crust are submerged (at present day).
     age_grid_filename : string
         Age grid filename.
         Used to obtain location of continental crust (where age grid is NaN).
@@ -101,12 +105,13 @@ def generate_rift_parameter_points(
         # Read the list of default rotation filenames.
         rotation_filenames = _read_list_of_files(DEFAULT_DEFORMING_MODEL_ROTATION_FILES)
 
-    # Read the age grid file and only include those that have NaN values (representing non-oceanic points).
-    #
-    # Note: We used to also read the total sediment thickness grid just to get *submerged* crust locations (where grid is not NaN).
-    #       However now we generate rift start/end grid values at any continental crust location (regardless of submerged or not).
+    # Read the total sediment thickness grid file and gather a list of non-NaN grid locations (ie, (longitude, latitude) tuples).
+    #print ('Reading submerged points...'); sys.stdout.flush()
+    submerged_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, total_sediment_thickness_filename) if not math.isnan(sample[2])]
+
+    # Read the age grid file (at submerged locations) and only include those that have NaN values (representing non-oceanic points).
     #print ('Reading continent points...'); sys.stdout.flush()
-    continent_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(input_points, age_grid_filename) if math.isnan(sample[2])]
+    continent_points = [(sample[0], sample[1]) for sample in _gmt_grdtrack(submerged_points, age_grid_filename) if math.isnan(sample[2])]
 
     # If using a single CPU then just process all ocean/continent points in one call.
     #print ('Reconstructing', len(continent_points), 'continent points...'); sys.stdout.flush()
@@ -188,7 +193,8 @@ def generate_rift_parameter_points(
             num_cpus = 1
         
         # Divide the non-deforming points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
-        num_point_groups = 2 * num_cpus
+        # Update: Using 8 times num_cpus since some point groups take quite a bit longer than others.
+        num_point_groups = 8 * num_cpus
         num_points_per_group = math.ceil(float(len(continent_non_deforming_points)) / num_point_groups)
 
         # Distribute the groups of points across the multiprocessing pool.
@@ -563,6 +569,14 @@ if __name__ == '__main__':
                 help='The grid spacing (in minutes) of generate points in lon/lat space. '
                     'Defaults to {0} minutes.'.format(DEFAULT_GRID_SPACING_MINUTES))
         
+        # Allow user to override default total sediment thickness filename (if they don't want the one in the bundled data).
+        parser.add_argument(
+            '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
+            default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+            metavar='total_sediment_thickness_filename',
+            help='Optional filename used to determine submerged crust. '
+                    'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+        
         # Allow user to override default age grid filename (if they don't want the one in the bundled data).
         parser.add_argument(
             '-a', '--age_grid_filename', type=argparse_unicode,
@@ -648,9 +662,11 @@ if __name__ == '__main__':
         # Generate a global latitude/longitude grid of points (with the requested grid spacing).
         input_points = generate_input_points_grid(grid_spacing_degrees)
         
-        # Generate rift parameter points on continental crust (at NaN grid sample locations in age grid).
+        # Generate rift parameter points on submerged continental crust
+        # (at non-NaN grid sample locations in total sediment thickness grid).
         rift_parameter_points = generate_rift_parameter_points(
                 input_points,
+                args.total_sediment_thickness_filename,
                 args.age_grid_filename,
                 topology_filenames,
                 rotation_filenames,
