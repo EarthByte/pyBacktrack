@@ -443,14 +443,17 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         # that began sediment deposition at 'age' Ma (and finished at present day).
         well = Well()
         well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+        # If we're reconstructing to times prior to 'age' then add an extra stratigraphic layer with zero thickness to cover the period prior
+        # to ocean crust formation at the mid-ocean ridge. We won't actually reconstruct prior to crust formation, but having this zero thickness layer
+        # means we don't have to test if None is returned by 'well.decompact(decompaction_time)' for special cases like an age grid value of zero
+        # (where we'd still like to create a bathmetry value at present day). Also this extra layer is similar to how it's done with continental crust. 
+        if time_range[-1] >= age:
+            well.add_compacted_unit(age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, base_lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
         present_day_decompacted_well = well.decompact(0.0)
-        if not present_day_decompacted_well:
-            # Skip current grid sample, 'age' must be zero and so there has been no time for sediment deposition.
-            continue
         present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
 
         # Present-day tectonic subsidence calculated from age-to-depth model.
@@ -478,11 +481,13 @@ def _reconstruct_backtrack_oceanic_bathymetry(
             decompacted_well = well.decompact(decompaction_time)
 
             # If the decompaction time has exceeded the age of ocean crust (bottom age of well) then we're finished with current well.
-            if not decompacted_well:
+            # That is, the current time exceeded the age grid value. Which means the ocean crust at the current point has been reconstructed
+            # back prior to the time it was created. So we're finished with it (because the remaining times in the loop are even older).
+            if decompaction_time > age:
                 break
 
             # Age of the ocean basin at well location when it's decompacted to the current decompaction age.
-            paleo_age_of_crust_at_decompaction_time = max(0, age - decompaction_time)
+            paleo_age_of_crust_at_decompaction_time = age - decompaction_time
             
             # Use age-to-depth model to lookup depth given the age.
             tectonic_subsidence_from_model = age_to_depth.convert_age_to_depth(paleo_age_of_crust_at_decompaction_time, ocean_age_to_depth_model)
@@ -582,14 +587,18 @@ def _reconstruct_backtrack_continental_bathymetry(
         # that began sediment deposition when rifting began (and finished at present day).
         well = Well()
         well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+        # If we're reconstructing to times prior to rifting then add an extra stratigraphic layer with zero thickness to cover the period prior to rifting.
+        # Having this zero thickness layer prevents us from prematurely ending bathymetry reconstruction for times prior to rifting by ensuring
+        # 'well.decompact(decompaction_time)' does not return None (when 'decompaction_time >= rift_start_age').
+        # The tectonic subsidence will be zero during this time period.
+        # It also allows us to easily see other effects prior to sediment deposition (eg, sea level, dynamic topography). 
+        if time_range[-1] >= rift_start_age:
+            well.add_compacted_unit(rift_start_age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, base_lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
         # Note that sea level variations don't apply here because they are zero at present day.
         present_day_decompacted_well = well.decompact(0.0)
-        if not present_day_decompacted_well:
-            # Skip current grid sample, 'rift_start_age' must be zero and so there has been no time for sediment deposition (which happens when rifting starts).
-            continue
         present_day_tectonic_subsidence = present_day_water_depth + present_day_decompacted_well.get_sediment_isostatic_correction()
         
         # If we have dynamic topography then get dynamic topography at rift start and at present day.
@@ -639,10 +648,6 @@ def _reconstruct_backtrack_continental_bathymetry(
         for decompaction_time in time_range:
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
-
-            # If the decompaction time has exceeded the rift start time (bottom age of well) then we're finished with current well.
-            if not decompacted_well:
-                break
 
             # Calculate rifting subsidence at decompaction time.
             decompacted_well.tectonic_subsidence = rifting.total_subsidence(
