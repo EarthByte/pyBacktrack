@@ -477,14 +477,14 @@ def _reconstruct_backtrack_oceanic_bathymetry(
             dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
         
         for decompaction_time in time_range:
-            # Decompact at the current time.
-            decompacted_well = well.decompact(decompaction_time)
-
             # If the decompaction time has exceeded the age of ocean crust (bottom age of well) then we're finished with current well.
             # That is, the current time exceeded the age grid value. Which means the ocean crust at the current point has been reconstructed
             # back prior to the time it was created. So we're finished with it (because the remaining times in the loop are even older).
             if decompaction_time > age:
                 break
+
+            # Decompact at the current time.
+            decompacted_well = well.decompact(decompaction_time)
 
             # Age of the ocean basin at well location when it's decompacted to the current decompaction age.
             paleo_age_of_crust_at_decompaction_time = age - decompaction_time
@@ -644,8 +644,16 @@ def _reconstruct_backtrack_continental_bathymetry(
             continue
         reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
 
+        # The age of the continental crust is the begin time (time of appearance) of the partitioning polygon (static polygon covering this point).
+        age, _ = partitioning_plate.get_feature().get_valid_time()
         
         for decompaction_time in time_range:
+            # If the decompaction time has exceeded the age of continental crust then we're finished with current well.
+            # That is, the current time exceeded the begin time of static polygon. Which means the continental crust at the current point has been
+            # reconstructed back prior to the time it was created. So we're finished with it (because the remaining times in the loop are even older).
+            if decompaction_time > age:
+                break
+
             # Decompact at the current time.
             decompacted_well = well.decompact(decompaction_time)
 
