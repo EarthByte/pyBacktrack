@@ -185,15 +185,13 @@ def generate_rift_parameter_points(
                 submerged_continent_rift_parameter_points.append((lon, lat, rift_start_time, rift_end_time))
 
     #
-    # For each non-deforming point find the closest deforming point (within threshold distance) and use its rift start/end times.
+    # For each non-deforming point find the closest deforming point and use its rift start/end times.
     #
-    rift_expansion_degrees = 10.0
     if not use_all_cpus:
         submerged_continent_rift_parameter_points_in_non_deforming_regions = expand_continent_rift_parameters_into_non_deforming_regions(
                 submerged_continent_non_deforming_points,
                 continent_deforming_points,
-                continent_deforming_rift_start_end_times,
-                rift_expansion_degrees)
+                continent_deforming_rift_start_end_times)
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
         # Number of CPUs for our multiprocessing pool.
@@ -213,8 +211,7 @@ def generate_rift_parameter_points(
                     partial(
                         expand_continent_rift_parameters_into_non_deforming_regions,
                         continent_deforming_points=continent_deforming_points,
-                        continent_deforming_rift_start_end_times=continent_deforming_rift_start_end_times,
-                        rift_expansion_degrees=rift_expansion_degrees),
+                        continent_deforming_rift_start_end_times=continent_deforming_rift_start_end_times),
                     (
                         submerged_continent_non_deforming_points[
                             group_index * num_points_per_group :
@@ -383,7 +380,7 @@ def expand_continent_rift_parameters_into_non_deforming_regions(
         continent_non_deforming_points,
         continent_deforming_points,
         continent_deforming_rift_start_end_times,
-        rift_expansion_degrees):
+        rift_expansion_degrees=None):
     """Expand rift parameters from deforming regions into nearby non-deforming regions.
     
     Parameters
@@ -394,23 +391,29 @@ def expand_continent_rift_parameters_into_non_deforming_regions(
         The point locations in deforming regions.
     continent_deforming_rift_start_end_times : sequence of (float, float) tuples
         The rift start and end times of points in deforming regions (in same order as *continent_deforming_points*).
-    rift_expansion_degrees : float
+    rift_expansion_degrees : float, optional
         The nearest neighbour distance to expand rift parameters in deforming regions into non-deforming regions.
+        If not specified then there's no limit on distance.
 
     Returns
     -------
     list of tuples (lon, lat, rift_start_time, rift_end_time).
     """
 
+    if rift_expansion_degrees is None:
+        distance_threshold_radians = None
+    else:
+        distance_threshold_radians = math.radians(rift_expansion_degrees)
+    
     continent_non_deforming_rift_start_end_times = proximity_query.find_closest_points_to_geometries(
             [pygplates.PointOnSphere(lat, lon) for lon, lat in continent_non_deforming_points],
             [pygplates.PointOnSphere(lat, lon) for lon, lat in continent_deforming_points],
             continent_deforming_rift_start_end_times,
-            distance_threshold_radians = math.radians(rift_expansion_degrees))
+            distance_threshold_radians = distance_threshold_radians)
 
     continent_rift_parameter_points = []
 
-    # Output the non-deforming points near deforming regions (within threshold distance).
+    # Output the non-deforming points near deforming regions.
     for point_index, rift_start_end_times in enumerate(continent_non_deforming_rift_start_end_times):
         if rift_start_end_times is not None:
             lon, lat = continent_non_deforming_points[point_index]
