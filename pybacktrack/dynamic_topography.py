@@ -177,7 +177,7 @@ class DynamicTopography(object):
         ----------
         dynamic_topography_model_name : string
             Name of a bundled dynamic topography model.
-            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts`` and ``smean``.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18`` and ``KM16``.
         longitude : float or list of float
             Longitude of the point location, or list of longitudes (if multiple point locations).
         latitude : float or list of float

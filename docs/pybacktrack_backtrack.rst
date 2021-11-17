@@ -378,6 +378,11 @@ dynamic topography since the start of rifting.
 
 These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
+* *Cao et al., 2019* - `The interplay of dynamic topography and eustasy on continental flooding in the late Paleozoic <https://doi.org/10.1016/j.tecto.2019.04.018>`_
+
+  * `AY18 <http://portal.gplates.org/dynamic_topography_cesium/?model=gld324&name=AY18>`_
+  * `KM16 <http://portal.gplates.org/dynamic_topography_cesium/?model=gld321&name=KM16>`_
+
 * *Müller et al., 2017* - `Dynamic topography of passive continental margins and their hinterlands since the Cretaceous <https://doi.org/10.1016/j.gr.2017.04.028>`_
 
   * `M1 <http://portal.gplates.org/dynamic_topography_cesium/?model=M1&name=M1>`_
