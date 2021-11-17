@@ -215,7 +215,23 @@ BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS = {
         [
             os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, '20101129', 'rotations.rot')
         ]
-    )
+    ),
+    'AY18': (
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'AY18.grids'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'AY18', 'static_polygons.shp'),
+        [
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'AY18', 'rotations_250-0Ma.rot'),
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'AY18', 'rotations_410-250Ma.rot')
+        ]
+    ),
+    'KM16': (
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH, 'KM16.grids'),
+        os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'KM16', 'static_polygons.shp'),
+        [
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'KM16', 'rotations_250-0Ma.rot'),
+            os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_RECONSTRUCTIONS_PATH, 'KM16', 'rotations_410-250Ma.rot')
+        ]
+    ),
 }
 
 BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES = BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS.keys()

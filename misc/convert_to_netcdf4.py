@@ -10,8 +10,8 @@ import re
 # We also strip away all
 #
 
-input_path = r'E:\Users\John\Downloads\dynamic_topography_reconstruction\models\M7\Dynamic_topography\MantleFrame'
-output_path = r'C:\Users\John\Development\Usyd\gplates\source-code\pygplates_scripts\Other\Backstrip\backstrip\bundle_data\dynamic_topography\models\Muller2017\M7'
+input_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\AY18\MantleFrame'
+output_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\models\Cao2019\AY18'
 grid_ext = 'nc'
 grid_spacing_degrees = 1.0
 
