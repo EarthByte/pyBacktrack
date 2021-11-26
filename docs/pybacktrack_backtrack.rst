@@ -423,3 +423,38 @@ because their oceanic paleo-depths lack the regional detail at more recent times
           The grid list filename, static-polygons filename and one or more rotation filenames are then specified using the
           ``-y`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options),
           or to the *dynamic_topography_model* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
+
+Geohistory analysis
+-------------------
+
+The `Decompacting Stratigraphic Layers <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/decompacting_stratigraphy.ipynb>`_
+notebook shows how to visualize the decompaction of stratigraphic layers at a drill site.
+
+.. note:: The example notebooks are installed as part of the example data which can be installed by following :ref:`these instructions <pybacktrack_install_examples>`.
+
+Continental subsidence
+^^^^^^^^^^^^^^^^^^^^^^
+
+One of the examples in that notebook demonstrates decompaction of a shallow continental drill site using backtracking.
+The tectonic subsidence (black dashed line) is from our :ref:`model of continental subsidence <pygplates_continental_subsidence>` and
+the paleo water depths (blue fill) are backtracked using tectonic subsidence and sediment decompaction.
+Note that, unlike backstripping, :ref:`dynamic topography <pygplates_dynamic_topography>` *does* affect tectonic subsidence
+(because its effects are included in the model of tectonic subsidence).
+
+.. figure:: images/geohistory_DSDP-36-327.png
+
+.. note:: There is a base sediment layer below the drill site (from the bottom of drill site to basement depth) since the drill site does not reach basement depth.
+          And for this drill site the base sediment layer is quite thick because the default total sediment thickness grid is not as accurate near continental margins (compared to deeper ocean basins).
+
+Oceanic subsidence
+^^^^^^^^^^^^^^^^^^
+
+Another example in that notebook demonstrates decompaction of an oceanic drill site using backtracking.
+The tectonic subsidence (black dashed line) is from our :ref:`model of oceanic subsidence <pygplates_oceanic_subsidence>` and
+the paleo water depths (blue fill) are backtracked using tectonic subsidence and sediment decompaction.
+Note that, unlike backstripping, :ref:`dynamic topography <pygplates_dynamic_topography>` *does* affect tectonic subsidence
+(because its effects are included in the model of tectonic subsidence).
+
+.. figure:: images/geohistory_ODP-114-699.png
+
+.. note:: There is a base sediment layer below the drill site (from the bottom of drill site to basement depth) since the drill site does not reach basement depth.

@@ -179,3 +179,18 @@ A sea-level model is optional. If one is not specified then sea-level variation 
 .. note:: It is also possible to specify your own sea-level model. This can be done by providing your own text file containing a column of ages (Ma) and a
           corresponding column of sea levels (m), and specifying the name of this file to the ``-sl`` command-line option or to the *sea_level_model* argument
           of the :func:`pybacktrack.backstrip_and_write_well` function.
+
+Geohistory analysis
+-------------------
+
+The `Decompacting Stratigraphic Layers <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/decompacting_stratigraphy.ipynb>`_
+notebook shows how to visualize the decompaction of stratigraphic layers at a drill site.
+
+.. note:: The example notebooks are installed as part of the example data which can be installed by following :ref:`these instructions <pybacktrack_install_examples>`.
+
+One of the examples in that notebook demonstrates decompaction of a shallow continental drill site using backstripping.
+The paleo water depths (blue fill) are recorded in the drill site file and the tectonic subsidence (black dashed line) is backstripped using the paleo water depths and sediment decompaction.
+Note that, unlike backtracking, dynamic topography does *not* affect tectonic subsidence
+(because backstripping does *not* have a model of tectonic subsidence). So the image below is simply plotting dynamic topography alongside backstripped tectonic subsidence.
+
+.. figure:: images/geohistory_DSDP-36-327.png

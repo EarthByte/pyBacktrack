@@ -141,6 +141,20 @@ and a bottom depth equal to the total sediment thickness.
 .. note:: To output an amended drill site file, specify the amended output filename using the ``-o`` command-line option
           in the :ref:`backtrack <pygplates_backtrack>` or :ref:`backstrip <pygplates_backstrip>` module.
 
+Geohistory analysis
+^^^^^^^^^^^^^^^^^^^
+
+The `Decompacting Stratigraphic Layers <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/decompacting_stratigraphy.ipynb>`_
+notebook shows how to visualize the decompaction of stratigraphic layers at a drill site.
+
+.. note:: The example notebooks are installed as part of the example data which can be installed by following :ref:`these instructions <pybacktrack_install_examples>`.
+
+That notebook decompacts drill sites in the context of :ref:`backtracking <pygplates_backtrack>` and :ref:`backstripping <pygplates_backstrip>` (covered in later sections), but
+regardless of whether we're backstripping or backtracking we are still decompacting the sediment layers in the same way. The following image (from that notebook)
+shows the decompaction of a shallow continental drill site over time.
+
+.. figure:: images/geohistory_sunrise.png
+
 .. _pygplates_lithology_definitions:
 
 Lithology Definitions
