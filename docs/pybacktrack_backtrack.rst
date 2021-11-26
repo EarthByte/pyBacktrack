@@ -267,7 +267,12 @@ by using an age-to-depth model. There are three models built into ``backtrack``:
 
 * ``RHCW18`` - Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_
 
-* ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
+* ``CROSBY_2007`` - Crosby, A.G., (2007). *Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis, University of Cambridge*
+  
+  The Python source code that implements this age-depth relationship can be found
+  `here <https://github.com/EarthByte/pyBacktrack/blob/43b19a73af606267c3fa0c0f8e415d098f0269f8/pybacktrack/age_to_depth.py#L195-L264>`_.
+  And note that additional background information on this model can be found in:
+  Crosby, A.G. and McKenzie, D., 2009. `An analysis of young ocean depth, gravity and global residual topography <https://doi.org/10.1111/j.1365-246X.2009.04224.x>`_.
 
 * ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
 

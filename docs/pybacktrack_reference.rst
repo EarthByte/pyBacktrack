@@ -156,7 +156,7 @@ Constants
     Richards et al. (2020) ``Structure and dynamics of the oceanic lithosphere-asthenosphere system``.
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007``
-    Crosby et al. (2006) ``The relationship between depth, age and gravity in the oceans``.
+    Crosby, A.G., (2007) ``Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis``.
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_GDH1``
     Stein and Stein (1992) ``Model for the global variation in oceanic depth and heat flow with lithospheric age``.

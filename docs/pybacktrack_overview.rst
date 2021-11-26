@@ -118,7 +118,7 @@ There are three built-in age-to-depth ocean models:
 
 * ``RHCW18`` - Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_
 
-* ``CROSBY_2007`` - Crosby et al. (2006) `The relationship between depth, age and gravity in the oceans <https://doi.org/10.1111/j.1365-246X.2006.03015.x>`_
+* ``CROSBY_2007`` - Crosby, A.G., (2007) Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis
 
 * ``GDH1`` - Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_
 

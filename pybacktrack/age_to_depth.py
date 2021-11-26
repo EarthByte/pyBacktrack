@@ -43,8 +43,8 @@ import warnings
 # GDH1;
 # Stein and Stein (1992) "Model for the global variation in oceanic depth and heat flow with lithospheric age".
 MODEL_GDH1 = 0
-# Crosby short PDF on 22 May 2007 uses function which best-fits all the data in
-# Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans".
+# Crosby short PDF on 22 May 2007 referencing thesis:
+# Crosby, A.G., (2007) "Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis".
 MODEL_CROSBY_2007 = 1
 # Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system".
 MODEL_RHCW18 = 2
@@ -54,7 +54,7 @@ MODEL_RHCW18 = 2
 # Only used by command-line script (at bottom of this file).
 ALL_MODELS = [
     (MODEL_GDH1, 'GDH1', 'Stein and Stein (1992) "Model for the global variation in oceanic depth and heat flow with lithospheric age"'),
-    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans"'),
+    (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby, A.G., (2007) "Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis"'),
     (MODEL_RHCW18, 'RHCW18', 'Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system"')]
 
 
@@ -192,12 +192,12 @@ def _age_to_depth_GDH1(age):
         return 5651.0 - 2473.0 * math.exp(-0.0278 * age)
 
 
-#########################################################################################
-# Crosby short PDF on 22 May 2007 uses function which best-fits all the data in         #
-# Crosby et al. (2006) "The relationship between depth, age and gravity in the oceans". #
-#                                                                                       #
-# Converted to Python from C program "age2depth.c".                                     #
-#########################################################################################
+###################################################################################################
+# Crosby short PDF on 22 May 2007 referencing thesis: Crosby, A.G., (2007)                        #
+# "Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis". #
+#                                                                                                 #
+# Converted to Python from C program "age2depth.c".                                               #
+###################################################################################################
 
 def _age_to_depth_CROSBY_2007(age):
     
