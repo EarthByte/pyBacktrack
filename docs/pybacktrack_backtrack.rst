@@ -270,7 +270,7 @@ by using an age-to-depth model. There are three models built into ``backtrack``:
 * ``CROSBY_2007`` - Crosby, A.G., (2007). *Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis, University of Cambridge*
   
   The Python source code that implements this age-depth relationship can be found
-  `here <https://github.com/EarthByte/pyBacktrack/blob/43b19a73af606267c3fa0c0f8e415d098f0269f8/pybacktrack/age_to_depth.py#L195-L264>`_.
+  `here <https://github.com/EarthByte/pyBacktrack/blob/8e21ec2b49be101e88d80e8ccb18fe736d68a277/pybacktrack/age_to_depth.py#L195-L264>`_.
   And note that additional background information on this model can be found in:
   Crosby, A.G. and McKenzie, D., 2009. `An analysis of young ocean depth, gravity and global residual topography <https://doi.org/10.1111/j.1365-246X.2009.04224.x>`_.
 
