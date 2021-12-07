@@ -81,6 +81,7 @@ def reconstruct_backtrack_bathymetry(
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
         region_plate_ids=None,
         anchor_plate_id=0,
+        output_negative_bathymetry_below_sea_level=True,
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
@@ -101,6 +102,7 @@ def reconstruct_backtrack_bathymetry(
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
+        output_negative_bathymetry_below_sea_level=True,\
         use_all_cpus=False)
     Reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
     
@@ -172,6 +174,10 @@ def reconstruct_backtrack_bathymetry(
         Defaults to global.
     anchor_plate_id : int, optional
         The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
+    output_negative_bathymetry_below_sea_level : bool, optional
+        Whether to output negative bathymetry values below sea level.
+        Topography/bathymetry grids typically have positive values above sea level and negative values below.
+        The default matches this (outputs negative bathymetry values below sea level).
     use_all_cpus : bool, optional
         If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
     
@@ -189,6 +195,9 @@ def reconstruct_backtrack_bathymetry(
 
     Notes
     -----
+    The output paleo bathymetry values are negative below sea level by default.
+    Note that this is the inverse of water depth (which is positive below sea level).
+
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
     """
     
@@ -308,7 +317,8 @@ def reconstruct_backtrack_bathymetry(
                 sea_levels,
                 rotation_filenames,
                 static_polygon_filename,
-                anchor_plate_id)
+                anchor_plate_id,
+                output_negative_bathymetry_below_sea_level)
         
         continental_paleo_bathymetry = _reconstruct_backtrack_continental_bathymetry(
                 continental_grid_samples,
@@ -319,7 +329,8 @@ def reconstruct_backtrack_bathymetry(
                 sea_levels,
                 rotation_filenames,
                 static_polygon_filename,
-                anchor_plate_id)
+                anchor_plate_id,
+                output_negative_bathymetry_below_sea_level)
         
         # Combine the oceanic and continental paleo bathymetry dicts into a single bathymetry dict.
         paleo_bathymetry = {time : [] for time in time_range}
@@ -355,7 +366,8 @@ def reconstruct_backtrack_bathymetry(
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
                     static_polygon_filename=static_polygon_filename,
-                    anchor_plate_id=anchor_plate_id),
+                    anchor_plate_id=anchor_plate_id,
+                    output_negative_bathymetry_below_sea_level=output_negative_bathymetry_below_sea_level),
                 (
                     oceanic_grid_samples[
                         oceanic_grid_sample_group_index * num_oceanic_grid_samples_per_group :
@@ -380,7 +392,8 @@ def reconstruct_backtrack_bathymetry(
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
                     static_polygon_filename=static_polygon_filename,
-                    anchor_plate_id=anchor_plate_id),
+                    anchor_plate_id=anchor_plate_id,
+                    output_negative_bathymetry_below_sea_level=output_negative_bathymetry_below_sea_level),
                 (
                     continental_grid_samples[
                         continental_grid_sample_group_index * num_continental_grid_samples_per_group :
@@ -409,7 +422,8 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         sea_levels,
         rotation_filenames,
         static_polygon_filename,
-        anchor_plate_id):
+        anchor_plate_id,
+        output_negative_bathymetry_below_sea_level):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
@@ -514,6 +528,11 @@ def _reconstruct_backtrack_oceanic_bathymetry(
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
+
+            # If the output bathymetry should be the negative of water depth then invert it.
+            if output_negative_bathymetry_below_sea_level:
+                # Topography/bathymetry grids typically have positive values above sea level and negative values below.
+                bathymetry = -bathymetry
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
             rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
@@ -536,7 +555,8 @@ def _reconstruct_backtrack_continental_bathymetry(
         sea_levels,
         rotation_filenames,
         static_polygon_filename,
-        anchor_plate_id):
+        anchor_plate_id,
+        output_negative_bathymetry_below_sea_level):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
@@ -681,6 +701,11 @@ def _reconstruct_backtrack_continental_bathymetry(
             
             # Calculate water depth (from decompacted sediment, tectonic subsidence, sea level and dynamic topography).
             bathymetry = decompacted_well.get_water_depth()
+
+            # If the output bathymetry should be the negative of water depth then invert it.
+            if output_negative_bathymetry_below_sea_level:
+                # Topography/bathymetry grids typically have positive values above sea level and negative values below.
+                bathymetry = -bathymetry
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
             rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
@@ -877,7 +902,7 @@ def write_bathymetry_grids(
         Lat/lon grid spacing (in degrees). Ideally this should match the spacing of the input points used to generate the paleo bathymetries.
     output_file_prefix : string
         The prefix of the output paleo bathymetry grid filenames over time, with "_<time>.nc" appended.
-    output_xyz : bool
+    output_xyz : bool, optional
         Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
         Each row of each xyz file contains "longitude latitude bathymetry".
         Default is to only create grid files (no xyz).
@@ -935,6 +960,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
         region_plate_ids=None,
         anchor_plate_id=0,
+        output_negative_bathymetry_below_sea_level=True,
         output_xyz=False,
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
@@ -957,6 +983,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
+        output_negative_bathymetry_below_sea_level=True,\
         output_xyz=False,\
         use_all_cpus=False)
     Same as :func:`pybacktrack.reconstruct_paleo_bathymetry` but also generates present day input points on a lat/lon grid and
@@ -1032,7 +1059,11 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         Defaults to global.
     anchor_plate_id : int, optional
         The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
-    output_xyz : bool
+    output_negative_bathymetry_below_sea_level : bool, optional
+        Whether to output negative bathymetry values below sea level.
+        Topography/bathymetry grids typically have positive values above sea level and negative values below.
+        The default matches this (outputs negative bathymetry values below sea level).
+    output_xyz : bool, optional
         Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
         Each row of each xyz file contains "longitude latitude bathymetry".
         Default is to only create grid files (no xyz).
@@ -1046,6 +1077,9 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
 
     Notes
     -----
+    The output paleo bathymetry grids have negative values below sea level by default.
+    Note that this is the inverse of water depth (which is positive below sea level).
+
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
     """
 
@@ -1070,6 +1104,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         ocean_age_to_depth_model,
         region_plate_ids,
         anchor_plate_id,
+        output_negative_bathymetry_below_sea_level,
         use_all_cpus)
     
     # Generate a NetCDF grid for each reconstructed time of the paleobathmetry.
@@ -1313,14 +1348,20 @@ def main():
              'If specified then each row should contain an age column followed by a column for sea level (in metres).')
     
     parser.add_argument(
-        '--use_all_cpus', action='store_true',
-        help='Use all CPUs (cores). Defaults to using a single CPU.')
+        '-bp', '--output_positive_bathymetry_below_sea_level', action='store_true',
+        help='Output positive bathymetry values below sea level. '
+             'This is the opposite of typical topography/bathymetry grids that have positive values above sea level and negative values below. '
+             'The default matches this (outputs negative bathymetry values below sea level).')
     
     parser.add_argument(
         '--output_xyz', action='store_true',
         help='Also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid. '
              'Each row of each xyz file contains "longitude latitude bathymetry". '
              'Default is to only create grid files (no xyz).')
+    
+    parser.add_argument(
+        '--use_all_cpus', action='store_true',
+        help='Use all CPUs (cores). Defaults to using a single CPU.')
 
     parser.add_argument('oldest_time', type=parse_non_negative_float,
             metavar='oldest_time',
@@ -1329,7 +1370,7 @@ def main():
     parser.add_argument(
         'output_file_prefix', type=argparse_unicode,
         metavar='output_file_prefix',
-        help='The prefix of the output paleo bathymetry grid filenames over time.')
+        help='The prefix of the output paleo bathymetry grid filenames over time, with "_<time>.nc" appended.')
     
     #
     # Parse command-line options.
@@ -1392,6 +1433,7 @@ def main():
         args.ocean_age_to_depth_model,
         args.region_plate_ids,
         args.anchor_plate_id,
+        not args.output_positive_bathymetry_below_sea_level,  # output_negative_bathymetry_below_sea_level
         args.output_xyz,
         args.use_all_cpus)
 

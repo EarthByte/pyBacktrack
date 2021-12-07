@@ -24,12 +24,13 @@ paleo_bathymetry_wright_extension = 'nc'
 # Dynamic topography grids.
 # These need to be applied to Wright paleobathymetry (pybacktrack already has it applied).
 apply_dynamic_topography = True
-dynamic_topography_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\interpolate_M7\output'
+dynamic_topography_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\dynamic_topography\interpolate_M7\output'
 dynamic_topography_basename = 'interp'
 dynamic_topography_extension = 'nc'
 
 # How far back in time to generate grids.
 max_time = 140
+time_increment = 1
 # For best results set this to the same as Wright grids (they are higher resolution at 0.1 degrees).
 merged_grid_spacing_degrees = 0.2
 
@@ -47,7 +48,9 @@ def merge_paleo_bathymetry_grids(
         present_day_dynamic_topography_points):
     
     # Paleo bathymetry grids to merge (pybacktrack and Wright).
-    paleo_bathymetry_pybacktrack_filename = os.path.join(paleo_bathymetry_pybacktrack_prefix, '{0}_{1}.{2}'.format(paleo_bathymetry_pybacktrack_basename, time, paleo_bathymetry_pybacktrack_extension))
+    #
+    # Note that pybacktrack uses 1 decimal place for the time in the filename, whereas Wright does not.
+    paleo_bathymetry_pybacktrack_filename = os.path.join(paleo_bathymetry_pybacktrack_prefix, '{0}_{1:.1f}.{2}'.format(paleo_bathymetry_pybacktrack_basename, time, paleo_bathymetry_pybacktrack_extension))
     paleo_bathymetry_wright_filename = os.path.join(paleo_bathymetry_wright_prefix, '{0}_{1}.{2}'.format(paleo_bathymetry_wright_basename, time, paleo_bathymetry_wright_extension))
 
     # Sample the paleo bathymetry grids that we're going to merge.
@@ -75,14 +78,17 @@ def merge_paleo_bathymetry_grids(
         if not math.isnan(paleo_bathymetry_pybacktrack):
             paleo_bathymetry = paleo_bathymetry_pybacktrack
         else:
-            # Negate the Wright paleobathymetry. It is negative below sea level (whereas pybacktrack is positive).
-            paleo_bathymetry = -paleo_bathymetry_wright
+            # Note that pybacktrack generates paleobathymetry grids with negative values below sea level by default
+            # (the opposite of backtracking which outputs positive depths below sea level).
+            # And this matches the Wright paleobathymetry grids (which also have negative values below sea level),
+            # so we don't need to negate them to match pybacktrack-generated paleobathymetry.
+            paleo_bathymetry = paleo_bathymetry_wright
             # Also apply dynamic topography to Wright grids (pybacktrack already has it applied).
             if apply_dynamic_topography:
                 dynamic_topography = optional_point_data[0]
-                # Dynamic topography is elevation but we want depth (subsidence) so subtract (instead of add).
+                # Dynamic topography, like bathymetry, is positive going up and negative going down so we can just add it to bathymetry.
                 _, _, dynamic_topography_at_present_day = present_day_dynamic_topography_points[point_index]
-                paleo_bathymetry -= dynamic_topography - dynamic_topography_at_present_day
+                paleo_bathymetry += dynamic_topography - dynamic_topography_at_present_day
 
         merged_points.append((lon, lat, paleo_bathymetry))
     
@@ -192,6 +198,9 @@ if __name__ == '__main__':
     else:
         present_day_dynamic_topography_points = None
     
+    # Create times from present day to 'max_time'.
+    time_range = range(0, max_time+1, time_increment)
+    
     if use_multiple_cpus:
         try:
             num_cpus = multiprocessing.cpu_count()
@@ -205,11 +214,11 @@ if __name__ == '__main__':
                         merge_paleo_bathymetry_grids,
                         input_points=input_points,
                         present_day_dynamic_topography_points=present_day_dynamic_topography_points),
-                    range(0, max_time+1),
+                    time_range,
                     1) # chunksize
 
     else:
-        for time in range(0, max_time+1):
+        for time in time_range:
             merge_paleo_bathymetry_grids(
                     time,
                     input_points,
