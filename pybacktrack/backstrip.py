@@ -18,9 +18,9 @@
 
 """Find decompacted total sediment thickness and tectonic subsidence through time.
 
-:func:`backstrip_well` finds decompacted total sediment thickness and tectonic subsidence for each age in a well.
+:func:`pybacktrack.backstrip_well` finds decompacted total sediment thickness and tectonic subsidence for each age in a well.
 
-:func:`write_well` writes decompacted parameters as columns in a text file.
+:func:`pybacktrack.write_backstrip_well` writes decompacted parameters as columns in a text file.
 """
 
 

@@ -38,7 +38,7 @@ import warnings
 
 class DynamicTopography(object):
     """
-    Class to reconstruct a point location (or locations) and sample the time-dependent dynamic topography *mantle* frame grid files.
+    Class to reconstruct ocean point location(s) and sample the time-dependent dynamic topography *mantle* frame grid files.
     
     Attributes
     ----------

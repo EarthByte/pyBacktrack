@@ -20,9 +20,9 @@
 
 """Interpolate a sequence of linear segments read from a 2-column file at values read from a 1-column file.
 
-:func:`read_curve_function` reads x and y columns from a curve file and returns a function y(x) that linearly interpolates.
+:func:`pybacktrack.read_interpolate_function` reads x and y columns from a curve file and returns a function y(x) that linearly interpolates.
 
-:func:`interpolate_file` interpolates a `curve_function` at `x` positions, read from input file, and stores both `x` and interpolated `y` values to output file.
+:func:`pybacktrack.interpolate_file` interpolates a `curve_function` at `x` positions, read from input file, and stores both `x` and interpolated `y` values to output file.
 """
 
 

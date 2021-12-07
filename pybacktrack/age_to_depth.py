@@ -18,9 +18,9 @@
 
 """Convert ocean basin ages (Ma) to basement depth (metres) using different age/depth models.
 
-:func:`convert_age_to_depth` converts ocean basin age to basement depth using a specified age/depth model.
+:func:`pybacktrack.convert_age_to_depth` converts a single ocean basin age to basement depth.
 
-:func:`convert_age_to_depth_files` converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
+:func:`pybacktrack.convert_age_to_depth_files` converts a sequence of ages (read from an input file) to depths (and writes both ages and depths to an output file).
 """
 
 

@@ -1418,7 +1418,7 @@ def read_well_file(
 
 def write_well_file(well, well_filename, other_column_attribute_names=None, well_attributes=None):
     """
-    Write a text file with each row representing a stratigraphic unit.
+    Writes a text file with each row representing a stratigraphic unit.
     
     Parameters
     ----------
@@ -1506,7 +1506,7 @@ def write_well_file(well, well_filename, other_column_attribute_names=None, well
 
 def write_well_metadata(well_file, well, well_attributes=None):
     """
-    Write well metadata to file object ``well_file``.
+    Writes well metadata to file object ``well_file``.
     
     Parameters
     ----------
