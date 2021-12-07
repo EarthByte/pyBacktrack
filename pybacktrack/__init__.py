@@ -44,7 +44,10 @@ from .backstrip import \
     COLUMN_DECOMPACTED_DEPTH as BACKSTRIP_COLUMN_DECOMPACTED_DEPTH
 
 from .paleo_bathymetry import \
-    reconstruct_backtrack_bathymetry
+    reconstruct_backtrack_bathymetry as reconstruct_paleo_bathymetry, \
+    generate_global_lon_lat_points, \
+    write_bathymetry_grids as write_paleo_bathymetry_grids, \
+    reconstruct_backtrack_bathymetry_and_write_grids as reconstruct_paleo_bathymetry_grids
 
 from .lithology import \
     Lithology, \

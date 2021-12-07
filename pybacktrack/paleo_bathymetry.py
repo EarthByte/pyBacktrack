@@ -18,8 +18,13 @@
 
 """Generate paleo bathymetry grids through time.
 
-:func:`pybacktrack.reconstruct_backtrack_bathymetry` reconstructs and backtracks
-sediment-covered crust through time to get paleo bathymetry.
+:func:`pybacktrack.reconstruct_paleo_bathymetry` reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
+
+:func:`pybacktrack.generate_global_lon_lat_points` generates a global grid of points uniformly spaced in longitude and latitude.
+
+:func:`pybacktrack.write_paleo_bathymetry_grids` grid paleo bathymetry into NetCDF grids files.
+
+:func:`pybacktrack.reconstruct_paleo_bathymetry_grids` generates a global grid of points, reconstructs/backtracks their bathymetry and writes paleo bathymetry grids.
 """
 
 
@@ -79,7 +84,7 @@ def reconstruct_backtrack_bathymetry(
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
-    """reconstruct_backtrack_bathymetry(\
+    """reconstruct_paleo_bathymetry(\
         input_points,\
         oldest_time,\
         time_increment=1,\
@@ -689,15 +694,32 @@ def _reconstruct_backtrack_continental_bathymetry(
     return paleo_bathymetry
 
 
-def generate_input_points_grid(grid_spacing_degrees):
-    """
-    Generate a global grid of points uniformly spaced in latitude and longitude.
+def generate_global_lon_lat_points(grid_spacing_degrees):
+    """generate_global_lon_lat_points(grid_spacing_degrees)
+    Generates a global grid of points uniformly spaced in longitude and latitude.
 
-    Returns a list of (longitude, latitude) tuples.
+    Parameters
+    ----------
+    grid_spacing_degrees : float
+        Spacing between points (in degrees).
+    
+    Returns
+    -------
+    list of (longitude, latitude) tuples
+    
+    Raises
+    ------
+    ValueError
+        If ``grid_spacing_degrees`` is negative or zero.
+
+    Notes
+    -----
+    Longitudes start at -180 (dateline) and latitudes start at -90.
+    If 180 is an integer multiple of ``grid_spacing_degrees`` then the final longitude is also on the dateline (+180).
     """
     
-    if grid_spacing_degrees == 0:
-        raise ValueError('Grid spacing cannot be zero.')
+    if grid_spacing_degrees <= 0:
+        raise ValueError('Grid spacing must be positive (and non-zero).')
     
     input_points = []
     
@@ -811,6 +833,252 @@ def _gmt_nearneighbor(
     
     # Call the system command.
     call_system_command(nearneighbor_command_line, stdin=input_data)
+
+
+def _gmt_nearneighbor_multiprocessing(
+        paleo_bathymetry_and_reconstruction_time,
+        grid_spacing,
+        grid_file_prefix,
+        output_xyz):
+    
+    paleo_bathymetry, reconstruction_time = paleo_bathymetry_and_reconstruction_time
+    # Generate paleo bathymetry grid from list of reconstructed points.
+    paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(grid_file_prefix, reconstruction_time)
+    # Also create xyz file if requested.
+    paleo_bathymetry_xyz_filename = None
+    if output_xyz:
+        paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
+        paleo_bathymetry_xyz_filename += '.xyz'
+    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+
+
+def write_bathymetry_grids(
+        paleo_bathymetry,
+        grid_spacing_degrees,
+        output_file_prefix,
+        output_xyz=False,
+        use_all_cpus=False):
+    """write_paleo_bathymetry_grids(\
+        paleo_bathymetry,\
+        grid_spacing_degrees,\
+        output_file_prefix,\
+        output_xyz=False,\
+        use_all_cpus=False)
+    Grid paleo bathymetry into a NetCDF grid for each time step.
+    
+    Parameters
+    ----------
+    paleo_bathymetry : dict
+        A dict mapping each reconstructed time to a list of 3-tuple (longitude, latitude, bathymetry)
+        The reconstructed paleo bathymetry points over a sequence of reconstructed times.
+        Each key in the returned dict is one of those times and each value in the dict is a list of reconstructed paleo bathymetries
+        represented as a 3-tuple containing reconstructed longitude, reconstructed latitude and paleo bathmetry.
+    grid_spacing_degrees : float
+        Lat/lon grid spacing (in degrees). Ideally this should match the spacing of the input points used to generate the paleo bathymetries.
+    output_file_prefix : string
+        The prefix of the output paleo bathymetry grid filenames over time, with "_<time>.nc" appended.
+    output_xyz : bool
+        Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
+        Each row of each xyz file contains "longitude latitude bathymetry".
+        Default is to only create grid files (no xyz).
+    use_all_cpus : bool, optional
+        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    """
+    
+    # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
+    if not use_all_cpus:
+        for reconstruction_time, paleo_bathymetry_at_reconstruction_time in paleo_bathymetry.items():
+            # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
+            # Generate paleo bathymetry grid from list of reconstructed points.
+            paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(output_file_prefix, reconstruction_time)
+            # Also create xyz file if requested.
+            paleo_bathymetry_xyz_filename = None
+            if output_xyz:
+                paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
+                paleo_bathymetry_xyz_filename += '.xyz'
+            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+    else:  # Use 'multiprocessing' pools to distribute across CPUs...
+        try:
+            num_cpus = multiprocessing.cpu_count()
+        except NotImplementedError:
+            num_cpus = 1
+        # Distribute writing of each grid to a different CPU.
+        with multiprocessing.Pool(num_cpus) as pool:
+            pool.map(
+                    partial(
+                        _gmt_nearneighbor_multiprocessing,
+                        grid_spacing=grid_spacing_degrees,
+                        grid_file_prefix=output_file_prefix,
+                        output_xyz=output_xyz),
+                    (
+                        (paleo_bathymetry_at_reconstruction_time, reconstruction_time)
+                            for reconstruction_time, paleo_bathymetry_at_reconstruction_time in paleo_bathymetry.items()
+                    ),
+                    1) # chunksize
+
+
+def reconstruct_backtrack_bathymetry_and_write_grids(
+        output_file_prefix,
+        grid_spacing_degrees,
+        oldest_time,
+        time_increment=1,
+        lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
+        age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
+        topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
+        total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+        crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+        dynamic_topography_model=None,
+        sea_level_model=None,
+        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        region_plate_ids=None,
+        anchor_plate_id=0,
+        output_xyz=False,
+        use_all_cpus=False):
+    # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
+    # the expanded values of the bundle filenames.
+    """reconstruct_paleo_bathymetry_grids(\
+        output_file_prefix,\
+        grid_spacing_degrees,\
+        oldest_time,\
+        time_increment=1,\
+        lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
+        age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
+        topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
+        total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
+        crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,\
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,\
+        dynamic_topography_model=None,\
+        sea_level_model=None,\
+        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
+        region_plate_ids=None,\
+        anchor_plate_id=0,\
+        output_xyz=False,\
+        use_all_cpus=False)
+    Same as :func:`pybacktrack.reconstruct_paleo_bathymetry` but also generates present day input points on a lat/lon grid and
+    outputs paleobathymetry as a NetCDF grid for each time step.
+    
+    Parameters
+    ----------
+    output_file_prefix : string
+        The prefix of the output paleo bathymetry grid filenames over time, with "_<time>.nc" appended.
+    grid_spacing_degrees : float
+        Spacing between lat/lon points (in degrees) to sample bathymetry at present day.
+        Note that any samples outside the masked region of the total sediment thickness grid are ignored.
+    oldest_time : float
+        The oldest time (in Ma) that output is generated back to (from present day). Value must not be negative.
+    time_increment: float
+        The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
+    lithology_filenames : list of string, optional
+        One or more text files containing lithologies.
+    age_grid_filename : string, optional
+        Age grid filename.
+        Used to obtain age of oceanic crust at present day.
+        Crust is oceanic at locations inside masked age grid region, and continental outside.
+    topography_filename : string, optional
+        Topography filename.
+        Used to obtain bathymetry at present day.
+    total_sediment_thickness_filename : string, optional
+        Total sediment thickness filename.
+        Used to obtain total sediment thickness at present day.
+    crustal_thickness_filename : string, optional
+        Crustal thickness filename.
+        Used to obtain crustal thickness at present day.
+    rotation_filenames : list of string, optional
+        List of filenames containing rotation features (to reconstruct sediment-deposited crust).
+        If not specified then defaults to the built-in global rotations associated with the topological model
+        used to generate the built-in rift start/end time grids.
+    static_polygon_filename : string, optional
+        Filename containing static polygon features (to assign plate IDs to points on sediment-deposited crust).
+        If not specified then defaults to the built-in static polygons associated with the topological model
+        used to generate the built-in rift start/end time grids.
+    dynamic_topography_model : string or tuple, optional
+        Represents a time-dependent dynamic topography raster grid (in *mantle* frame).
+        
+        Can be either:
+        
+        * A string containing the name of a bundled dynamic topography model.
+        
+          Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18`` and ``KM16``.
+        * A tuple containing the three elements (dynamic topography list filename, static polygon filename, rotation filenames).
+        
+          The first tuple element is the filename of file containing list of dynamic topography grids (and associated times).
+          Each row in this list file should contain two columns.
+          First column containing filename (relative to list file) of a dynamic topography grid at a particular time.
+          Second column containing associated time (in Ma).
+          The second tuple element is the filename of file containing static polygons associated with dynamic topography model.
+          This is used to assign plate ID to well location so it can be reconstructed.
+          The third tuple element is the filename of the rotation file associated with model.
+          Only the rotation file for static continents/oceans is needed (ie, deformation rotations not needed).
+        
+    sea_level_model : string, optional
+        Used to obtain sea levels relative to present day.
+        Can be either the name of a bundled sea level model, or a sea level filename.
+        Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
+    base_lithology_name : string, optional
+        Lithology name of the all sediment (must be present in lithologies file).
+        The total sediment thickness at all sediment locations is consists of a single lithology.
+        Defaults to ``Shale``.
+    ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
+        The model to use when converting ocean age to depth at well location
+        (if on ocean floor - not used for continental passive margin).
+        It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    region_plate_ids : list of int, optional
+        Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
+        Defaults to global.
+    anchor_plate_id : int, optional
+        The anchor plate id used when reconstructing paleobathymetry grid points. Defaults to zero.
+    output_xyz : bool
+        Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
+        Each row of each xyz file contains "longitude latitude bathymetry".
+        Default is to only create grid files (no xyz).
+    use_all_cpus : bool, optional
+        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    
+    Raises
+    ------
+    ValueError
+        If ``oldest_time`` is negative or if ``time_increment`` is not positive.
+
+    Notes
+    -----
+    Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
+    """
+
+    # Generate a global latitude/longitude grid of points (with the requested grid spacing).
+    input_points = generate_global_lon_lat_points(grid_spacing_degrees)
+    
+    # Generate reconstructed paleo bathymetry points over the requested time period.
+    paleo_bathymetry = reconstruct_backtrack_bathymetry(
+        input_points,
+        oldest_time,
+        time_increment,
+        lithology_filenames,
+        age_grid_filename,
+        topography_filename,
+        total_sediment_thickness_filename,
+        crustal_thickness_filename,
+        rotation_filenames,
+        static_polygon_filename,
+        dynamic_topography_model,
+        sea_level_model,
+        base_lithology_name,
+        ocean_age_to_depth_model,
+        region_plate_ids,
+        anchor_plate_id,
+        use_all_cpus)
+    
+    # Generate a NetCDF grid for each reconstructed time of the paleobathmetry.
+    write_bathymetry_grids(
+        paleo_bathymetry,
+        grid_spacing_degrees,
+        output_file_prefix,
+        output_xyz,
+        use_all_cpus)
 
 
 ########################
@@ -1105,12 +1373,10 @@ def main():
     else:
         sea_level_model = None
     
-    # Generate a global latitude/longitude grid of points (with the requested grid spacing).
-    input_points = generate_input_points_grid(grid_spacing_degrees)
-    
-    # Generate reconstructed paleo bathymetry points over the requested time period.
-    paleo_bathymetry = reconstruct_backtrack_bathymetry(
-        input_points,
+    # Generate reconstructed paleo bathymetry grids over the requested time period.
+    paleo_bathymetry = reconstruct_backtrack_bathymetry_and_write_grids(
+        args.output_file_prefix,
+        grid_spacing_degrees,
         args.oldest_time,
         args.time_increment,
         args.lithology_filenames,
@@ -1126,59 +1392,8 @@ def main():
         args.ocean_age_to_depth_model,
         args.region_plate_ids,
         args.anchor_plate_id,
+        args.output_xyz,
         args.use_all_cpus)
-    
-    # Create times from present day to the oldest requested time in the requested time increments.
-    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
-    time_range = [float(time) for time in np.arange(0, args.oldest_time + 1e-6, args.time_increment)]
-    
-    # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
-    if not args.use_all_cpus:
-        for reconstruction_time in time_range:
-            # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
-            paleo_bathymetry_at_reconstruction_time = paleo_bathymetry[reconstruction_time]
-            # Generate paleo bathymetry grid from list of reconstructed points.
-            paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(args.output_file_prefix, reconstruction_time)
-            # Also create xyz file if requested.
-            paleo_bathymetry_xyz_filename = None
-            if args.output_xyz:
-                paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
-                paleo_bathymetry_xyz_filename += '.xyz'
-            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
-    else:  # Use 'multiprocessing' pools to distribute across CPUs...
-        try:
-            num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
-        # Distribute writing of each grid to a different CPU.
-        with multiprocessing.Pool(num_cpus) as pool:
-            pool.map(
-                    partial(
-                        _gmt_nearneighbor_multiprocessing,
-                        grid_spacing=grid_spacing_degrees,
-                        grid_file_prefix=args.output_file_prefix,
-                        output_xyz=args.output_xyz),
-                    (
-                        (paleo_bathymetry[reconstruction_time], reconstruction_time) for reconstruction_time in time_range
-                    ),
-                    1) # chunksize
-
-
-def _gmt_nearneighbor_multiprocessing(
-        paleo_bathymetry_and_reconstruction_time,
-        grid_spacing,
-        grid_file_prefix,
-        output_xyz):
-    
-    paleo_bathymetry, reconstruction_time = paleo_bathymetry_and_reconstruction_time
-    # Generate paleo bathymetry grid from list of reconstructed points.
-    paleo_bathymetry_grid_filename = '{0}_{1}.nc'.format(grid_file_prefix, reconstruction_time)
-    # Also create xyz file if requested.
-    paleo_bathymetry_xyz_filename = None
-    if output_xyz:
-        paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
-        paleo_bathymetry_xyz_filename += '.xyz'
-    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
 
 
 if __name__ == '__main__':
