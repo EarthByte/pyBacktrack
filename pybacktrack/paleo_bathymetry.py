@@ -20,7 +20,7 @@
 
 :func:`pybacktrack.reconstruct_paleo_bathymetry` reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
 
-:func:`pybacktrack.generate_global_lon_lat_points` generates a global grid of points uniformly spaced in longitude and latitude.
+:func:`pybacktrack.generate_lon_lat_points` generates a global grid of points uniformly spaced in longitude and latitude.
 
 :func:`pybacktrack.write_paleo_bathymetry_grids` grid paleo bathymetry into NetCDF grids files.
 
@@ -199,6 +199,8 @@ def reconstruct_backtrack_bathymetry(
     Note that this is the inverse of water depth (which is positive below sea level).
 
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
+        
+    .. versionadded:: 1.4
     """
     
     if oldest_time < 0:
@@ -719,8 +721,8 @@ def _reconstruct_backtrack_continental_bathymetry(
     return paleo_bathymetry
 
 
-def generate_global_lon_lat_points(grid_spacing_degrees):
-    """generate_global_lon_lat_points(grid_spacing_degrees)
+def generate_lon_lat_points(grid_spacing_degrees):
+    """generate_lon_lat_points(grid_spacing_degrees)
     Generates a global grid of points uniformly spaced in longitude and latitude.
 
     Parameters
@@ -741,6 +743,8 @@ def generate_global_lon_lat_points(grid_spacing_degrees):
     -----
     Longitudes start at -180 (dateline) and latitudes start at -90.
     If 180 is an integer multiple of ``grid_spacing_degrees`` then the final longitude is also on the dateline (+180).
+        
+    .. versionadded:: 1.4
     """
     
     if grid_spacing_degrees <= 0:
@@ -908,6 +912,10 @@ def write_bathymetry_grids(
         Default is to only create grid files (no xyz).
     use_all_cpus : bool, optional
         If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+        
+    Notes
+    -----
+    .. versionadded:: 1.4
     """
     
     # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
@@ -1081,10 +1089,12 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     Note that this is the inverse of water depth (which is positive below sea level).
 
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
+        
+    .. versionadded:: 1.4
     """
 
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
-    input_points = generate_global_lon_lat_points(grid_spacing_degrees)
+    input_points = generate_lon_lat_points(grid_spacing_degrees)
     
     # Generate reconstructed paleo bathymetry points over the requested time period.
     paleo_bathymetry = reconstruct_backtrack_bathymetry(

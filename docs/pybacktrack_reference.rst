@@ -77,7 +77,7 @@ Generate paleo bathymetry grids through time.
 Summary
 ^^^^^^^
 
-:func:`pybacktrack.generate_global_lon_lat_points` generates a global grid of points uniformly spaced in longitude and latitude.
+:func:`pybacktrack.generate_lon_lat_points` generates a global grid of points uniformly spaced in longitude and latitude.
 
 :func:`pybacktrack.reconstruct_paleo_bathymetry` reconstructs and backtracks sediment-covered crust through time to get paleo bathymetry.
 
@@ -88,7 +88,7 @@ Summary
 Detail
 ^^^^^^
 
-.. autofunction:: pybacktrack.generate_global_lon_lat_points
+.. autofunction:: pybacktrack.generate_lon_lat_points
 
 .. autofunction:: pybacktrack.reconstruct_paleo_bathymetry
 
