@@ -51,6 +51,12 @@ class DynamicTopography(object):
         
         .. note:: If no age(s) was supplied and the location(s) is on continental crust then the age(s) of the static polygon(s)
                   containing location(s) is used (or zero when no polygon contains a location).
+        
+    Notes
+    -----
+    .. versionchanged:: 1.4
+        Can have multiple point locations (version 1.3 allowed only one location).
+        So ``longitude``, ``latitude`` and ``age`` can all have either a single value or multiple values (same number for each).
     """
     
     def __init__(self, grid_list_filename, static_polygon_filename, rotation_filenames, longitude, latitude, age=None):
@@ -199,6 +205,9 @@ class DynamicTopography(object):
         Notes
         -----
         .. versionadded:: 1.2
+        
+        .. versionchanged:: 1.4
+           Added ability to specify a list of point locations (as an alternative to specifying a single location).
         """
         
         if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
