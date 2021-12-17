@@ -95,6 +95,29 @@ hence only need to be specified if the default does not suit.
 
 .. seealso:: :ref:`pygplates_backstrip`
 
+.. _pybacktrack_running_the_paleo_bathymetry_script:
+
+paleo_bathymetry
+^^^^^^^^^^^^^^^^
+
+The ``paleo_bathymetry`` module is used to generate paleo bathymetry grids by reconstructing and backtracking present-day sediment-covered crust through time.
+
+This example generates paleobathymetry grids at 12 minute resolution from 0Ma to 240Ma in 1Myr increments using the ``M7`` :ref:`dynamic topography model <pygplates_dynamic_topography>`
+and the ``GDH1`` :ref:`oceanic subsidence model <pygplates_oceanic_subsidence>`:
+
+.. code-block:: python
+
+    python -m pybacktrack.paleo_bathymetry_cli -gm 12 -ym M7 -m GDH1 --use_all_cpus -- 240 paleo_bathymetry_12m_M7_GDH1
+
+...where the ``-gm`` option specifies the grid spacing (in minutes), the ``-ym`` specifies the dynamic topography model, the ``-m`` option specifies the
+oceanic subsidence model, the ``--use_all_cpus`` option uses all CPUs (so it runs faster) and the generated paleobathymetry grid files are named
+``paleo_bathymetry_12m_M7_GDH1_<time>.nc``.
+
+There are other command-line options available to the ``paleo_bathymetry`` module (use the ``--help`` option to list them) but they all have default values and
+hence only need to be specified if the default does not suit.
+
+.. seealso:: :ref:`pygplates_paleo_bathymetry`
+
 .. _pybacktrack_running_the_age_to_depth_script:
 
 age_to_depth
@@ -229,6 +252,31 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
 .. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
+
+paleo_bathymetry
+^^^^^^^^^^^^^^^^
+
+The following Python source code (using :ref:`these functions <pybacktrack_reference_paleobathymetry>`):
+
+.. code-block:: python
+
+    import pybacktrack
+    
+    pybacktrack.reconstruct_paleo_bathymetry_grids(
+        'paleo_bathymetry_12m_M7_GDH1',
+        '0.2',  # degrees (same as 12 minutes)
+        240,
+        dynamic_topography_model='M7',
+        ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_MODEL_GDH1,
+        use_all_cpus=True)
+
+...is equivalent to :ref:`running the paleobathymetry script example <pybacktrack_running_the_paleo_bathymetry_script>`:
+
+.. code-block:: python
+
+    python -m pybacktrack.paleo_bathymetry_cli -gm 12 -ym M7 -m GDH1 --use_all_cpus -- 240 paleo_bathymetry_12m_M7_GDH1
+
+.. note:: The ``paleo_bathymetry`` module is covered in more detail :ref:`here <pygplates_paleo_bathymetry>`.
 
 age_to_depth
 ^^^^^^^^^^^^

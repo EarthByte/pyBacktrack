@@ -47,6 +47,7 @@ Contents
    pybacktrack_stratigraphy
    pybacktrack_backtrack
    pybacktrack_backstrip
+   pybacktrack_paleo_bathymetry
    pybacktrack_reference
 
 
