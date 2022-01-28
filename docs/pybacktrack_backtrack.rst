@@ -1,4 +1,4 @@
-.. _pygplates_backtrack:
+.. _pybacktrack_backtrack:
 
 Backtrack
 =========
@@ -7,7 +7,7 @@ Backtrack
    :local:
    :depth: 2
 
-.. _pygplates_backtrack_overview:
+.. _pybacktrack_backtrack_overview:
 
 Overview
 --------
@@ -15,7 +15,7 @@ Overview
 The ``backtrack`` module is used to find paleo water depths from a tectonic subsidence model, and sediment decompaction over time.
 The tectonic subsidence model is either an age-to-depth curve (in ocean basins) or rifting (near continental passive margins).
 
-.. _pygplates_running_backtrack:
+.. _pybacktrack_running_backtrack:
 
 Running backtrack
 -----------------
@@ -37,7 +37,7 @@ You can either run ``backtrack`` as a built-in script, specifying parameters as 
 .. note:: You can run ``python -m pybacktrack.backtrack_cli --help`` to see a description of all command-line options available, or
           see the :ref:`backtracking reference section <pybacktrack_reference_backtracking>` for documentation on the function parameters.
 
-.. _pygplates_backtrack_example:
+.. _pybacktrack_backtrack_example:
 
 Example
 ^^^^^^^
@@ -89,23 +89,23 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 
 .. note:: The drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
 
-.. _pygplates_backtrack_output:
+.. _pybacktrack_backtrack_output:
 
 Backtrack output
 ----------------
 
 For each stratigraphic layer in the input drill site file, ``backtrack`` can write one or more parameters to an output file.
 
-Running the :ref:`above example <pygplates_backtrack_example>` on ODP drill site 699:
+Running the :ref:`above example <pybacktrack_backtrack_example>` on ODP drill site 699:
 
 .. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
    :literal:
 
-...produces an :ref:`amended drill site output file <pygplates_backtrack_output_amended_drill_site>` containing an extra base sediment layer,
-and a :ref:`decompacted output file <pygplates_backtrack_output_decompacted>` containing the decompacted output parameters like
+...produces an :ref:`amended drill site output file <pybacktrack_backtrack_output_amended_drill_site>` containing an extra base sediment layer,
+and a :ref:`decompacted output file <pybacktrack_backtrack_output_decompacted>` containing the decompacted output parameters like
 sediment thickness and water depth.
 
-.. _pygplates_backtrack_output_amended_drill_site:
+.. _pybacktrack_backtrack_output_amended_drill_site:
 
 Amended drill site output
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -115,16 +115,16 @@ The amended drill site output file:
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
-There is an extra :ref:`base sediment layer <pygplates_base_sediment_layer>` that extends from the bottom
+There is an extra :ref:`base sediment layer <pybacktrack_base_sediment_layer>` that extends from the bottom
 of the drill site (516.3 metres) to the total sediment thickness (601 metres).
 The bottom age of this new base layer (86.79 Ma) is the age of oceanic crust that ODP drill site 699 is on.
 If it had been on continental crust (near a passive margin such as DSDP drill site 327) then
 the bottom age of this new base layer would have been when rifting started
 (since we would have assumed deposition began when continental stretching began).
 
-.. seealso:: :ref:`pygplates_base_sediment_layer` and :ref:`pygplates_backtrack_oceanic_versus_continental_sites`
+.. seealso:: :ref:`pybacktrack_base_sediment_layer` and :ref:`pybacktrack_backtrack_oceanic_versus_continental_sites`
 
-.. _pygplates_backtrack_output_decompacted:
+.. _pybacktrack_backtrack_output_decompacted:
 
 Decompacted output
 ^^^^^^^^^^^^^^^^^^
@@ -138,7 +138,7 @@ The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom
 in the input drill site (except there is also a row associated with the surface age).
 
 The *compacted_thickness* column is the total sediment thickness (601 metres - see base sediment layer of
-:ref:`amended drill site <pygplates_backtrack_output_amended_drill_site>` above) minus *compacted_depth*.
+:ref:`amended drill site <pybacktrack_backtrack_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
 (or the surface age) the decompacted thickness is just the compacted thickness. The *decompacted_density* column is the average density
@@ -150,14 +150,14 @@ At each time it is calculated as the fully decompacted thickness (ie, using surf
 ever been buried. It is also similar to *compacted_depth* except all effects of compaction have been removed.
 The *dynamic_topography* column is the dynamic topography elevation relative to present day (or zero if no dynamic topography model was specified).
 
-Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pygplates_backtrack_oceanic_and_continental_subsidence>`,
+Finally, *tectonic_subsidence* is the output of the underlying :ref:`tectonic subsidence model <pybacktrack_backtrack_oceanic_and_continental_subsidence>`,
 and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.
 
 .. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *decompacted_columns* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
           By default, only *age* and *decompacted_thickness* are output.
 
-.. _pygplates_backtrack_sealevel_variation:
+.. _pybacktrack_backtrack_sealevel_variation:
 
 Sea level variation
 -------------------
@@ -180,7 +180,7 @@ A sea-level model is optional. If one is not specified then sea-level variation 
           corresponding column of sea levels (m), and specifying the name of this file to the ``-sl`` command-line option or to the *sea_level_model* argument
           of the :func:`pybacktrack.backtrack_and_write_well` function.
 
-.. _pygplates_backtrack_oceanic_and_continental_subsidence:
+.. _pybacktrack_backtrack_oceanic_and_continental_subsidence:
 
 Oceanic and continental tectonic subsidence
 -------------------------------------------
@@ -202,7 +202,7 @@ The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_dat
 .. note:: You can optionally specify your own age grid using the ``-a`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *age_grid_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
-.. _pygplates_backtrack_oceanic_versus_continental_sites:
+.. _pybacktrack_backtrack_oceanic_versus_continental_sites:
 
 Oceanic versus continental drill sites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -214,7 +214,7 @@ ODP drill site 699 is located on deeper *ocean* crust (as opposed to shallower c
 
 So it will use the *oceanic* subsidence model.
 
-.. seealso:: :ref:`pygplates_oceanic_subsidence`
+.. seealso:: :ref:`pybacktrack_oceanic_subsidence`
 
 In contrast, DSDP drill site 327 is located on shallower *continental* crust (as opposed to deeper ocean crust):
 
@@ -223,16 +223,16 @@ In contrast, DSDP drill site 327 is located on shallower *continental* crust (as
 
 So it will use the *continental* subsidence model. Since continental subsidence involves rifting, it requires a rift start and end time.
 These extra rift parameters can be specified at the top of the drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes
-(see :ref:`pygplates_continental_subsidence`).
+(see :ref:`pybacktrack_continental_subsidence`).
 
-.. seealso:: :ref:`pygplates_continental_subsidence`
+.. seealso:: :ref:`pybacktrack_continental_subsidence`
 
 If you are not sure whether your drill site lies on oceanic or continental crust then first prepare your drill site assuming it's on
 oceanic crust (since this does not need rift start and end ages). If an error message is generated when
-:ref:`running backtrack <pygplates_running_backtrack>` then you'll need to determine the rift start and end age, then
+:ref:`running backtrack <pybacktrack_running_backtrack>` then you'll need to determine the rift start and end age, then
 add these to your drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes, and then run backtrack again.
 
-.. _pygplates_present_day_tectonic_subsidence:
+.. _pybacktrack_present_day_tectonic_subsidence:
 
 Present-day tectonic subsidence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -255,7 +255,7 @@ The default present-day bathymetry grid :ref:`bundled <pybacktrack_reference_bun
 .. note:: If you specify your own bathymetry grid, ensure that its ocean water depths are negative.
           It is assumed that elevations in the grid above/below sea level are positive/negative.
 
-.. _pygplates_oceanic_subsidence:
+.. _pybacktrack_oceanic_subsidence:
 
 Oceanic subsidence
 ------------------
@@ -289,9 +289,9 @@ The default model is ``RHCW18``.
           where your function should accept a single age (Ma) argument and return the corresponding depth (m).
 
 Since the drill site might be located on anomalously thick or thin ocean crust, a constant offset is added to the age-to-depth model to ensure the model subsidence matches
-the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day.
+the :ref:`actual subsidence <pybacktrack_present_day_tectonic_subsidence>` at present day.
 
-.. _pygplates_continental_subsidence:
+.. _pybacktrack_continental_subsidence:
 
 Continental subsidence
 ----------------------
@@ -327,7 +327,7 @@ the same regardless of whether a rift *start* time was specified or not.
 
 If a rift *start* time is specified, then the stretching factor varies exponentially between the rift *start* and *end* times (assuming a constant strain rate).
 The stretching factor at the rift *start* time is ``1.0`` (since the lithosphere has not yet stretched). The stretching factor at the rift *end* time is
-estimated such that our model produces a subsidence matching the :ref:`actual subsidence <pygplates_present_day_tectonic_subsidence>` at present day, while
+estimated such that our model produces a subsidence matching the :ref:`actual subsidence <pybacktrack_present_day_tectonic_subsidence>` at present day, while
 also thinning the crust to match the actual crustal thickness at present day.
 
 .. note:: The crustal thickness at the end of rifting and at present day are assumed to be the same.
@@ -349,7 +349,7 @@ The default present-day crustal thickness grid :ref:`bundled <pybacktrack_refere
 .. note:: You can optionally specify your own crustal thickness grid using the ``-k`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *crustal_thickness_filename* argument of the :func:`pybacktrack.backtrack_and_write_well` function.
 
-.. _pygplates_dynamic_topography:
+.. _pybacktrack_dynamic_topography:
 
 Dynamic topography
 ------------------
@@ -372,14 +372,14 @@ file to assign a reconstruction plate ID to the drill site, and associated rotat
 Dynamic topography is included in the oceanic subsidence model by adjusting the subsidence to account for the change in
 dynamic topography at the drill site since present day.
 
-.. seealso:: :ref:`pygplates_oceanic_subsidence`
+.. seealso:: :ref:`pybacktrack_oceanic_subsidence`
 
 Dynamic topography is included in the continental subsidence model by first removing the effects of dynamic topography (between the start of rifting and present day)
 prior to estimating the rift stretching factor. This is because estimation of the stretching factor only considers subsidence due to lithospheric thinning (stretching)
 and subsequent thickening (thermal cooling). Once the optimal stretching factor has been estimated, the continental subsidence is adjusted to account for the change in
 dynamic topography since the start of rifting.
 
-.. seealso:: :ref:`pygplates_continental_subsidence`
+.. seealso:: :ref:`pybacktrack_continental_subsidence`
 
 These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
@@ -441,9 +441,9 @@ Continental subsidence
 ^^^^^^^^^^^^^^^^^^^^^^
 
 One of the examples in that notebook demonstrates decompaction of a shallow continental drill site using backtracking.
-The tectonic subsidence (black dashed line) is from our :ref:`model of continental subsidence <pygplates_continental_subsidence>` and
+The tectonic subsidence (black dashed line) is from our :ref:`model of continental subsidence <pybacktrack_continental_subsidence>` and
 the paleo water depths (blue fill) are backtracked using tectonic subsidence and sediment decompaction.
-Note that, unlike backstripping, :ref:`dynamic topography <pygplates_dynamic_topography>` *does* affect tectonic subsidence
+Note that, unlike backstripping, :ref:`dynamic topography <pybacktrack_dynamic_topography>` *does* affect tectonic subsidence
 (because its effects are included in the model of tectonic subsidence).
 
 .. figure:: images/geohistory_DSDP-36-327.png
@@ -455,9 +455,9 @@ Oceanic subsidence
 ^^^^^^^^^^^^^^^^^^
 
 Another example in that notebook demonstrates decompaction of an oceanic drill site using backtracking.
-The tectonic subsidence (black dashed line) is from our :ref:`model of oceanic subsidence <pygplates_oceanic_subsidence>` and
+The tectonic subsidence (black dashed line) is from our :ref:`model of oceanic subsidence <pybacktrack_oceanic_subsidence>` and
 the paleo water depths (blue fill) are backtracked using tectonic subsidence and sediment decompaction.
-Note that, unlike backstripping, :ref:`dynamic topography <pygplates_dynamic_topography>` *does* affect tectonic subsidence
+Note that, unlike backstripping, :ref:`dynamic topography <pybacktrack_dynamic_topography>` *does* affect tectonic subsidence
 (because its effects are included in the model of tectonic subsidence).
 
 .. figure:: images/geohistory_ODP-114-699.png

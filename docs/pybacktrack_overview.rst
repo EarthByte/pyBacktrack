@@ -1,4 +1,4 @@
-.. _pygplates_overview:
+.. _pybacktrack_overview:
 
 Overview
 ========
@@ -63,7 +63,7 @@ the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-
 There are other command-line options available to the ``backtrack`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. seealso:: :ref:`pygplates_backtrack`
+.. seealso:: :ref:`pybacktrack_backtrack`
 
 .. _pybacktrack_running_the_backstrip_script:
 
@@ -83,7 +83,7 @@ lithology definitions, the ``-d`` option specifies the desired columns (``age`` 
 and ``sunrise_backstrip_decompat.txt`` is the output file.
 
 .. note:: It is necessary to specify the bundled ``primary`` and ``extended`` lithology definitions, with ``-l primary extended``, because the input drill site
-          references lithologies in both lithology definition files. See :ref:`pygplates_bundled_lithology_definitions`. This is unlike the
+          references lithologies in both lithology definition files. See :ref:`pybacktrack_bundled_lithology_definitions`. This is unlike the
           :ref:`backtracking example <pybacktrack_running_the_backtrack_script>` above that only references the ``primary`` lithologies, and hence does not need
           to specify lithology definitions because ``primary`` is the default (when ``-l`` is not specified).
 
@@ -93,7 +93,7 @@ and ``sunrise_backstrip_decompat.txt`` is the output file.
 There are other command-line options available to the ``backstrip`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. seealso:: :ref:`pygplates_backstrip`
+.. seealso:: :ref:`pybacktrack_backstrip`
 
 .. _pybacktrack_running_the_paleo_bathymetry_script:
 
@@ -102,8 +102,8 @@ paleo_bathymetry
 
 The ``paleo_bathymetry`` module is used to generate paleo bathymetry grids by reconstructing and backtracking present-day sediment-covered crust through time.
 
-This example generates paleobathymetry grids at 12 minute resolution from 0Ma to 240Ma in 1Myr increments using the ``M7`` :ref:`dynamic topography model <pygplates_dynamic_topography>`
-and the ``GDH1`` :ref:`oceanic subsidence model <pygplates_oceanic_subsidence>`:
+This example generates paleobathymetry grids at 12 minute resolution from 0Ma to 240Ma in 1Myr increments using the ``M7`` :ref:`dynamic topography model <pybacktrack_dynamic_topography>`
+and the ``GDH1`` :ref:`oceanic subsidence model <pybacktrack_oceanic_subsidence>`:
 
 .. code-block:: python
 
@@ -116,7 +116,7 @@ oceanic subsidence model, the ``--use_all_cpus`` option uses all CPUs (so it run
 There are other command-line options available to the ``paleo_bathymetry`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
 
-.. seealso:: :ref:`pygplates_paleo_bathymetry`
+.. seealso:: :ref:`pybacktrack_paleo_bathymetry`
 
 .. _pybacktrack_running_the_age_to_depth_script:
 
@@ -226,7 +226,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
 
-.. note:: The ``backtrack`` module is covered in more detail :ref:`here <pygplates_backtrack>`.
+.. note:: The ``backtrack`` module is covered in more detail :ref:`here <pybacktrack_backtrack>`.
 
 backstrip
 ^^^^^^^^^
@@ -251,7 +251,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
 
-.. note:: The ``backstrip`` module is covered in more detail :ref:`here <pygplates_backstrip>`.
+.. note:: The ``backstrip`` module is covered in more detail :ref:`here <pybacktrack_backstrip>`.
 
 paleo_bathymetry
 ^^^^^^^^^^^^^^^^
@@ -276,7 +276,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     python -m pybacktrack.paleo_bathymetry_cli -gm 12 -ym M7 -m GDH1 --use_all_cpus -- 240 paleo_bathymetry_12m_M7_GDH1
 
-.. note:: The ``paleo_bathymetry`` module is covered in more detail :ref:`here <pygplates_paleo_bathymetry>`.
+.. note:: The ``paleo_bathymetry`` module is covered in more detail :ref:`here <pybacktrack_paleo_bathymetry>`.
 
 age_to_depth
 ^^^^^^^^^^^^

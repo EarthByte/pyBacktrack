@@ -192,7 +192,7 @@ To install the latest development version (requires Git on local system), run:
 Install the examples
 ^^^^^^^^^^^^^^^^^^^^
 
-Before running the example below, or any :ref:`other examples <pygplates_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
+Before running the example below, or any :ref:`other examples <pybacktrack_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
 This assumes you've already :ref:`installed the pybacktrack package <pybacktrack_install_pybacktrack>`.
 
 The following command installs the examples (example data and notebooks) to a new sub-directory of your *current working directory* called ``pybacktrack_examples``:
@@ -256,7 +256,7 @@ To run the docker image:
             sudo docker run -it --rm -p 18888:8888 -w /usr/src/pybacktrack earthbyte/pybacktrack
 
 From the current working directory you can run the :ref:`backtracking example <pybacktrack_a_backtracking_example>` below,
-or any :ref:`other examples <pygplates_overview>` in this documentation. For example, you could run:
+or any :ref:`other examples <pybacktrack_overview>` in this documentation. For example, you could run:
 
 .. code-block:: python
 

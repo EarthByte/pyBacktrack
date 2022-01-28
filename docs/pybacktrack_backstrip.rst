@@ -1,4 +1,4 @@
-.. _pygplates_backstrip:
+.. _pybacktrack_backstrip:
 
 Backstrip
 =========
@@ -7,14 +7,14 @@ Backstrip
    :local:
    :depth: 2
 
-.. _pygplates_backstrip_overview:
+.. _pybacktrack_backstrip_overview:
 
 Overview
 --------
 
 The ``backstrip`` module is used to find tectonic subsidence from paleo water depths, and sediment decompaction over time.
 
-.. _pygplates_running_backstrip:
+.. _pybacktrack_running_backstrip:
 
 Running backstrip
 -----------------
@@ -36,7 +36,7 @@ You can either run ``backstrip`` as a built-in script, specifying parameters as 
 .. note:: You can run ``python -m pybacktrack.backstrip_cli --help`` to see a description of all command-line options available, or
           see the :ref:`backstripping reference section <pybacktrack_reference_backstripping>` for documentation on the function parameters.
 
-.. _pygplates_backstrip_example:
+.. _pybacktrack_backstrip_example:
 
 Example
 ^^^^^^^
@@ -91,23 +91,23 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
 
 .. note:: The drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
 
-.. _pygplates_backstrip_output:
+.. _pybacktrack_backstrip_output:
 
 Backstrip output
 ----------------
 
 For each stratigraphic layer in the input drill site file, ``backstrip`` can write one or more parameters to an output file.
 
-Running the :ref:`above example <pygplates_backstrip_example>` on the sunrise drill site:
+Running the :ref:`above example <pybacktrack_backstrip_example>` on the sunrise drill site:
 
 .. include:: ../pybacktrack/test_data/sunrise_lithology.txt
    :literal:
 
-...produces an :ref:`amended drill site output file <pygplates_backstrip_output_amended_drill_site>`,
-and a :ref:`decompacted output file <pygplates_backstrip_output_decompacted>` containing the decompacted output parameters like
+...produces an :ref:`amended drill site output file <pybacktrack_backstrip_output_amended_drill_site>`,
+and a :ref:`decompacted output file <pybacktrack_backstrip_output_decompacted>` containing the decompacted output parameters like
 sediment thickness and tectonic subsidence.
 
-.. _pygplates_backstrip_output_amended_drill_site:
+.. _pybacktrack_backstrip_output_amended_drill_site:
 
 Amended drill site output
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -117,13 +117,13 @@ The amended drill site output file:
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_amended.txt
    :literal:
 
-.. note:: No extra :ref:`base sediment layer <pygplates_base_sediment_layer>` is added from the bottom of the
+.. note:: No extra :ref:`base sediment layer <pybacktrack_base_sediment_layer>` is added from the bottom of the
           drill site (2311 metres) to the total sediment thickness at the drill site (1298.15 metres),
           because the former (bottom of drill site) is already deeper than the latter (total sediment thickness).
-          This happens because the :ref:`default total sediment thickness grid <pygplates_base_sediment_layer>` is not
+          This happens because the :ref:`default total sediment thickness grid <pybacktrack_base_sediment_layer>` is not
           as accurate near continental margins (compared to deeper ocean basins).
 
-.. _pygplates_backstrip_output_decompacted:
+.. _pybacktrack_backstrip_output_decompacted:
 
 Decompacted output
 ^^^^^^^^^^^^^^^^^^
@@ -137,11 +137,11 @@ The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *litholog
 *min_water_depth*, *max_water_depth* and *lithology* columns in the input drill site (except there is also a row associated with the surface age).
 
 The *compacted_thickness* column is the bottom depth of the drill site (2311 metres - noting that there is no base sediment layer in the
-:ref:`amended drill site <pygplates_backstrip_output_amended_drill_site>` above) minus *compacted_depth*.
+:ref:`amended drill site <pybacktrack_backstrip_output_amended_drill_site>` above) minus *compacted_depth*.
 The *decompacted_thickness* column is the thickness of all sediment at the associated age. In other words, at each consecutive age
 another stratigraphic layer is essentially removed, allowing the underlying layers to expand (due to their porosity). At present day
 (or the surface age) the decompacted thickness is just the compacted thickness. And note that because no extra
-:ref:`base sediment layer <pygplates_base_sediment_layer>` was added to the bottom of the drill site (2311 metres) the thickness and density is zero there.
+:ref:`base sediment layer <pybacktrack_base_sediment_layer>` was added to the bottom of the drill site (2311 metres) the thickness and density is zero there.
 The *decompacted_density* column is the average density integrated over the decompacted thickness of the drill site (each stratigraphic layer contains
 a mixture of water and sediment according to its porosity at the decompacted depth of the layer). The *decompacted_sediment_rate* column is the rate of
 sediment deposition in units of metres/Ma. At each time it is calculated as the fully decompacted thickness (ie, using surface porosity only) of the
@@ -157,7 +157,7 @@ decompacted sediment thickness (to obtain the deeper isostatically compensated, 
           using the *decompacted_columns* argument of the :func:`pybacktrack.backstrip_and_write_well` function.
           By default, only *age* and *decompacted_thickness* are output.
 
-.. _pygplates_backstrip_sealevel_variation:
+.. _pybacktrack_backstrip_sealevel_variation:
 
 Sea level variation
 -------------------
