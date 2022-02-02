@@ -264,7 +264,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     
     pybacktrack.reconstruct_paleo_bathymetry_grids(
         'paleo_bathymetry_12m_M7_GDH1',
-        '0.2',  # degrees (same as 12 minutes)
+        0.2,  # degrees (same as 12 minutes)
         240,
         dynamic_topography_model='M7',
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_MODEL_GDH1,
