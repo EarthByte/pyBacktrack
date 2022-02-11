@@ -38,7 +38,7 @@ import warnings
 
 class DynamicTopography(object):
     """
-    Class to reconstruct ocean point location(s) and sample the time-dependent dynamic topography *mantle* frame grid files.
+    Class that reconstructs ocean point location(s) and samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
     
     Attributes
     ----------
@@ -84,6 +84,8 @@ class DynamicTopography(object):
         ValueError
             If any ``age`` is negative (if specified).
         ValueError
+            If ``longitude`` and ``latitude`` are both not a single value or both not a sequence (of same length).
+        ValueError
             If ``grid_list_filename`` does not contain a grid at present day, or
             ``grid_list_filename`` contains fewer than two grids, or
             not all rows in ``grid_list_filename`` contain a grid filename followed by an age, or
@@ -115,33 +117,29 @@ class DynamicTopography(object):
         self.longitude = longitude
         self.age = age
 
-        # See if we've been provided a single location or a sequence of locations (by seeing if we can iterate over latitude or not).
+        # See if we've been provided a single location or a sequence of locations (by seeing if we can iterate over longitude/latitude or not).
         try:
-            iter(latitude)
-        except TypeError:
-            # A single location.
-            self.is_sequence_of_locations = False
+            iter(longitude)
+        except TypeError: # longitude is a single value ...
+            # Make sure latitude is also a single value.
+            try:
+                iter(latitude)
+            except TypeError: # latitude is a single value ...
+                self.is_sequence_of_locations = False
+            else: # latitude is a sequence ...
+                raise ValueError('longitude is a single value but latitude is a seqence')
+        else: # longitude is a sequence ...
+            # Make sure latitude is also a sequence.
+            try:
+                iter(latitude)
+            except TypeError: # latitude is a single value ...
+                raise ValueError('longitude is a seqence but latitude is a single value')
+            else: # latitude is a sequence ...
+                if len(longitude) != len(latitude):
+                    raise ValueError('longitude and latitude sequences are not the same length')
+                self.is_sequence_of_locations = True
 
-            self.location = pygplates.PointOnSphere(self.latitude, self.longitude)
-            partitioning_plate = plate_partitioner.partition_point(self.location)
-            if partitioning_plate:
-                self.reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-            else:
-                self.reconstruction_plate_id = 0
-        
-            # Use the age of the containing static polygon if age is None (eg, outside age grid).
-            if self.age is None:
-                if partitioning_plate:
-                    self.age, _ = partitioning_plate.get_feature().get_valid_time()
-                else:
-                    self.age = 0.0
-            
-            if self.age < 0:
-                raise ValueError('Dynamic topography: age values must not be negative')
-            
-        else:
-            # A sequence of locations.
-            self.is_sequence_of_locations = True
+        if self.is_sequence_of_locations:
 
             self.location = []
             self.reconstruction_plate_id =  []
@@ -173,6 +171,25 @@ class DynamicTopography(object):
             
             if any(age < 0 for age in self.age):
                 raise ValueError('Dynamic topography: age values must not be negative')
+            
+        else: # A single location...
+
+            self.location = pygplates.PointOnSphere(self.latitude, self.longitude)
+            partitioning_plate = plate_partitioner.partition_point(self.location)
+            if partitioning_plate:
+                self.reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+            else:
+                self.reconstruction_plate_id = 0
+        
+            # Use the age of the containing static polygon if age is None (eg, outside age grid).
+            if self.age is None:
+                if partitioning_plate:
+                    self.age, _ = partitioning_plate.get_feature().get_valid_time()
+                else:
+                    self.age = 0.0
+            
+            if self.age < 0:
+                raise ValueError('Dynamic topography: age values must not be negative')
     
     @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
@@ -181,7 +198,7 @@ class DynamicTopography(object):
         
         Parameters
         ----------
-        dynamic_topography_model_name : string
+        dynamic_topography_model_name : str
             Name of a bundled dynamic topography model.
             Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18`` and ``KM16``.
         longitude : float or list of float
@@ -228,10 +245,10 @@ class DynamicTopography(object):
         
         Parameters
         ----------
-        dynamic_topography_model_or_bundled_model_name : string
-            Either a user-provided model specified as a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames)
-            (see first three parameters of :meth:`pybacktrack.DynamicTopography.__init__`), or name of a bundled dynamic topography model
-            (see :meth:`pybacktrack.DynamicTopography.create_from_bundled_model`), .
+        dynamic_topography_model_or_bundled_model_name : str or 3-tuple (str, str, list of str)
+            Either the name of a bundled dynamic topography model (see :meth:`pybacktrack.DynamicTopography.create_from_bundled_model`), or
+            a user-provided model specified as a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames)
+            (see first three parameters of :meth:`pybacktrack.DynamicTopography.__init__`).
         longitude : float or list of float
             Longitude of the point location, or list of longitudes (if multiple point locations).
         latitude : float or list of float
@@ -278,7 +295,7 @@ class DynamicTopography(object):
             If constructed with a single location then returns a single value, otherwise
             returns a list of values (one per location).
             
-            When ``fallback`` is ``True`` then ``float('NaN`)`` will never be returned.
+            When ``fallback`` is ``True`` then ``float('NaN`)`` will never be returned (see notes below).
             When ``fallback`` is ``False`` then ``float('NaN`)`` will be returned for each point location where:
             
             - ``time`` is outside age range of grids, or
@@ -287,7 +304,7 @@ class DynamicTopography(object):
         Raises
         ------
         AssertionError
-            If dynamic topography model does include the point location(s).
+            If dynamic topography model does not include the point location(s).
             This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
             The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
             therefore should have global coverage (such that no sample location will return NaN).
@@ -309,7 +326,7 @@ class DynamicTopography(object):
         
         .. versionchanged:: 1.4
            Merged *sample*, *sample_interpolated* and *sample_oldest* methods into one method (this method).
-           Added *fallback* parameter (when ``False`` behaves like removed *sample_interpolated* method).
+           Added *fallback* parameter (where ``False`` behaves like removed *sample_interpolated* method).
            Added ability to specify a list of point locations (as an alternative to specifying a single location).
         """
         
@@ -444,7 +461,7 @@ class DynamicTopography(object):
     
     def _sample_grid(self, grid_index):
         
-        grid_age, grid_filename = self.grids.grid_ages_and_filenames[grid_index]
+        grid_age, _ = self.grids.grid_ages_and_filenames[grid_index]
 
         if self.is_sequence_of_locations:
             grid_sample = [float('nan')] * len(self.location)
@@ -471,9 +488,6 @@ class DynamicTopography(object):
             if not gmt_locations:
                 return grid_sample  # All NaNs.
             
-            # Create a single multiline string (one line per lon/lat row).
-            gmt_location_data = ''.join(
-                    '{0} {1}\n'.format(gmt_longitude, gmt_latitude) for gmt_longitude, gmt_latitude in gmt_locations)
         else:
             # Skip locations that appear after the grid age (leave them as NaN to indicate this).
             # This is because we should not reconstruct to times earlier than the location's appearance age.
@@ -487,50 +501,265 @@ class DynamicTopography(object):
             gmt_location = rotation * self.location
             gmt_latitude, gmt_longitude = gmt_location.to_lat_lon()
 
-            gmt_location_data = '{0} {1}\n'.format(gmt_longitude, gmt_latitude)
+            # List containing the single location.
+            gmt_locations = [(gmt_longitude, gmt_latitude)]
         
-        #
         # Sample mantle frame grid.
-        #
-
-        # The command-line strings to execute GMT 'grdtrack'.
-        grdtrack_command_line = ["gmt", "grdtrack", "-Z", "-G{0}".format(grid_filename)]
-        
-        # Call the system command.
-        gmt_output_data = call_system_command(grdtrack_command_line, stdin=gmt_location_data, return_stdout=True)
+        sample_values = self.grids.sample_grid(grid_index, gmt_locations)
         
         if self.is_sequence_of_locations:
             # Extract the sampled values (and write them back to correct index in returned grid sample).
-            for line_index, line in enumerate(gmt_output_data.splitlines()):
-                # Due to "-Z" option each line returned by GMT grdtrack contains only the sampled value.
-                # Note that if GMT returns "NaN" then we'll return float('nan').
-                sample_value = float(line)
-
-                # Raise error if grid returns NaN at reconstructed location.
-                # This shouldn't happen with *mantle* frame grids (typically have global coverage).
-                if math.isnan(sample_value):
-                    gmt_longitude, gmt_latitude = gmt_locations[line_index]
-                    raise AssertionError(u'Internal error: Dynamic topography model "{0}" has grid at {1}Ma that does not include location ({2}, {3}).'.format(
-                        self.grids.grid_list_filename, grid_age, gmt_longitude, gmt_latitude))
-
+            for sample_index, sample_value in enumerate(sample_values):
                 # The GMT output data should be in the same order as the GMT input data.
-                point_index = gmt_location_point_indices[line_index]
+                point_index = gmt_location_point_indices[sample_index]
                 grid_sample[point_index] = sample_value
             
             return grid_sample
         
         else:
-            # Due to "-Z" option the single line returned by GMT grdtrack contains only the sampled value.
-            # Note that if GMT returns "NaN" then we'll return float('nan').
-            grid_sample = float(gmt_output_data)
-
-            # Raise error if grid returns NaN at reconstructed location.
-            # This shouldn't happen with *mantle* frame grids (typically have global coverage).
-            if math.isnan(grid_sample):
-                raise AssertionError(u'Internal error: Dynamic topography model "{0}" has grid at {1}Ma that does not include location ({2}, {3}).'.format(
-                    self.grids.grid_list_filename, grid_age, gmt_longitude, gmt_latitude))
+            # Only a single sample value for single location.
+            grid_sample = sample_values[0]
 
             return grid_sample
+
+
+class InterpolateDynamicTopography(object):
+    """
+    Class that just samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
+
+    This class accepts locations that have already been reconstructed whereas :class:`pybacktrack.DynamicTopography`
+    accepts present day locations and reconstructs them prior to sampling the dynamic topography grids.
+        
+    Notes
+    -----
+    .. versionadded:: 1.4
+    """
+    
+    def __init__(self, grid_list_filename):
+        """
+        Load dynamic topography grid filenames and associated ages from grid list file 'grid_list_filename'.
+        
+        Parameters
+        ----------
+        grid_list_filename : str
+            The filename of the grid list file.
+        
+        Raises
+        ------
+        ValueError
+            If ``grid_list_filename`` does not contain a grid at present day, or
+            ``grid_list_filename`` contains fewer than two grids, or
+            not all rows in ``grid_list_filename`` contain a grid filename followed by an age, or
+            there are two ages in ``grid_list_filename`` with same age.
+        
+        Notes
+        -----
+        Each dynamic topography grid should be in the *mantle* reference frame (not *plate* reference frame) and
+        should have global coverage (such that no sample location will return NaN).
+        
+        Each row in the grid list file should contain two columns. First column containing
+        filename (relative to directory of list file) of a dynamic topography grid at a particular time.
+        Second column containing associated time (in Ma).
+
+        .. versionadded:: 1.4
+        """
+        
+        self.grids = TimeDependentGrid(grid_list_filename)
+    
+    @staticmethod
+    def create_from_bundled_model(dynamic_topography_model_name):
+        """create_from_bundled_model(dynamic_topography_model_name)
+        Create a InterpolateDynamicTopography instance from a bundled dynamic topography model name.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_name : str
+            Name of a bundled dynamic topography model.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18`` and ``KM16``.
+        
+        Returns
+        -------
+        :class:`pybacktrack.InterpolateDynamicTopography`
+            The bundled dynamic topography model.
+        
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_name`` is not the name of a bundled dynamic topography model.
+        
+        Notes
+        -----
+        .. versionadded:: 1.4
+        """
+        
+        if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
+            raise ValueError("'dynamic_topography_model_name' should be one of {0}.".format(
+                ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        
+        dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model_name]
+        dynamic_topography_list_filename, _, _ = dynamic_topography_model
+        
+        return InterpolateDynamicTopography(dynamic_topography_list_filename)
+    
+    @staticmethod
+    def create_from_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name):
+        """create_from_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name)
+        Create a InterpolateDynamicTopography instance from a user-provided model or from a bundled model.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_or_bundled_model_name : str
+            Either the name of a bundled dynamic topography model (see :meth:`pybacktrack.InterpolateDynamicTopography.create_from_bundled_model`), or
+            a user-provided model specified as the filename of the grid list file (see parameter of :meth:`pybacktrack.InterpolateDynamicTopography.__init__`).
+        
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_or_bundled_model_name`` is not the name of a bundled dynamic topography model or
+            the filename of an existing grid list file.
+        
+        Returns
+        -------
+        :class:`pybacktrack.InterpolateDynamicTopography`
+            The dynamic topography model loaded from a user-provided model or from a bundled model.
+        
+        Notes
+        -----
+        .. versionadded:: 1.4
+        """
+        
+        # If a dynamic topography *bundled model name* was specified then create it from a bundled dynamic topography model.
+        if dynamic_topography_model_or_bundled_model_name in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
+            dynamic_topography_list_filename, _, _ = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model_or_bundled_model_name]
+            return InterpolateDynamicTopography(dynamic_topography_list_filename)
+
+        # Else it should refer to an existing grid list file.
+        if os.path.isfile(dynamic_topography_model_or_bundled_model_name):
+            dynamic_topography_list_filename = dynamic_topography_model_or_bundled_model_name
+            return InterpolateDynamicTopography(dynamic_topography_list_filename)
+        
+        raise ValueError('"{}" is not an internal dynamic topography model name or an existing file (user-provided grid list).'.format(
+                dynamic_topography_model_or_bundled_model_name))
+    
+    def sample(self, time, longitude, latitude, fallback=True):
+        """
+        Samples the time-dependent dynamic topography grid files at ``time`` at the specified point location(s), but
+        optionally falls back to a non-optimal sampling if necessary (depending on ``time``).
+        
+        Parameters
+        ----------
+        time : float
+            Time to sample dynamic topography.
+        longitude : float or list of float
+            Longitude of the point location, or list of longitudes (if multiple point locations).
+        latitude : float or list of float
+            Latitude of the point location, or list of latitudes (if multiple point locations).
+        fallback : bool
+            Whether to fall back to a non-optimal sampling if neccessary (see notes below).
+            Defaults to ``True``.
+        
+        Returns
+        -------
+        float or list of float or None
+            The sampled dynamic topography value or list of values.
+            If ``longitude`` and ``latitude`` are each a ``float`` value then returns a single value, otherwise
+            returns a list of values (one per location).
+            
+            When ``fallback`` is ``True`` then ``None`` will never be returned (see notes below).
+            When ``fallback`` is ``False`` then ``None`` will be returned when ``time`` is outside age range of the grids.
+        
+        Raises
+        ------
+        ValueError
+            If ``longitude`` and ``latitude`` are both not a single value or both not a sequence (of same length).
+        AssertionError
+            If dynamic topography model does not include the point location(s).
+            This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
+            The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
+            therefore should have global coverage (such that no sample location will return NaN).
+        
+        Notes
+        -----
+        The point location(s) sample the two grids with ages bounding ``time`` and then interpolate between them.
+        
+        However if ``time`` is outside the age range of grids then the oldest grid file that is younger than ``time``
+        is sampled (if ``fallback`` is ``True``).
+        
+        .. versionadded:: 1.4
+        """
+
+        # See if we've been provided a single location or a sequence of locations (by seeing if we can iterate over longitude/latitude or not).
+        try:
+            iter(longitude)
+        except TypeError: # longitude is a single value ...
+            # Make sure latitude is also a single value.
+            try:
+                iter(latitude)
+            except TypeError: # latitude is a single value ...
+                is_sequence_of_locations = False
+            else: # latitude is a sequence ...
+                raise ValueError('longitude is a single value but latitude is a seqence')
+        else: # longitude is a sequence ...
+            # Make sure latitude is also a sequence.
+            try:
+                iter(latitude)
+            except TypeError: # latitude is a single value ...
+                raise ValueError('longitude is a seqence but latitude is a single value')
+            else: # latitude is a sequence ...
+                if len(longitude) != len(latitude):
+                    raise ValueError('longitude and latitude sequences are not the same length')
+                is_sequence_of_locations = True
+        
+        # Search for the two grids bounding 'time'.
+        grids_bounding_time = self.grids.get_grids_bounding_time(time)
+ 
+        # If there are no grids bounding 'time' and we're not falling back to oldest grid then return None.
+        if grids_bounding_time is None and not fallback:
+            return None
+
+        # List of (lon, lat) tuples.
+        if is_sequence_of_locations:
+            locations = list(zip(longitude, latitude))
+        else:
+            # List containing a single location.
+            locations = [(longitude, latitude)]
+
+        # If there are no grids bounding 'time'.
+        if grids_bounding_time is None:
+            # Fall back to the oldest grid that is after/younger than 'time'.
+            # Since the grids are sorted in order of increasing age (and they start at present day)
+            # we know that a non-negative 'time' will be older than the oldest grid which is the last grid.
+            oldest_grid_index = len(self.grids.grid_ages_and_filenames) - 1
+
+            # Sample oldest mantle frame grid.
+            grid_sample = self.grids.sample_grid(oldest_grid_index, locations)
+        
+        else: # There are two grids bounding 'time' ...
+
+            grid_index_younger, grid_index_older = grids_bounding_time
+
+            grid_age_younger, _ = self.grids.grid_ages_and_filenames[grid_index_younger]
+            grid_age_older, _ = self.grids.grid_ages_and_filenames[grid_index_older]
+            
+            # Sample both mantle frame grids (we'll interpolate between them).
+            grid_sample_younger = self.grids.sample_grid(grid_index_younger, locations)
+            grid_sample_older = self.grids.sample_grid(grid_index_older, locations)
+            
+            grid_sample = []
+            for point_index in range(len(locations)):
+                # Linearly interpolate between the older and younger grids.
+                # We already know that no two ages are the same (from TimeDependentGrid constructor), so divide-by-zero is not possible.
+                grid_sample.append(
+                    ((grid_age_older - time) * grid_sample_younger[point_index] +
+                    (time - grid_age_younger) * grid_sample_older[point_index])
+                        / (grid_age_older - grid_age_younger))
+
+        if is_sequence_of_locations:
+            # Return a list of sample values.
+            return grid_sample
+        else:
+            # Only a single location, so return a single sampled value (rather than a list containing a single value).
+            return grid_sample[0]
 
 
 class TimeDependentGrid(object):
@@ -540,7 +769,8 @@ class TimeDependentGrid(object):
     
     def __init__(self, grid_list_filename):
         """
-        Load grid filenames and associated ages from grid list file 'grid_list_filename'.
+        Load grid filenames and associated ages from grid list file 'grid_list_filename' and
+        sort in order of increasing age.
         
         Raises ValueError if:
         - list file does not contain a grid at present day, or
@@ -621,3 +851,43 @@ class TimeDependentGrid(object):
         
         # Time is outside grid age range ('time' is greater than last grid age).
         return None
+    
+    def sample_grid(self, grid_index, locations):
+        """
+        Samples the grid at specified grid index using the specified locations (a sequence of (longitude, latitude) tuples).
+        
+        Returns a list of sampled values (one per input location).
+        """
+        
+        grid_age, grid_filename = self.grid_ages_and_filenames[grid_index]
+
+        # Create a single multiline string (one line per lon/lat row).
+        gmt_location_data = ''.join('{0} {1}\n'.format(longitude, latitude) for longitude, latitude in locations)
+        
+        #
+        # Sample mantle frame grid.
+        #
+
+        # The command-line strings to execute GMT 'grdtrack'.
+        grdtrack_command_line = ["gmt", "grdtrack", "-Z", "-G{0}".format(grid_filename)]
+        
+        # Call the system command.
+        gmt_output_data = call_system_command(grdtrack_command_line, stdin=gmt_location_data, return_stdout=True)
+        
+        # Extract the sampled values.
+        grid_sample = []
+        for line_index, line in enumerate(gmt_output_data.splitlines()):
+            # Due to "-Z" option each line returned by GMT grdtrack contains only the sampled value.
+            # Note that if GMT returns "NaN" then we'll return float('nan').
+            sample_value = float(line)
+
+            # Raise error if grid returns NaN at current location.
+            # This shouldn't happen with *mantle* frame grids (typically have global coverage).
+            if math.isnan(sample_value):
+                longitude, latitude = locations[line_index]
+                raise AssertionError(u'Internal error: Dynamic topography grid "{0}" has grid at {1}Ma that does not include location ({2}, {3}).'.format(
+                    self.grid_list_filename, grid_age, longitude, latitude))
+
+            grid_sample.append(sample_value)
+        
+        return grid_sample

@@ -81,7 +81,8 @@ from .rifting import \
     post_rift_subsidence
 
 from .dynamic_topography import \
-    DynamicTopography
+    DynamicTopography, \
+    InterpolateDynamicTopography
 
 from .sea_level import \
     SeaLevel
@@ -169,6 +170,7 @@ __all__ = [
     'post_rift_subsidence',
     # From dynamic_topography module...
     'DynamicTopography',
+    'InterpolateDynamicTopography',
     # From sea_level module...
     'SeaLevel',
     # From interpolate module...
