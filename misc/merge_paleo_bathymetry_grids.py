@@ -21,12 +21,14 @@ paleo_bathymetry_wright_prefix = r'C:\Users\John\Development\Usyd\source_code\re
 paleo_bathymetry_wright_basename = 'paleobathymetry'
 paleo_bathymetry_wright_extension = 'nc'
 
-# Dynamic topography grids.
-# These need to be applied to Wright paleobathymetry (pybacktrack already has it applied).
-apply_dynamic_topography = True
-dynamic_topography_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\dynamic_topography\interpolate_M7\output'
-dynamic_topography_basename = 'interp'
-dynamic_topography_extension = 'nc'
+# Optional dynamic topography model to add to Wright paleobathymetry grids (the pybacktrack grids already have it applied).
+#
+# Can be any builtin dynamic topography model *name* supported by pyBacktrack
+# (see the list at https://pybacktrack.readthedocs.io/en/latest/pybacktrack_backtrack.html#dynamic-topography).
+#
+# Note: This can be 'None' if no dynamic topography need be applied.
+#dynamic_topography_model_name = None
+dynamic_topography_model_name = 'M7'
 
 # How far back in time to generate grids.
 max_time = 140
@@ -42,10 +44,18 @@ merged_grid_basename = 'paleo_bathymetry'
 use_multiple_cpus = True
 
 
+
+# Create the dynamic topography model (from model name) if requested.
+if dynamic_topography_model_name:
+    dynamic_topography_model = pybacktrack.InterpolateDynamicTopography.create_from_bundled_model(dynamic_topography_model_name)
+else:
+    dynamic_topography_model = None
+
+
 def merge_paleo_bathymetry_grids(
         time,
         input_points,
-        present_day_dynamic_topography_points):
+        dynamic_topography_at_present_day):
     
     # Paleo bathymetry grids to merge (pybacktrack and Wright).
     #
@@ -59,17 +69,14 @@ def merge_paleo_bathymetry_grids(
             paleo_bathymetry_pybacktrack_filename,
             paleo_bathymetry_wright_filename)
     
-    if apply_dynamic_topography:
-        # Dynamic topography grids.
-        dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, time, dynamic_topography_extension))
-        # Add dynamic topography to the samples.
-        paleo_bathymetry_points = _gmt_grdtrack(
-                paleo_bathymetry_points,
-                dynamic_topography_filename)
+    if dynamic_topography_model:
+        # Sample the dynamic topography at 'time'.
+        longitudes, latitudes = zip(*input_points)
+        dynamic_topography = dynamic_topography_model.sample(time, longitudes, latitudes)
     
     merged_points = []
     for point_index, paleo_bathymetry_point in enumerate(paleo_bathymetry_points):
-        lon, lat, paleo_bathymetry_pybacktrack, paleo_bathymetry_wright, *optional_point_data = paleo_bathymetry_point
+        lon, lat, paleo_bathymetry_pybacktrack, paleo_bathymetry_wright = paleo_bathymetry_point
         if math.isnan(paleo_bathymetry_pybacktrack) and math.isnan(paleo_bathymetry_wright):
             # Skip point if no paleo bathymetry from pybacktrack or Wright.
             continue
@@ -83,12 +90,10 @@ def merge_paleo_bathymetry_grids(
             # And this matches the Wright paleobathymetry grids (which also have negative values below sea level),
             # so we don't need to negate them to match pybacktrack-generated paleobathymetry.
             paleo_bathymetry = paleo_bathymetry_wright
-            # Also apply dynamic topography to Wright grids (pybacktrack already has it applied).
-            if apply_dynamic_topography:
-                dynamic_topography = optional_point_data[0]
+            # Also apply dynamic topography to Wright grids if requested (pybacktrack already has it applied).
+            if dynamic_topography_model:
                 # Dynamic topography, like bathymetry, is positive going up and negative going down so we can just add it to bathymetry.
-                _, _, dynamic_topography_at_present_day = present_day_dynamic_topography_points[point_index]
-                paleo_bathymetry += dynamic_topography - dynamic_topography_at_present_day
+                paleo_bathymetry += dynamic_topography[point_index] - dynamic_topography_at_present_day[point_index]
 
         merged_points.append((lon, lat, paleo_bathymetry))
     
@@ -191,12 +196,12 @@ if __name__ == '__main__':
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
     input_points = _generate_input_points_grid(merged_grid_spacing_degrees)
 
-    if apply_dynamic_topography:
+    if dynamic_topography_model:
         # Sample the dynamic topography at present day.
-        present_day_dynamic_topography_filename = os.path.join(dynamic_topography_prefix, '{0}_{1}.{2}'.format(dynamic_topography_basename, 0, dynamic_topography_extension))
-        present_day_dynamic_topography_points = _gmt_grdtrack(input_points, present_day_dynamic_topography_filename)
+        longitudes, latitudes = zip(*input_points)
+        dynamic_topography_at_present_day = dynamic_topography_model.sample(0, longitudes, latitudes)
     else:
-        present_day_dynamic_topography_points = None
+        dynamic_topography_at_present_day = None
     
     # Create times from present day to 'max_time'.
     time_range = range(0, max_time+1, time_increment)
@@ -213,7 +218,7 @@ if __name__ == '__main__':
                     partial(
                         merge_paleo_bathymetry_grids,
                         input_points=input_points,
-                        present_day_dynamic_topography_points=present_day_dynamic_topography_points),
+                        dynamic_topography_at_present_day=dynamic_topography_at_present_day),
                     time_range,
                     1) # chunksize
 
@@ -222,4 +227,4 @@ if __name__ == '__main__':
             merge_paleo_bathymetry_grids(
                     time,
                     input_points,
-                    present_day_dynamic_topography_points)
+                    dynamic_topography_at_present_day)
