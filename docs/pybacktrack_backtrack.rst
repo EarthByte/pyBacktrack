@@ -365,11 +365,9 @@ The grids are in the *mantle* reference frame (instead of the *plate* reference 
 (back in time) before sampling these grids. To enable this, a dynamic topography model also includes an associated static-polygons
 file to assign a reconstruction plate ID to the drill site, and associated rotation file(s) to reconstruct the drill site location.
 
-.. warning:: If the drill site is reconstructed to a time that is older than the age of the crust it is located on, then a warning is emitted (to ``standard error`` on the console).
-             This is because it does not make sense to reconstruct a parcel of crust prior to the time at which that parcel appeared. This can happen when interpolating between
-             the two dynamic topography grids that surround the reconstruction time because the older of the two grids could be arbitrarily old.
-             This same warning is also emitted if the dynamic topography model does not go back far enough in time.
-             In these cases the oldest dynamic topography grid in the model, that is younger than or equal to the age of the crust, is sampled.
+.. warning:: If the drill site is reconstructed to a time that is older than supported by the dynamic topography model then the oldest dynamic topography grid is used.
+             Also note that the drill site can be reconstructed to a time that is older than the age of the crust it is located on if the bottom age
+             in the drill site file is older than the basement age.
 
 Dynamic topography is included in the oceanic subsidence model by adjusting the subsidence to account for the change in
 dynamic topography at the drill site since present day.
