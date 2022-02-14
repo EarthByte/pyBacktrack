@@ -71,8 +71,7 @@ def merge_paleo_bathymetry_grids(
     
     if dynamic_topography_model:
         # Sample the dynamic topography at 'time'.
-        longitudes, latitudes = zip(*input_points)
-        dynamic_topography = dynamic_topography_model.sample(time, longitudes, latitudes)
+        dynamic_topography = dynamic_topography_model.sample(time, input_points)
     
     merged_points = []
     for point_index, paleo_bathymetry_point in enumerate(paleo_bathymetry_points):
@@ -198,8 +197,7 @@ if __name__ == '__main__':
 
     if dynamic_topography_model:
         # Sample the dynamic topography at present day.
-        longitudes, latitudes = zip(*input_points)
-        dynamic_topography_at_present_day = dynamic_topography_model.sample(0, longitudes, latitudes)
+        dynamic_topography_at_present_day = dynamic_topography_model.sample(0, input_points)
     else:
         dynamic_topography_at_present_day = None
     
