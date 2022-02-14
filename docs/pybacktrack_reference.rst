@@ -279,9 +279,9 @@ Dynamic topography
 Summary
 ^^^^^^^
 
-:class:`pybacktrack.DynamicTopography` is a class that reconstructs ocean point location(s) and samples (and interpolates) time-dependent dynamic topography *mantle* frame grids.
+:class:`pybacktrack.DynamicTopography` is a class that reconstructs point location(s) and samples (and interpolates) time-dependent dynamic topography *mantle* frame grids.
 
-:class:`pybacktrack.InterpolateDynamicTopography` is a class that just samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
+:class:`pybacktrack.InterpolateDynamicTopography` is a class that just samples and interpolates time-dependent dynamic topography *mantle* frame grid files.
 
 Detail
 ^^^^^^

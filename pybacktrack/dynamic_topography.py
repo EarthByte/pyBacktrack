@@ -37,7 +37,7 @@ import sys
 
 class DynamicTopography(object):
     """
-    Class that reconstructs ocean point location(s) and samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
+    Class that reconstructs point location(s) and samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
     
     Attributes
     ----------
@@ -315,14 +315,6 @@ class DynamicTopography(object):
             - for all points when the oldest dynamic topography grid is younger than ``time``, or
             - for each point location whose age is younger than ``time`` (ie, has not yet appeared).
         
-        Raises
-        ------
-        AssertionError
-            If dynamic topography model does not include the point location(s).
-            This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
-            The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
-            therefore should have global coverage (such that no sample location will return NaN).
-        
         Notes
         -----
         Each point location is first reconstructed to ``time`` before sampling the two grids surrounding ``time``
@@ -338,9 +330,21 @@ class DynamicTopography(object):
            Previously this method was called *sample_interpolated* and did not fall back to non-optimal sampling when necessary.
         
         .. versionchanged:: 1.4
-           Merged *sample*, *sample_interpolated* and *sample_oldest* methods into one method (this method).
-           Added *fallback* parameter (where ``False`` behaves like removed *sample_interpolated* method).
-           Added ability to specify a list of point locations (as an alternative to specifying a single location).
+           The following changes were made:
+
+           - Merged *sample*, *sample_interpolated* and *sample_oldest* methods into one method (this method).
+           - Added *fallback* parameter (where ``False`` behaves like removed *sample_interpolated* method).
+           - Added ability to specify a list of point locations (as an alternative to specifying a single location).
+           - Changed how grids are interpolated:
+
+             * Version 1.3 (and earlier) reconstructed each location to two times (of the two grids surrounding ``time``) to get *two* reconstructed locations.
+               Then each reconstructed location sampled its respective grid (ie, each grid was sampled at a *different* reconstructed location).
+               Then these two samples were interpolated (based on ``time``).
+             * Version 1.4 reconstructs each location to the single ``time`` to get a *single* reconstructed location.
+               Then that single reconstructed location samples both grids surrounding ``time`` (ie, each grid is sampled at the *same* reconstructed location).
+               Then these two samples are interpolated (based on ``time``).
+             
+             ...note that there is no difference *at* grid times (only between grid times).
         """
 
         grid_sample = [float('nan')] * len(self._locations)
@@ -395,7 +399,7 @@ class DynamicTopography(object):
 
 class InterpolateDynamicTopography(object):
     """
-    Class that just samples (and interpolates) time-dependent dynamic topography *mantle* frame grid files.
+    Class that just samples and interpolates time-dependent dynamic topography *mantle* frame grid files.
 
     This class accepts locations that have already been reconstructed whereas :class:`pybacktrack.DynamicTopography`
     accepts present day locations and reconstructs them prior to sampling the dynamic topography grids.
@@ -536,14 +540,6 @@ class InterpolateDynamicTopography(object):
 
             - if ``fallback_to_oldest`` is ``True`` then the oldest dynamic topography grid is sampled, or
             - if ``fallback_to_oldest`` is ``False`` then ``None`` is returned.
-        
-        Raises
-        ------
-        AssertionError
-            If dynamic topography model does not include the point location(s).
-            This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
-            The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
-            therefore should have global coverage (such that no sample location will return NaN).
         
         Notes
         -----
@@ -691,6 +687,11 @@ class TimeDependentGrid(object):
         Samples the grid at specified grid index using the specified locations (a sequence of (longitude, latitude) tuples).
         
         Returns a list of sampled values (one per input location).
+        
+        Raises AssertionError if dynamic topography model does not include the locations.
+        This should not happen if the dynamic topography grids have global coverage (ie, have no NaN values).
+        The dynamic topography grids should be in the *mantle* reference frame (not *plate* reference frame) and
+        therefore should have global coverage (such that no sample location will return NaN).
         """
         
         grid_age, grid_filename = self.grid_ages_and_filenames[grid_index]

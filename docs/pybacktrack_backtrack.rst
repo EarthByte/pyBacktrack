@@ -365,6 +365,10 @@ The grids are in the *mantle* reference frame (instead of the *plate* reference 
 (back in time) before sampling these grids. To enable this, a dynamic topography model also includes an associated static-polygons
 file to assign a reconstruction plate ID to the drill site, and associated rotation file(s) to reconstruct the drill site location.
 
+.. note:: The dynamic topography grids are interpolated at times not coinciding with the grid times.
+          The method of interpolation changed in pyBacktrack version 1.4 (as described in the notes of :meth:`pybacktrack.DynamicTopography.sample`) -
+          however this change has no effect *at* the grid times (only between grid times).
+
 .. warning:: If the drill site is reconstructed to a time that is older than supported by the dynamic topography model then the oldest dynamic topography grid is used.
              Also note that the drill site can be reconstructed to a time that is older than the age of the crust it is located on if the bottom age
              in the drill site file is older than the basement age.
