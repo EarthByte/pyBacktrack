@@ -151,24 +151,27 @@ class DynamicTopography(object):
 
         # Create a sequence of pygplates.PointOnSphere for use with reconstructing.
         if self.is_sequence_of_locations:
-            self.location = [pygplates.PointOnSphere(latitude[index], longitude[index]) for index in range(len(longitude))]
+            self._locations = [pygplates.PointOnSphere(latitude[index], longitude[index]) for index in range(len(longitude))]
         else:
             # Sequence containing a single item.
-            self.location = [pygplates.PointOnSphere(latitude, longitude)]
+            self._locations = [pygplates.PointOnSphere(latitude, longitude)]
 
+        # Creat a sequence of ages (in self._ages).
         if age is None:
-            self.age = []
-            find_age = True
+            # We'll initialise the age(s) below.
+            self._ages = []
         else:
-            # If not already a sequence of ages then turn into one (a sequence containing a single age).
-            if not self.is_sequence_of_locations:
-                self.age = [age]
-            find_age = False
+            if self.is_sequence_of_locations:
+                # Already a sequence of ages.
+                self._ages = age
+            else:
+                # Turn into a sequence of ages (a sequence containing a single age).
+                self._ages = [age]
 
         self.reconstruction_plate_id =  []
 
         # Assign a plate ID to each location (and optionally an age if not already provided).
-        for point in self.location:
+        for point in self._locations:
             partitioning_plate = plate_partitioner.partition_point(point)
             if partitioning_plate:
                 reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
@@ -177,15 +180,30 @@ class DynamicTopography(object):
             self.reconstruction_plate_id.append(reconstruction_plate_id)
         
             # Use the age of the containing static polygon if age not provided (eg, if outside age grid).
-            if find_age:
+            if age is None:
                 if partitioning_plate:
-                    age, _ = partitioning_plate.get_feature().get_valid_time()
+                    time_of_appearance, _ = partitioning_plate.get_feature().get_valid_time()
                 else:
-                    age = 0.0
-                self.age.append(age)
+                    time_of_appearance = 0.0
+                self._ages.append(time_of_appearance)
         
-        if any(age < 0 for age in self.age):
+        if any(a < 0 for a in self._ages):
             raise ValueError('Dynamic topography: age values must not be negative')
+        
+        # Attributes used by clients of this class.
+        #
+        # Note: These attributes are either a list of values or a single value (similar to what client passed into constructor).
+        self.longitude = longitude
+        self.latitude = latitude
+        if age is None:
+            if self.is_sequence_of_locations:
+                self.age = self._ages
+            else:
+                # Extract single age.
+                self.age = self._ages[0]
+        else:
+            self.age = age
+
     
     @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
@@ -325,16 +343,16 @@ class DynamicTopography(object):
            Added ability to specify a list of point locations (as an alternative to specifying a single location).
         """
 
-        grid_sample = [float('nan')] * len(self.location)
+        grid_sample = [float('nan')] * len(self._locations)
 
         # Reconstruct the present day locations to 'time'.
         gmt_reconstructed_locations = []
         location_point_indices = []  # Keep track of where to write sampled locations back to.
-        for point_index in range(len(self.location)):
+        for point_index in range(len(self._locations)):
             if not fallback:
                 # Fallback is disabled so we should not reconstruct to times earlier than the location's appearance age.
                 # Skip locations that appear after 'time' (leave them as NaN to indicate this).
-                if time > self.age[point_index] + 1e-6:
+                if time > self._ages[point_index] + 1e-6:
                     continue
             # else: Fallback is enabled so allow a location to be reconstructed earlier than its time of appearance.
             #       There's a small chance that its rotation doesn't extend earlier than its appearance age but
@@ -344,7 +362,7 @@ class DynamicTopography(object):
             rotation = self.rotation_model.get_rotation(time, self.reconstruction_plate_id[point_index])
             
             # Reconstruct location to 'time'.
-            reconstructed_location = rotation * self.location[point_index]
+            reconstructed_location = rotation * self._locations[point_index]
             gmt_reconstructed_latitude, gmt_reconstructed_longitude = reconstructed_location.to_lat_lon()
 
             gmt_reconstructed_locations.append((gmt_reconstructed_longitude, gmt_reconstructed_latitude))
