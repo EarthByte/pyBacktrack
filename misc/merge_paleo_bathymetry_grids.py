@@ -58,6 +58,9 @@ use_xarray_if_available = False
 
 # Use multiple CPUs (if True then make sure you don't interrupt the process).
 use_multiple_cpus = True
+# Number of CPUs to use (only used if use_multiple_cpus is True).
+# Specify None to use all CPUs.
+num_cpus = 4
 
 
 
@@ -278,7 +281,9 @@ if __name__ == '__main__':
     
     if use_multiple_cpus:
         try:
-            num_cpus = multiprocessing.cpu_count()
+            # Use all CPUs unless a specific number is requested.
+            if num_cpus is None:
+                num_cpus = multiprocessing.cpu_count()
         except NotImplementedError:
             num_cpus = 1
 
