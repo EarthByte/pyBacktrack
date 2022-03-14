@@ -445,8 +445,8 @@ def _gmt_grdtrack(
     grdtrack_command_line = ["gmt", "grdtrack",
         # Geographic input/output coordinates...
         "-fg",
-        # Use linear interpolation, and avoid anti-aliasing...
-        "-nl+a+bg+t0.5"]
+        # Avoid anti-aliasing...
+        "-n+a+bg+t0.5"]
     # One or more grid filenames to sample.
     for grid_filename in grid_filenames:
         grdtrack_command_line.append("-G{0}".format(grid_filename))

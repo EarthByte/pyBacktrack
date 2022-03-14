@@ -754,10 +754,15 @@ def generate_lon_lat_points(grid_spacing_degrees):
     
     # Data points start *on* dateline (-180).
     # If 180 is an integer multiple of grid spacing then final longitude also lands on dateline (+180).
-    num_latitudes = int(math.floor(180.0 / grid_spacing_degrees)) + 1
+    #
+    # Note: To avoid a bug in GMT 6.3 we'll avoid generating points *on* the poles.
+    #       See https://github.com/GenericMappingTools/gmt/issues/6299
+    #       Happens with grdtrack and linear interpolation.
+    #       And we need linear interpolation to, for example, avoid potential negative ages when sampling age grid.
+    num_latitudes = int(math.floor(180.0 / grid_spacing_degrees)) - 1
     num_longitudes = int(math.floor(360.0 / grid_spacing_degrees)) + 1
     for lat_index in range(num_latitudes):
-        lat = -90 + lat_index * grid_spacing_degrees
+        lat = -90 + (lat_index + 1) * grid_spacing_degrees
         
         for lon_index in range(num_longitudes):
             lon = -180 + lon_index * grid_spacing_degrees
@@ -789,7 +794,7 @@ def _gmt_grdtrack(
     grdtrack_command_line = ["gmt", "grdtrack",
         # Geographic input/output coordinates...
         "-fg",
-        # Use linear interpolation, and avoid anti-aliasing...
+        # Use linear interpolation (eg, to avoid potential negative ages when sampling age grid), and avoid anti-aliasing...
         "-nl+a+bg+t0.5"]
     # One or more grid filenames to sample.
     for grid_filename in grid_filenames:
