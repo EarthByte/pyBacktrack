@@ -81,8 +81,11 @@ def generate_rift_parameter_points(
         Defaults to 250 Ma.
 
     The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "deforming_model/" directory).
-    use_all_cpus: bool, optional
-        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    use_all_cpus : bool or int, optional
+        If ``False`` (or zero) then use a single CPU.
+        If ``True`` then distribute CPU processing across all CPUs (cores).
+        If a positive integer then use that many CPUs (cores).
+        Defaults to ``False`` (single CPU).
     
     Returns
     -------
@@ -130,11 +133,18 @@ def generate_rift_parameter_points(
                 oldest_rift_start_time)
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
-        # Number of CPUs for our multiprocessing pool.
-        try:
-            num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
+        
+        # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
+        if isinstance(use_all_cpus, bool):
+            try:
+                num_cpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                num_cpus = 1
+        # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+        elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+            num_cpus = use_all_cpus
+        else:
+            raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
         
         # Divide the points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
         num_point_groups = 2 * num_cpus
@@ -194,11 +204,18 @@ def generate_rift_parameter_points(
                 continent_deforming_rift_start_end_times)
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
-        # Number of CPUs for our multiprocessing pool.
-        try:
-            num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
+        
+        # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
+        if isinstance(use_all_cpus, bool):
+            try:
+                num_cpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                num_cpus = 1
+        # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+        elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+            num_cpus = use_all_cpus
+        else:
+            raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
         
         # Divide the non-deforming points into a number of groups equal to twice the number of CPUs in case some groups of points take longer to process than others.
         # Update: Using 8 times num_cpus since some point groups take quite a bit longer than others.
@@ -556,6 +573,17 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError("Unable to convert filename %s to unicode" % value_string)
         
         return filename
+        
+    def parse_positive_integer(value_string):
+        try:
+            value = int(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not an integer" % value_string)
+        
+        if value <= 0:
+            raise argparse.ArgumentTypeError("%g is not a positive integer" % value)
+        
+        return value
     
     
     def main():
@@ -629,10 +657,13 @@ if __name__ == '__main__':
             metavar='oldest_rift_start_time',
             help='How far to go back in time when searching for the beginning of rifting. '
                  'Defaults to {0} Ma.'.format(DEFAULT_OLDEST_RIFT_START_TIME))
-            
+        
         parser.add_argument(
-            '--use_all_cpus', action='store_true',
-            help='Use all CPUs (cores). Defaults to using a single CPU.')
+            '--use_all_cpus', nargs='?', type=parse_positive_integer,
+            const=True, default=False,
+            metavar='NUM_CPUS',
+            help='Use all CPUs (cores), or if an optional integer is also specified then use the specified number of CPUs. '
+                'Defaults to using a single CPU.')
         
         parser.add_argument(
             'rift_start_time_grid_filename', type=argparse_unicode,

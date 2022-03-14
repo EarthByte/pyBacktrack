@@ -178,8 +178,11 @@ def reconstruct_backtrack_bathymetry(
         Whether to output positive bathymetry values below sea level (the same as backtracked water depths at a drill site).
         However topography/bathymetry grids typically have negative values below sea level (and positive above).
         So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
-    use_all_cpus : bool, optional
-        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    use_all_cpus : bool or int, optional
+        If ``False`` (or zero) then use a single CPU.
+        If ``True`` then distribute CPU processing across all CPUs (cores).
+        If a positive integer then use that many CPUs (cores).
+        Defaults to ``False`` (single CPU).
     
     Returns
     -------
@@ -345,11 +348,18 @@ def reconstruct_backtrack_bathymetry(
     #
     # Use 'multiprocessing' pools to distribute across CPUs.
     #
-
-    try:
-        num_cpus = multiprocessing.cpu_count()
-    except NotImplementedError:
-        num_cpus = 1
+        
+    # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
+    if isinstance(use_all_cpus, bool):
+        try:
+            num_cpus = multiprocessing.cpu_count()
+        except NotImplementedError:
+            num_cpus = 1
+    # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+    elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+        num_cpus = use_all_cpus
+    else:
+        raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
     
     # Divide the oceanic grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
     num_oceanic_grid_sample_groups = 2 * num_cpus
@@ -915,8 +925,11 @@ def write_bathymetry_grids(
         Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
         Each row of each xyz file contains "longitude latitude bathymetry".
         Default is to only create grid files (no xyz).
-    use_all_cpus : bool, optional
-        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    use_all_cpus : bool or int, optional
+        If ``False`` (or zero) then use a single CPU.
+        If ``True`` then distribute CPU processing across all CPUs (cores).
+        If a positive integer then use that many CPUs (cores).
+        Defaults to ``False`` (single CPU).
         
     Notes
     -----
@@ -935,11 +948,21 @@ def write_bathymetry_grids(
                 paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
                 paleo_bathymetry_xyz_filename += '.xyz'
             _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
-        try:
-            num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
+
+        # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
+        if isinstance(use_all_cpus, bool):
+            try:
+                num_cpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                num_cpus = 1
+        # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+        elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+            num_cpus = use_all_cpus
+        else:
+            raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
+        
         # Distribute writing of each grid to a different CPU.
         with multiprocessing.Pool(num_cpus) as pool:
             pool.map(
@@ -1080,8 +1103,11 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         Whether to also create a GMT xyz file (with ".xyz" extension) for each output paleo bathymetry grid.
         Each row of each xyz file contains "longitude latitude bathymetry".
         Default is to only create grid files (no xyz).
-    use_all_cpus : bool, optional
-        If True then distribute CPU processing across all CPUs (cores), otherwise use a single CPU.
+    use_all_cpus : bool or int, optional
+        If ``False`` (or zero) then use a single CPU.
+        If ``True`` then distribute CPU processing across all CPUs (cores).
+        If a positive integer then use that many CPUs (cores).
+        Defaults to ``False`` (single CPU).
     
     Raises
     ------
@@ -1375,8 +1401,11 @@ def main():
              'Default is to only create grid files (no xyz).')
     
     parser.add_argument(
-        '--use_all_cpus', action='store_true',
-        help='Use all CPUs (cores). Defaults to using a single CPU.')
+        '--use_all_cpus', nargs='?', type=parse_positive_integer,
+        const=True, default=False,
+        metavar='NUM_CPUS',
+        help='Use all CPUs (cores), or if an optional integer is also specified then use the specified number of CPUs. '
+             'Defaults to using a single CPU.')
 
     parser.add_argument('oldest_time', type=parse_non_negative_float,
             metavar='oldest_time',

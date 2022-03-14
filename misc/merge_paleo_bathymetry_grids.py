@@ -56,12 +56,14 @@ merged_grid_basename = 'paleo_bathymetry'
 # (whereas GMT grdtrack will interpolate halfway from a non-NaN value, using option "-n+t0.5").
 use_xarray_if_available = False
 
-# Use multiple CPUs (if True then make sure you don't interrupt the process).
-use_multiple_cpus = True
-# Number of CPUs to use (only used if use_multiple_cpus is True).
-# Specify None to use all CPUs.
-num_cpus = 4
-
+# Use all CPUs (if True then make sure you don't interrupt the process).
+#
+# If False then use a single CPU.
+# If True then use all CPUs (cores).
+# If a positive integer then use that many CPUs (cores).
+#
+#use_all_cpus = True
+use_all_cpus = 4
 
 
 # Create the dynamic topography model (from model name) if requested.
@@ -279,13 +281,19 @@ if __name__ == '__main__':
     # Create times from present day to 'max_time'.
     time_range = range(0, max_time+1, time_increment)
     
-    if use_multiple_cpus:
-        try:
-            # Use all CPUs unless a specific number is requested.
-            if num_cpus is None:
+    if use_all_cpus:
+
+        # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
+        if isinstance(use_all_cpus, bool):
+            try:
                 num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
+            except NotImplementedError:
+                num_cpus = 1
+        # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+        elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+            num_cpus = use_all_cpus
+        else:
+            raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
 
         # Distribute writing of each grid to a different CPU.
         with multiprocessing.Pool(num_cpus) as pool:
