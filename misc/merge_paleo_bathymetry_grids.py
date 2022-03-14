@@ -9,17 +9,26 @@ import os
 import os.path
 import pybacktrack
 import sys
-
+try:
+    import xarray
+except ImportError:
+    have_xarray = False
+else:
+    have_xarray = True
 
 # PyBacktrack paleobathymetry grids.
 paleo_bathymetry_pybacktrack_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_output\paleo_bathymetry_12m_M7_RHCW18'
 paleo_bathymetry_pybacktrack_basename = 'paleo_bathymetry'
 paleo_bathymetry_pybacktrack_extension = 'nc'
+# Typically either 0 or 1.
+paleo_bathymetry_pybacktrack_decimal_places_in_time = 1
 
 # Wright paleobathymetry grids.
 paleo_bathymetry_wright_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_Wright\Paleobathymetry_RHCW18'
 paleo_bathymetry_wright_basename = 'paleobathymetry'
 paleo_bathymetry_wright_extension = 'nc'
+# Typically either 0 or 1.
+paleo_bathymetry_wright_decimal_places_in_time = 0
 
 # Optional dynamic topography model to add to Wright paleobathymetry grids (the pybacktrack grids already have it applied).
 #
@@ -40,6 +49,13 @@ merged_grid_spacing_degrees = 0.2
 merged_grid_directory = os.path.join('paleo_bathymetry_output', 'merged', 'paleo_bathymetry_{0:.0f}m_M7_RHCW18'.format(merged_grid_spacing_degrees * 60.0))  # Insert grid spacing (in minutes) in output directory.
 merged_grid_basename = 'paleo_bathymetry'
 
+# Use the Python xarray module (if installed) to load the bathymetry grids.
+#
+# This enables faster loading of the grids (compared to GMT grdtrack) but any
+# interpolated location that has any NaN neighbours (in 4x4 linear region) will itself be NaN
+# (whereas GMT grdtrack will interpolate halfway from a non-NaN value, using option "-n+t0.5").
+use_xarray_if_available = False
+
 # Use multiple CPUs (if True then make sure you don't interrupt the process).
 use_multiple_cpus = True
 
@@ -57,22 +73,31 @@ def merge_paleo_bathymetry_grids(
         input_points,
         dynamic_topography_at_present_day):
     
+    # print('Time: {}'.format(time)); sys.stdout.flush()
+
     # Paleo bathymetry grids to merge (pybacktrack and Wright).
     #
     # Note that pybacktrack uses 1 decimal place for the time in the filename, whereas Wright does not.
-    paleo_bathymetry_pybacktrack_filename = os.path.join(paleo_bathymetry_pybacktrack_prefix, '{0}_{1:.1f}.{2}'.format(paleo_bathymetry_pybacktrack_basename, time, paleo_bathymetry_pybacktrack_extension))
-    paleo_bathymetry_wright_filename = os.path.join(paleo_bathymetry_wright_prefix, '{0}_{1}.{2}'.format(paleo_bathymetry_wright_basename, time, paleo_bathymetry_wright_extension))
+    paleo_bathymetry_pybacktrack_filename = os.path.join(
+            paleo_bathymetry_pybacktrack_prefix,
+            '{0}_{1:.{2}f}.{3}'.format(paleo_bathymetry_pybacktrack_basename, time, paleo_bathymetry_pybacktrack_decimal_places_in_time, paleo_bathymetry_pybacktrack_extension))
+    paleo_bathymetry_wright_filename = os.path.join(
+            paleo_bathymetry_wright_prefix,
+            '{0}_{1:.{2}f}.{3}'.format(paleo_bathymetry_wright_basename, time, paleo_bathymetry_wright_decimal_places_in_time, paleo_bathymetry_wright_extension))
 
     # Sample the paleo bathymetry grids that we're going to merge.
-    paleo_bathymetry_points = _gmt_grdtrack(
+    # print('Reading input bathymetry grids...'); sys.stdout.flush()
+    paleo_bathymetry_points = _load_bathymetry(
             input_points,
             paleo_bathymetry_pybacktrack_filename,
             paleo_bathymetry_wright_filename)
     
     if dynamic_topography_model:
         # Sample the dynamic topography at 'time'.
+        # print('Sample dynamic topography at {}...'.format(time)); sys.stdout.flush()
         dynamic_topography = dynamic_topography_model.sample(time, input_points)
     
+    # print('Merging...'); sys.stdout.flush()
     merged_points = []
     for point_index, paleo_bathymetry_point in enumerate(paleo_bathymetry_points):
         lon, lat, paleo_bathymetry_pybacktrack, paleo_bathymetry_wright = paleo_bathymetry_point
@@ -96,40 +121,84 @@ def merge_paleo_bathymetry_grids(
 
         merged_points.append((lon, lat, paleo_bathymetry))
     
+    # print('Nearneighbor gridding...'); sys.stdout.flush()
     merged_grid_filename = os.path.join(merged_grid_directory, '{0}_{1}.nc'.format(merged_grid_basename, time))
     _gmt_nearneighbor(merged_points, merged_grid_spacing_degrees, merged_grid_filename)
 
 
-def _gmt_grdtrack(
-        input,
-        *grid_filenames):
+def _load_bathymetry(
+        input_points,
+        paleo_bathymetry_pybacktrack_filename,
+        paleo_bathymetry_wright_filename):
     
-    # Create a multiline string (one line per lon/lat/value1/etc row).
-    location_data = ''.join(
-            ' '.join(str(item) for item in row) + '\n' for row in input)
+    if use_xarray_if_available and have_xarray:
 
-    # The command-line strings to execute GMT 'grdtrack'.
-    grdtrack_command_line = ["gmt", "grdtrack",
-        # Geographic input/output coordinates...
-        "-fg",
-        # Use linear interpolation, and avoid anti-aliasing...
-        "-nl+a+bg+t0.5"]
-    # One or more grid filenames to sample.
-    for grid_filename in grid_filenames:
-        grdtrack_command_line.append("-G{0}".format(grid_filename))
-    
-    # Call the system command.
-    stdout_data = pybacktrack.util.call_system_command.call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
+        # The input point longitudes and latitudes.
+        lons = xarray.DataArray([lon for lon, lat in input_points])
+        lats = xarray.DataArray([lat for lon, lat in input_points])
 
-    # Extract the sampled values.
-    output_values = []
-    for line in stdout_data.splitlines():
-        # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
-        # Note that if GMT returns "NaN" then we'll return float('nan').
-        output_value = tuple(float(value) for value in line.split())
-        output_values.append(output_value)
+        with xarray.open_dataset(paleo_bathymetry_pybacktrack_filename) as bathymetry_pybacktrack_grid:
+            # Get the lon, lat coordinates names (typically 'lon' and 'lat', and in that order).
+            coord_names = list(bathymetry_pybacktrack_grid.coords.keys())
+            lon_name = coord_names[0]
+            lat_name = coord_names[1]
+            # Get the z value name (typically 'z').
+            z_name = list(bathymetry_pybacktrack_grid.data_vars.keys())[0]
+            # Interpolate the bathymetry grid at the input point locations.
+            bathymetry_pybacktrack_values = bathymetry_pybacktrack_grid[z_name].interp(dict({lon_name : lons, lat_name : lats}))
+            # print(bathymetry_pybacktrack_grid.keys())
+            # print(bathymetry_pybacktrack_values.shape)
+
+        with xarray.open_dataset(paleo_bathymetry_wright_filename) as bathymetry_wright_grid:
+            # Get the lon, lat coordinates names (typically 'lon' and 'lat', and in that order).
+            coord_names = list(bathymetry_wright_grid.coords.keys())
+            lon_name = coord_names[0]
+            lat_name = coord_names[1]
+            # Get the z value name (typically 'z').
+            z_name = list(bathymetry_wright_grid.data_vars.keys())[0]
+            # Interpolate the bathymetry grid at the input point locations.
+            bathymetry_wright_values = bathymetry_wright_grid[z_name].interp(dict({lon_name : lons, lat_name : lats}))
+            # print(bathymetry_wright_grid.keys())
+            # print(bathymetry_wright_values.shape)
+
+        output_values = []
+
+        for point_index in range(len(lons)):
+            lon, lat = input_points[point_index]
+            output_value = (lon, lat, float(bathymetry_pybacktrack_values.item(point_index)), float(bathymetry_wright_values.item(point_index)))
+            output_values.append(output_value)
     
-    return output_values
+        return output_values
+
+    else:  # Use GMT grdtrack ...
+
+        # Create a multiline string (one line per lon/lat/value1/etc row).
+        location_data = ''.join(
+                ' '.join(str(item) for item in row) + '\n' for row in input_points)
+
+        # The command-line strings to execute GMT 'grdtrack'.
+        grdtrack_command_line = ["gmt", "grdtrack",
+            # Geographic input/output coordinates...
+            "-fg",
+            # Avoid anti-aliasing...
+            "-n+a+bg+t0.5"]
+        # One or more grid filenames to sample.
+        for grid_filename in (paleo_bathymetry_pybacktrack_filename, paleo_bathymetry_wright_filename):
+            grdtrack_command_line.append("-G{0}".format(grid_filename))
+        
+        # Call the system command.
+        stdout_data = pybacktrack.util.call_system_command.call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
+
+        output_values = []
+
+        # Extract the sampled values.
+        for line in stdout_data.splitlines():
+            # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
+            # Note that if GMT returns "NaN" then we'll return float('nan').
+            output_value = tuple(float(value) for value in line.split())
+            output_values.append(output_value)
+    
+        return output_values
 
 
 def _gmt_nearneighbor(
@@ -179,7 +248,9 @@ def _generate_input_points_grid(grid_spacing_degrees):
         lat = -90 + lat_index * grid_spacing_degrees
         
         for lon_index in range(num_longitudes):
-            lon = -180 + lon_index * grid_spacing_degrees
+            # NOTE: For some reason xarray does not always like the range [-180, 180] (excludes half the globe).
+            #       So use the range [0, 360] instead.
+            lon = 0 + lon_index * grid_spacing_degrees
             
             input_points.append((lon, lat))
     
@@ -197,6 +268,7 @@ if __name__ == '__main__':
 
     if dynamic_topography_model:
         # Sample the dynamic topography at present day.
+        # print('Sample dynamic topography at {}...'.format(0)); sys.stdout.flush()
         dynamic_topography_at_present_day = dynamic_topography_model.sample(0, input_points)
     else:
         dynamic_topography_at_present_day = None
