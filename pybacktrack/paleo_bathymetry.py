@@ -301,6 +301,16 @@ def reconstruct_backtrack_bathymetry(
     #       A value of NaN means there is no rifting at the sample location.
     continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
                                     if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
+    # Ensure rift start ages are not younger than associated rift end ages (due to filtering during grid sampling).
+    for grid_sample_index in range(len(continental_grid_samples)):
+        grid_sample = continental_grid_samples[grid_sample_index]
+        rift_start_age, rift_end_age = grid_sample[5], grid_sample[6]
+        if rift_start_age < rift_end_age:
+            # Clamp rift start age to the rift end age.
+            rift_start_age = rift_end_age
+            # Create a new tuple with the rift start age replaced.
+            grid_sample = grid_sample[:5] + (rift_start_age,) + grid_sample[6:]
+            continental_grid_samples[grid_sample_index] = grid_sample
     
     # Find the sea levels over the requested time period.
     if sea_level_model:

@@ -149,11 +149,13 @@ def total_subsidence(
             # So subsidence has not yet happened.
             return 0.0
         
-        if rift_start_time <= rift_end_time:
-            raise ValueError('Rift start time must be prior to rift end time.')
+        if rift_start_time < rift_end_time:
+            raise ValueError('Rift start time must not be younger than rift end time.')
         
         # If prior to rifting then subsidence has not yet happened.
         if time >= rift_start_time:
+            # Returning early also avoids divide by zero below when 'rift_start_time == rift_end_time'
+            # (because we know 'time > rift_end_time' and so 'time > rift_start_time').
             return 0.0
         
         # The stretching factor (beta) is the total strain.
