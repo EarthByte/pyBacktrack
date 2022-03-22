@@ -219,8 +219,8 @@ def _gmt_nearneighbor(
     nearneighbor_command_line = [
         "gmt",
         "nearneighbor",
-        "-N4/1", # Divide search radius into 4 sectors but only require a value in 1 sector.
-        "-S{0}d".format(0.7 * grid_spacing_degrees),
+        "-N1/1", # Divide search radius into 1 sector and only require a value in 1 sector.
+        "-S{0}d".format(0.1 * grid_spacing_degrees),
         "-I{0}".format(grid_spacing_degrees),
         # Use GMT gridline registration since our input point grid has data points on the grid lines.
         # Gridline registration is the default so we don't need to force pixel registration...
