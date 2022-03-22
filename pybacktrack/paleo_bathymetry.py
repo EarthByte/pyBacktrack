@@ -226,7 +226,7 @@ def reconstruct_backtrack_bathymetry(
     base_lithology_components = [(base_lithology_name, 1.0)]
 
     # Sample the total sediment thickness grid.
-    grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename)
+    grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename, force_positive=True)
 
     # Ignore samples outside total sediment thickness grid (masked region) since we can only backtrack where there's sediment.
     #
@@ -261,7 +261,8 @@ def reconstruct_backtrack_bathymetry(
         grid_samples = _grid_samples
 
     # Add age and topography to the total sediment thickness grid samples.
-    grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, topography_filename)
+    grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, force_positive=True)
+    grid_samples = _gmt_grdtrack(grid_samples, topography_filename)
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
@@ -289,9 +290,9 @@ def reconstruct_backtrack_bathymetry(
     # Add crustal thickness and builtin rift start/end times to continental grid samples.
     #
     # Note: For some reason we get a GMT error if we combine these grids in a single 'grdtrack' call, so we separate them instead.
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename, force_positive=True)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME, force_positive=True)
+    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME, force_positive=True)
 
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
@@ -764,15 +765,10 @@ def generate_lon_lat_points(grid_spacing_degrees):
     
     # Data points start *on* dateline (-180).
     # If 180 is an integer multiple of grid spacing then final longitude also lands on dateline (+180).
-    #
-    # Note: To avoid a bug in GMT 6.3 we'll avoid generating points *on* the poles.
-    #       See https://github.com/GenericMappingTools/gmt/issues/6299
-    #       Happens with grdtrack and linear interpolation.
-    #       And we need linear interpolation to, for example, avoid potential negative ages when sampling age grid.
-    num_latitudes = int(math.floor(180.0 / grid_spacing_degrees)) - 1
+    num_latitudes = int(math.floor(180.0 / grid_spacing_degrees)) + 1
     num_longitudes = int(math.floor(360.0 / grid_spacing_degrees)) + 1
     for lat_index in range(num_latitudes):
-        lat = -90 + (lat_index + 1) * grid_spacing_degrees
+        lat = -90 + lat_index * grid_spacing_degrees
         
         for lon_index in range(num_longitudes):
             lon = -180 + lon_index * grid_spacing_degrees
@@ -784,7 +780,8 @@ def generate_lon_lat_points(grid_spacing_degrees):
 
 def _gmt_grdtrack(
         input,
-        *grid_filenames):
+        grid_filename,
+        force_positive=False):
     """
     Samples one or more grid files at the specified locations.
     
@@ -792,8 +789,8 @@ def _gmt_grdtrack(
     Should at least have 2-tuples (longitude, latitude) but 'grdtrack' allows extra columns.
     
     Returns a list of tuples of float values.
-    For example, if input was (longitude, latitude) tuples and one grid file specified then output is (longitude, latitude, sample) tuples.
-    If input was (longitude, latitude, value) tuples and two grid file specified then output is (longitude, latitude, value, sample_grid1, sample_grid2) tuples.
+    For example, if input was (longitude, latitude) tuples then output is (longitude, latitude, sample) tuples.
+    If input was (longitude, latitude, value) tuples then output is (longitude, latitude, value, sample_grid) tuples.
     """
     
     # Create a multiline string (one line per lon/lat/value1/etc row).
@@ -804,11 +801,9 @@ def _gmt_grdtrack(
     grdtrack_command_line = ["gmt", "grdtrack",
         # Geographic input/output coordinates...
         "-fg",
-        # Use linear interpolation (eg, to avoid potential negative ages when sampling age grid), and avoid anti-aliasing...
-        "-nl+a+bg+t0.5"]
-    # One or more grid filenames to sample.
-    for grid_filename in grid_filenames:
-        grdtrack_command_line.append("-G{0}".format(grid_filename))
+        # Avoid anti-aliasing...
+        "-n+a+bg+t0.5",
+        "-G{0}".format(grid_filename)]
     
     # Call the system command.
     stdout_data = call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
@@ -819,6 +814,13 @@ def _gmt_grdtrack(
         # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
         # Note that if GMT returns "NaN" then we'll return float('nan').
         output_value = tuple(float(value) for value in line.split())
+
+        # If requested to clamp negative samples to zero.
+        # Note: value just sampled is the last column.
+        if force_positive and output_value[-1] < 0.0:
+            # Make last column (just sampled) be zero.
+            output_value = output_value[:-1] + (0.0,)
+        
         output_values.append(output_value)
     
     return output_values
