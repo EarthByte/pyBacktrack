@@ -142,7 +142,10 @@ __all__ = [
     'BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE',
     'BACKSTRIP_COLUMN_DECOMPACTED_DEPTH',
     # From paleo_bathymetry module...
-    'reconstruct_backtrack_bathymetry',
+    'reconstruct_paleo_bathymetry',
+    'generate_lon_lat_points',
+    'write_paleo_bathymetry_grids',
+    'reconstruct_paleo_bathymetry_grids',
     # From lithology module...
     'Lithology',
     'read_lithologies_file',
@@ -197,6 +200,8 @@ __all__ = [
     'BUNDLE_SEA_LEVEL_PATH',
     'BUNDLE_SEA_LEVEL_MODELS',
     'BUNDLE_SEA_LEVEL_MODEL_NAMES',
+    'BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES',
+    'BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME',
     '__version__',
     'VERSION'
 ]

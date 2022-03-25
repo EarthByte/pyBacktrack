@@ -99,6 +99,14 @@ The following module attributes are available:
   A list of bundled sea level model *names* (keys in `BUNDLE_SEA_LEVEL_MODELS`).
   
   Choices include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
+
+- **pybacktrack.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES**
+
+  Rotation files of the reconstruction model used to reconstruct sediment-deposited crust for paleobathymetry gridding.
+
+- **pybacktrack.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME**
+
+  Static polygon file of the reconstruction model used to assign plate IDs to points on sediment-deposited crust for paleobathymetry gridding.
 """
 
 
