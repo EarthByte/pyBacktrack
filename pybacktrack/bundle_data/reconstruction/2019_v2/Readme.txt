@@ -1,4 +1,4 @@
-These 2019 v2 files were obtained from https://www.earthbyte.org/webdav/ftp/Data_Collections/Muller_etal_2019_Tectonics/Muller_etal_2019_PlateMotionModel/ .
+The 2019 v2 reconstruction model was obtained from https://www.earthbyte.org/webdav/ftp/Data_Collections/Muller_etal_2019_Tectonics/Muller_etal_2019_PlateMotionModel/ .
 
 To help avoid the 260 character maximum (absolute) path length limit on Windows:
 * "Global_250-0Ma_Rotations_2019_v2.rot" was renamed to "rotations_250-0Ma.rot".

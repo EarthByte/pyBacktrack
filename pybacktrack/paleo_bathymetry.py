@@ -73,8 +73,8 @@ def reconstruct_backtrack_bathymetry(
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
-        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES,
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,
         dynamic_topography_model=None,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -94,8 +94,8 @@ def reconstruct_backtrack_bathymetry(
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
         crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
-        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,\
-        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,\
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES,\
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
@@ -1000,8 +1000,8 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         topography_filename=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         total_sediment_thickness_filename=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         crustal_thickness_filename=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
-        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
-        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES,
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,
         dynamic_topography_model=None,
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
@@ -1023,8 +1023,8 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         topography_filename=pybacktrack.BUNDLE_TOPOGRAPHY_FILENAME,\
         total_sediment_thickness_filename=pybacktrack.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,\
         crustal_thickness_filename=pybacktrack.BUNDLE_CRUSTAL_THICKNESS_FILENAME,\
-        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,\
-        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,\
+        rotation_filenames=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES,\
+        static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
@@ -1344,22 +1344,22 @@ def main():
     # Defaults to built-in global rotations associated with topological model used to generate built-in rift start/end time grids.
     parser.add_argument(
         '-r', '--rotation_filenames', type=str, nargs='+',
-        default=pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES,
+        default=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES,
         metavar='rotation_filename',
         help='One or more rotation files (to reconstruct sediment-deposited crust). '
              'Defaults to the bundled global rotations associated with topological model '
-             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RIFTING_ROTATION_FILENAMES))
+             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES))
     
     # Allow user to override default static polygon filename (to assign plate IDs to points on sediment-deposited crust).
     #
     # Defaults to built-in static polygons associated with topological model used to generate built-in rift start/end time grids.
     parser.add_argument(
         '-p', '--static_polygon_filename', type=str,
-        default=pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME,
+        default=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,
         metavar='static_polygon_filename',
         help='File containing static polygons (to assign plate IDs to points on sediment-deposited crust). '
              'Defaults to the bundled static polygons associated with topological model '
-             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RIFTING_STATIC_POLYGON_FILENAME))
+             'used to generate built-in rift start/end time grids: {0}'.format(pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME))
     
     # Can optionally specify dynamic topography as a triplet of filenames or a model name (if using bundled data) but not both.
     dynamic_topography_argument_group = parser.add_mutually_exclusive_group()
