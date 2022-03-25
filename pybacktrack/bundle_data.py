@@ -129,6 +129,7 @@ BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.nc')
 
 BUNDLE_RIFTING_START_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rift_start_grid.nc')
 BUNDLE_RIFTING_END_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rift_end_grid.nc')
+BUNDLE_TRENCHES_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'trenches.gpmlz')
 BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES = [os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rotations_250-0Ma.rot')]
 BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'static_polygons.shp')
 

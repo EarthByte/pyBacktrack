@@ -80,7 +80,6 @@ def generate_rift_parameter_points(
         How far to go back in time when searching for the beginning of rifting.
         Defaults to 250 Ma.
 
-    The list filenames are "<model_name>_topology_files.txt" and "<model_name>_rotation_files.txt" (in the "deforming_model/" directory).
     use_all_cpus : bool or int, optional
         If ``False`` (or zero) then use a single CPU.
         If ``True`` then distribute CPU processing across all CPUs (cores).

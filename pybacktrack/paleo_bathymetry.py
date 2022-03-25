@@ -33,6 +33,7 @@ from __future__ import division
 from __future__ import print_function
 
 from functools import partial
+import itertools
 import math
 import multiprocessing
 import numpy as np
@@ -79,6 +80,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        exclude_distance_to_trenches_kms=None,
         region_plate_ids=None,
         anchor_plate_id=0,
         output_positive_bathymetry_below_sea_level=False,
@@ -100,6 +102,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
+        exclude_distance_to_trenches_kms=None,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
         output_positive_bathymetry_below_sea_level=False,\
@@ -169,6 +172,8 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    exclude_distance_to_trenches_kms : float, optional
+        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None for no exclusion. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -205,6 +210,24 @@ def reconstruct_backtrack_bathymetry(
         
     .. versionadded:: 1.4
     """
+   
+    #
+    # Determine number of CPUs to use.
+    #
+    if use_all_cpus:
+        # If 'use_all_cpus' is a bool (and therefore is True) then use all available CPUs...
+        if isinstance(use_all_cpus, bool):
+            try:
+                num_cpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                num_cpus = 1
+        # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
+        elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
+            num_cpus = use_all_cpus
+        else:
+            raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
+    else:
+        num_cpus = 1
     
     if oldest_time < 0:
         raise ValueError("'oldest_time' should not be negative")
@@ -259,7 +282,33 @@ def reconstruct_backtrack_bathymetry(
             _grid_samples.append(grid_sample)
 
         grid_samples = _grid_samples
+    
+    if exclude_distance_to_trenches_kms:
+        if num_cpus == 1:
+            grid_samples = _exclude_grid_samples_near_trenches(grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, exclude_distance_to_trenches_kms)
+        else:
+            # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
+            num_grid_sample_groups = 2 * num_cpus
+            num_grid_samples_per_group = math.ceil(float(len(grid_samples)) / num_grid_sample_groups)
 
+            # Distribute the groups of grid samples across the multiprocessing pool.
+            with multiprocessing.Pool(num_cpus) as pool:
+                grid_samples_list = pool.map(
+                        partial(
+                            _exclude_grid_samples_near_trenches,
+                            trench_filename=pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME,
+                            threshold_distance_to_trench_kms=exclude_distance_to_trenches_kms),
+                        (
+                            grid_samples[
+                                grid_sample_group_index * num_grid_samples_per_group :
+                                (grid_sample_group_index + 1) * num_grid_samples_per_group]
+                                        for grid_sample_group_index in range(num_grid_sample_groups)
+                        ),
+                        1) # chunksize
+            
+            # Merge output lists back into one list.
+            grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
+    
     # Add age and topography to the total sediment thickness grid samples.
     grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, force_positive=True)
     grid_samples = _gmt_grdtrack(grid_samples, topography_filename)
@@ -322,7 +371,7 @@ def reconstruct_backtrack_bathymetry(
         sea_levels = None
 
     # If using a single CPU then just process all ocean/continent points in one call.
-    if not use_all_cpus:
+    if num_cpus == 1:
         oceanic_paleo_bathymetry = _reconstruct_backtrack_oceanic_bathymetry(
                 oceanic_grid_samples,
                 time_range,
@@ -355,23 +404,7 @@ def reconstruct_backtrack_bathymetry(
                 paleo_bathymetry[time].extend(bathymetries)
         
         return paleo_bathymetry
-    
-    #
-    # Use 'multiprocessing' pools to distribute across CPUs.
-    #
-        
-    # If 'use_all_cpus' is a bool (and therefore must be True) then use all available CPUs...
-    if isinstance(use_all_cpus, bool):
-        try:
-            num_cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            num_cpus = 1
-    # else 'use_all_cpus' is a positive integer specifying the number of CPUs to use...
-    elif isinstance(use_all_cpus, int) and use_all_cpus > 0:
-        num_cpus = use_all_cpus
-    else:
-        raise TypeError('{} is neither a bool nor a positive integer'.format(use_all_cpus))
-    
+     
     # Divide the oceanic grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
     num_oceanic_grid_sample_groups = 2 * num_cpus
     num_oceanic_grid_samples_per_group = math.ceil(float(len(oceanic_grid_samples)) / num_oceanic_grid_sample_groups)
@@ -742,6 +775,40 @@ def _reconstruct_backtrack_continental_bathymetry(
     return paleo_bathymetry
 
 
+def _exclude_grid_samples_near_trenches(
+        grid_samples,
+        trench_filename,
+        threshold_distance_to_trench_kms):
+
+    threshold_distance_to_trench_radians = threshold_distance_to_trench_kms / pygplates.Earth.mean_radius_in_kms
+
+    trench_features = pygplates.FeatureCollection(trench_filename)
+    # Extract the trench geometries from the trench features (we've ensure during pre-processing that each feature will have a single geometry).
+    trench_geometries = []
+    for trench_feature in trench_features:
+        trench_geometries.extend(trench_feature.get_all_geometries())
+
+    included_grid_samples = []
+    for grid_sample in grid_samples:
+        # Extract the grid sample location.
+        grid_longitude, grid_latitude = grid_sample[0], grid_sample[1]
+        grid_location = pygplates.PointOnSphere(grid_latitude, grid_longitude)
+        # See if current grid sample is near any trenches.
+        is_grid_location_near_a_trench = False
+        for trench_geometry in trench_geometries:
+            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, threshold_distance_to_trench_radians) is not None:
+                is_grid_location_near_a_trench = True
+                break
+
+        # Skip current grid sample if it's near any trench.
+        if is_grid_location_near_a_trench:
+            continue
+        
+        included_grid_samples.append(grid_sample)
+    
+    return included_grid_samples
+
+
 def generate_lon_lat_points(grid_spacing_degrees):
     """generate_lon_lat_points(grid_spacing_degrees)
     Generates a global grid of points uniformly spaced in longitude and latitude.
@@ -1006,6 +1073,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
+        exclude_distance_to_trenches_kms=None,
         region_plate_ids=None,
         anchor_plate_id=0,
         output_positive_bathymetry_below_sea_level=False,
@@ -1029,6 +1097,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
+        exclude_distance_to_trenches_kms=None,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
         output_positive_bathymetry_below_sea_level=False,\
@@ -1102,6 +1171,8 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
+    exclude_distance_to_trenches_kms : float, optional
+        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None for no exclusion. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -1155,6 +1226,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model,
         base_lithology_name,
         ocean_age_to_depth_model,
+        exclude_distance_to_trenches_kms,
         region_plate_ids,
         anchor_plate_id,
         output_positive_bathymetry_below_sea_level,
@@ -1275,6 +1347,9 @@ def main():
             metavar='PLATE_ID',
             dest='region_plate_ids',
             help='Plate IDs of one or more plates to restrict paleobathymetry reconstruction to. Defaults to global.')
+    
+    parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=parse_positive_float,
+            help='The distance to present-day trenches to exclude bathymetry grid points (in kms). Defaults to no exclusion.')
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
@@ -1487,6 +1562,7 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model,
+        args.exclude_distance_to_trenches_kms,
         args.region_plate_ids,
         args.anchor_plate_id,
         args.output_positive_bathymetry_below_sea_level,
