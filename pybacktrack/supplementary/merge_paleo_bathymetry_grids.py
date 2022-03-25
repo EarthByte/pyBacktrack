@@ -49,13 +49,6 @@ merged_grid_spacing_degrees = 0.2
 merged_grid_directory = os.path.join('paleo_bathymetry_output', 'merged', 'paleo_bathymetry_{0:.0f}m_M7_RHCW18'.format(merged_grid_spacing_degrees * 60.0))  # Insert grid spacing (in minutes) in output directory.
 merged_grid_basename = 'paleo_bathymetry'
 
-# Use the Python xarray module (if installed) to load the bathymetry grids.
-#
-# This enables faster loading of the grids (compared to GMT grdtrack) but any
-# interpolated location that has any NaN neighbours (in 4x4 linear region) will itself be NaN
-# (whereas GMT grdtrack will interpolate halfway from a non-NaN value, using option "-n+t0.5").
-use_xarray_if_available = False
-
 # Use all CPUs (if True then make sure you don't interrupt the process).
 #
 # If False then use a single CPU.
@@ -135,6 +128,19 @@ def _load_bathymetry(
         input_points,
         paleo_bathymetry_pybacktrack_filename,
         paleo_bathymetry_wright_filename):
+
+    # Use the Python xarray module (if installed) to load the bathymetry grids.
+    #
+    # This enables faster loading of the grids (compared to GMT grdtrack) but any
+    # interpolated location that has any NaN neighbours (in 4x4 linear region) will itself be NaN
+    # (whereas GMT grdtrack will interpolate halfway from a non-NaN value, using option "-n+t0.5").
+    #
+    # UPDATE: No longer using xarray since:
+    #         - xarray seems to require the longitude range of the sampling points to match the input grid (whereas GMT grdtrack does not).
+    #           For example, if sampling points are [-180, 180] and grid is [0, 360] then an entire hemisphere goes missing.
+    #         - xarray appears to shift away from NaN regions slightly (likely due to the NaN interpolation method covered above).
+    #
+    use_xarray_if_available = False
     
     if use_xarray_if_available and have_xarray:
 
