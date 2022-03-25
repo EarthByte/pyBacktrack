@@ -208,6 +208,22 @@ The following command installs the examples (example data and notebooks) to a ne
             creates a new sub-directory of your *current working directory* called ``pybacktrack/examples``.
           | However the example below assumes the default directory (``pybacktrack_examples``).
 
+.. _pybacktrack_install_supplementary:
+
+Install supplementary scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can optionally install supplementary scripts. These are not necessary for running the ``pybacktrack`` module.
+They are various pre/post processing, conversion and test scripts that have only been included for reference (for those interested).
+
+The following command installs the supplementary scripts to a new sub-directory of your *current working directory* called ``pybacktrack_supplementary``:
+
+.. code-block:: python
+
+    python -c "import pybacktrack; pybacktrack.install_supplementary()"
+
+.. note:: Like :ref:`the examples <pybacktrack_install_examples>` you can specify your own sub-directory.
+
 .. _pybacktrack_install_using_docker:
 
 Install using Docker

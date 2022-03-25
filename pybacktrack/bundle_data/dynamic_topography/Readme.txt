@@ -9,10 +9,10 @@ in a separate sub-directory because some of these reconstructions are shared by 
 
 This data (model and reconstructions) was obtained from Michael Chin and is the data used
 in his GPlates Web Portal. The mantle-frame grids were subsequently down-sampled using
-'misc/convert_to_netcdf4.py' which essentially amounts to 'gmt grdfilter input.nc -Goutput.nc -D4 -Fc200 -I1'
+'pybacktrack/supplementary/convert_to_netcdf4.py' which essentially amounts to 'gmt grdfilter input.nc -Goutput.nc -D4 -Fc200 -I1'
 to create 1 degree resolution grids where the cosine filter width is 200km (radius 100km).
 Also the multipoint grids (used by GPlates Web Portal to convert mantle-frame to plate-frame) were
-tested against the static polygons, using 'misc/test_multipoint_came_from_static_polygons.py',
+tested against the static polygons, using 'pybacktrack/supplementary/test_multipoint_came_from_static_polygons.py',
 to make sure we associated the correct static polygons with each model.
 
 

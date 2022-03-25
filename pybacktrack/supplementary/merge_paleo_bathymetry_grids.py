@@ -17,14 +17,14 @@ else:
     have_xarray = True
 
 # PyBacktrack paleobathymetry grids.
-paleo_bathymetry_pybacktrack_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_output\paleo_bathymetry_12m_M7_RHCW18'
+paleo_bathymetry_pybacktrack_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\supplementary\paleo_bathymetry_output\paleo_bathymetry_12m_M7_RHCW18'
 paleo_bathymetry_pybacktrack_basename = 'paleo_bathymetry'
 paleo_bathymetry_pybacktrack_extension = 'nc'
 # Typically either 0 or 1.
 paleo_bathymetry_pybacktrack_decimal_places_in_time = 1
 
 # Wright paleobathymetry grids.
-paleo_bathymetry_wright_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\misc\paleo_bathymetry_Wright\Paleobathymetry_RHCW18'
+paleo_bathymetry_wright_prefix = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\supplementary\paleo_bathymetry_Wright\Paleobathymetry_RHCW18'
 paleo_bathymetry_wright_basename = 'paleobathymetry'
 paleo_bathymetry_wright_extension = 'nc'
 # Typically either 0 or 1.

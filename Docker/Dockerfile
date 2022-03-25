@@ -51,6 +51,8 @@ RUN pip3 install pybacktrack
 # Install pybacktrack example data from the pybacktrack package.
 RUN pip3 install -U setuptools  # Need pkg_resources to install examples.
 RUN python3 -c 'import pybacktrack; pybacktrack.install_examples()'
+# Install pybacktrack supplementary scripts from the pybacktrack package.
+RUN python3 -c 'import pybacktrack; pybacktrack.install_supplementary()'
 
 # User can run 'notebook.sh' to start jupyter notebook
 # (if they want to look at the example notebooks).

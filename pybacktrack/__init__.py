@@ -98,6 +98,8 @@ from .bundle_data import *
 
 # Installing examples from pybacktrack package.
 from .install_examples import install as install_examples
+# Installing supplementary script from pybacktrack package.
+from .install_supplementary import install as install_supplementary
 
 from .version import __version__, VERSION
 

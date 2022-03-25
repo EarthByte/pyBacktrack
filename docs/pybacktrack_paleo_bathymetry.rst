@@ -121,10 +121,12 @@ It is also used during regular backtracking to obtain the rift period of a drill
 The rift grids cover all submerged continental crust, not just those areas that have undergone rifting.
 Submerged continental crust is where the total sediment thickness grid contains valid values but the age grid does not (ie, submerged crust that is non oceanic).
 
-The rift grids were generated with ``misc/generate_rift_grids.py`` using the Müller 2019 deforming plate model:
+The rift grids were generated with ``pybacktrack/supplementary/generate_rift_grids.py`` using the Müller 2019 deforming plate model:
 
 * Müller, R. D., Zahirovic, S., Williams, S. E., Cannon, J., Seton, M., Bower, D. J., Tetley, M. G., Heine, C., Le Breton, E., Liu, S., Russell, S. H. J., Yang, T., Leonard, J., and Gurnis, M. (2019),
   `A global plate model including lithospheric deformation along major rifts and orogens since the Triassic. Tectonics, vol. 38, <https://doi.org/10.1029/2018TC005462>`_.
+
+.. note:: The rift generation script ``pybacktrack/supplementary/generate_rift_grids.py`` can be obtained by :ref:`installing the supplementary scripts <pybacktrack_install_supplementary>`.
 
 This paragraph gives a brief overview of rift gridding...
 First, grid points on continental crust that have undergone *extensional* deformation (rifting) during their most recent deformation period have their rift start and end ages assigned
@@ -136,7 +138,7 @@ Next, the *non-deforming* grid points on continental crust obtain their rift per
 This ensures that all continental crust contains a rift period and hence can be used to generate paleobathymetry grids from all present day continental crust.
 Finally, only those continental grid points that are submerged are stored in the final rift grids since we only need to backtrack submerged crust.
 
-This paragraph gives a more detailed explanation of how deformation in particular is used in ``misc/generate_rift_grids.py``...
+This paragraph gives a more detailed explanation of how deformation in particular is used in ``pybacktrack/supplementary/generate_rift_grids.py``...
 The script allows one to specify a total sediment thickness grid and an age grid (defaulting to those included with pyBacktrack).
 Grid points are uniformly generated in longitude/latitude space on continental crust.
 Next pyGPlates is used to load the Müller 2019 topological plate model (containing rigid plate polygons and deforming networks) and reconstruct these continental grid points on back through geological time.

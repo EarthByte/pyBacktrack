@@ -3,6 +3,7 @@ include LICENSE
 recursive-include pybacktrack/bundle_data *
 recursive-include pybacktrack/test_data *
 recursive-include pybacktrack/notebooks *
+recursive-include pybacktrack/supplementary *
 recursive-include tests *
 prune pybacktrack/notebooks/.ipynb_checkpoints
 prune tests/__pycache__
