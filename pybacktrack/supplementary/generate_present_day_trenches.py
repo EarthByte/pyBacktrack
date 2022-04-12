@@ -33,10 +33,14 @@ PYGPLATES_VERSION_REQUIRED = pygplates.Version(30)
 DEFAULT_TOPOLOGY_FILES = os.path.join('deforming_model', '2019_v2', 'topology_files.txt')
 DEFAULT_ROTATION_FILES = os.path.join('deforming_model', '2019_v2', 'rotation_files.txt')
 
+# Default distance to present-day trenches to exclude bathymetry grid points (in kms).
+DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS = 50
+
 
 def generate_present_day_trenches(
         topology_filenames=None,
-        rotation_filenames=None):
+        rotation_filenames=None,
+        exclude_distance_to_trenches_kms=DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS):
     """Generate the present-day locations of trenches.
     
     Parameters
@@ -47,6 +51,8 @@ def generate_present_day_trenches(
     rotation_filenames : list of string, optional
         List of filenames containing rotation features (to create a topological model with).
         If not specified then defaults to the 'deforming_model/2019_v2/' topological model.
+    exclude_distance_to_trenches_kms : float, optional
+        The distance to present-day trenches (in kms) that will be used to exclude grid points during paleobathymetry gridding.
     
     Returns
     -------
@@ -84,6 +90,10 @@ def generate_present_day_trenches(
         if resolved_topological_section.get_feature().get_feature_type() == pygplates.FeatureType.gpml_subduction_zone:
             trench_sub_segments = resolved_topological_section.get_shared_sub_segments()
             resolved_trench_features.extend(trench_sub_segment.get_resolved_feature() for trench_sub_segment in trench_sub_segments)
+
+    # Set the default exclude distance to trenches as a shapefile attribute (to be read by paleo bathymetry gridding workflow).
+    for resolved_trench_feature in resolved_trench_features:
+        resolved_trench_feature.set_shapefile_attribute('exclude_distance_to_trench_kms', float(exclude_distance_to_trenches_kms))
 
     # Return resolved features each containing a single shared sub-segment geometry.
     return resolved_trench_features
@@ -168,6 +178,10 @@ if __name__ == '__main__':
             metavar='trench_filename',
             help='The output trench filename containing present-day trench locations.')
         
+        parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=float, default=DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS,
+                help='The distance to present-day trenches (in kms) that will be used to exclude grid points during paleobathymetry gridding. '
+                     'Defaults to {} kms.'.format(DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS))
+        
         # Parse command-line options.
         args = parser.parse_args()
             
@@ -192,7 +206,7 @@ if __name__ == '__main__':
             rotation_filenames = None
         
         # Generate the present-day trenches.
-        trench_features = generate_present_day_trenches(topology_filenames, rotation_filenames)
+        trench_features = generate_present_day_trenches(topology_filenames, rotation_filenames, args.exclude_distance_to_trenches_kms)
 
         # Create the trenches feature collection and save to file.
         pygplates.FeatureCollection(trench_features).write(args.trench_filename)

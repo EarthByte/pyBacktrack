@@ -173,7 +173,7 @@ def reconstruct_backtrack_bathymetry(
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     exclude_distance_to_trenches_kms : float, optional
-        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None for no exclusion. Default is None.
+        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None to use built-in per-trench defaults. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -283,31 +283,33 @@ def reconstruct_backtrack_bathymetry(
 
         grid_samples = _grid_samples
     
-    if exclude_distance_to_trenches_kms:
-        if num_cpus == 1:
-            grid_samples = _exclude_grid_samples_near_trenches(grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, exclude_distance_to_trenches_kms)
-        else:
-            # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
-            num_grid_sample_groups = 2 * num_cpus
-            num_grid_samples_per_group = math.ceil(float(len(grid_samples)) / num_grid_sample_groups)
+    #
+    # Exclude grid samples near trenches.
+    #
+    if num_cpus == 1:
+        grid_samples = _exclude_grid_samples_near_trenches(grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, exclude_distance_to_trenches_kms)
+    else:
+        # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
+        num_grid_sample_groups = 2 * num_cpus
+        num_grid_samples_per_group = math.ceil(float(len(grid_samples)) / num_grid_sample_groups)
 
-            # Distribute the groups of grid samples across the multiprocessing pool.
-            with multiprocessing.Pool(num_cpus) as pool:
-                grid_samples_list = pool.map(
-                        partial(
-                            _exclude_grid_samples_near_trenches,
-                            trench_filename=pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME,
-                            threshold_distance_to_trench_kms=exclude_distance_to_trenches_kms),
-                        (
-                            grid_samples[
-                                grid_sample_group_index * num_grid_samples_per_group :
-                                (grid_sample_group_index + 1) * num_grid_samples_per_group]
-                                        for grid_sample_group_index in range(num_grid_sample_groups)
-                        ),
-                        1) # chunksize
-            
-            # Merge output lists back into one list.
-            grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
+        # Distribute the groups of grid samples across the multiprocessing pool.
+        with multiprocessing.Pool(num_cpus) as pool:
+            grid_samples_list = pool.map(
+                    partial(
+                        _exclude_grid_samples_near_trenches,
+                        trench_filename=pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME,
+                        threshold_distance_to_trenches_kms=exclude_distance_to_trenches_kms),
+                    (
+                        grid_samples[
+                            grid_sample_group_index * num_grid_samples_per_group :
+                            (grid_sample_group_index + 1) * num_grid_samples_per_group]
+                                    for grid_sample_group_index in range(num_grid_sample_groups)
+                    ),
+                    1) # chunksize
+        
+        # Merge output lists back into one list.
+        grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
     
     # Add age and topography to the total sediment thickness grid samples.
     grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, force_positive=True)
@@ -778,15 +780,21 @@ def _reconstruct_backtrack_continental_bathymetry(
 def _exclude_grid_samples_near_trenches(
         grid_samples,
         trench_filename,
-        threshold_distance_to_trench_kms):
-
-    threshold_distance_to_trench_radians = threshold_distance_to_trench_kms / pygplates.Earth.mean_radius_in_kms
+        threshold_distance_to_trenches_kms=None):
 
     trench_features = pygplates.FeatureCollection(trench_filename)
-    # Extract the trench geometries from the trench features (we've ensure during pre-processing that each feature will have a single geometry).
+    # Extract the trench geometries from the trench features (during pre-processing we've ensured that each feature will have a single geometry).
     trench_geometries = []
     for trench_feature in trench_features:
-        trench_geometries.extend(trench_feature.get_all_geometries())
+        if threshold_distance_to_trenches_kms is None:
+            # Default to using built-in per-trench defaults (each trench potentially has a different distance extracted from the trench feature).
+            exclude_distance_to_trench_radians = trench_feature.get_shapefile_attribute('exclude_distance_to_trench_kms') / pygplates.Earth.mean_radius_in_kms
+        else:
+            # User has specified a global default distance.
+            exclude_distance_to_trench_radians = threshold_distance_to_trenches_kms / pygplates.Earth.mean_radius_in_kms
+        
+        trench_geometries.extend(
+                (exclude_distance_to_trench_radians, trench_geometry) for trench_geometry in trench_feature.get_all_geometries())
 
     included_grid_samples = []
     for grid_sample in grid_samples:
@@ -795,8 +803,8 @@ def _exclude_grid_samples_near_trenches(
         grid_location = pygplates.PointOnSphere(grid_latitude, grid_longitude)
         # See if current grid sample is near any trenches.
         is_grid_location_near_a_trench = False
-        for trench_geometry in trench_geometries:
-            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, threshold_distance_to_trench_radians) is not None:
+        for exclude_distance_to_trench_radians, trench_geometry in trench_geometries:
+            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, exclude_distance_to_trench_radians) is not None:
                 is_grid_location_near_a_trench = True
                 break
 
@@ -1172,7 +1180,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
     exclude_distance_to_trenches_kms : float, optional
-        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None for no exclusion. Default is None.
+        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None to use built-in per-trench defaults. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -1349,7 +1357,8 @@ def main():
             help='Plate IDs of one or more plates to restrict paleobathymetry reconstruction to. Defaults to global.')
     
     parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=parse_positive_float,
-            help='The distance to present-day trenches to exclude bathymetry grid points (in kms). Defaults to no exclusion.')
+            help='The distance to present-day trenches to exclude bathymetry grid points (in kms). '
+                 'Defaults to using built-in per-trench defaults.')
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
