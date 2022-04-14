@@ -287,7 +287,8 @@ def reconstruct_backtrack_bathymetry(
     # Exclude grid samples near trenches.
     #
     if num_cpus == 1:
-        grid_samples = _exclude_grid_samples_near_trenches(grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, exclude_distance_to_trenches_kms)
+        grid_samples = _exclude_grid_samples_near_trenches(
+                grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, pybacktrack.bundle_data.BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME, exclude_distance_to_trenches_kms)
     else:
         # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
         num_grid_sample_groups = 2 * num_cpus
@@ -299,6 +300,7 @@ def reconstruct_backtrack_bathymetry(
                     partial(
                         _exclude_grid_samples_near_trenches,
                         trench_filename=pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME,
+                        subducting_boundary_filename=pybacktrack.bundle_data.BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME,
                         threshold_distance_to_trenches_kms=exclude_distance_to_trenches_kms),
                     (
                         grid_samples[
@@ -780,21 +782,38 @@ def _reconstruct_backtrack_continental_bathymetry(
 def _exclude_grid_samples_near_trenches(
         grid_samples,
         trench_filename,
+        subducting_boundary_filename,
         threshold_distance_to_trenches_kms=None):
 
     trench_features = pygplates.FeatureCollection(trench_filename)
-    # Extract the trench geometries from the trench features (during pre-processing we've ensured that each feature will have a single geometry).
+
+    subducting_boundary_features = pygplates.FeatureCollection(subducting_boundary_filename)
+    subducting_boundary_polygons_dict = {
+            feature.get_feature_id().get_string() : feature.get_geometry(lambda property: True)
+                    for feature in subducting_boundary_features}
+
+    # Extract the trench geometries and threshold distances from the trench features.
     trench_geometries = []
+    trench_distances = []
+    trench_subducting_boundary_polygons = []
     for trench_feature in trench_features:
         if threshold_distance_to_trenches_kms is None:
             # Default to using built-in per-trench defaults (each trench potentially has a different distance extracted from the trench feature).
-            exclude_distance_to_trench_radians = trench_feature.get_shapefile_attribute('exclude_distance_to_trench_kms') / pygplates.Earth.mean_radius_in_kms
+            trench_distance_radians = trench_feature.get_shapefile_attribute('exclude_distance_to_trench_kms') / pygplates.Earth.mean_radius_in_kms
         else:
             # User has specified a global default distance.
-            exclude_distance_to_trench_radians = threshold_distance_to_trenches_kms / pygplates.Earth.mean_radius_in_kms
+            trench_distance_radians = threshold_distance_to_trenches_kms / pygplates.Earth.mean_radius_in_kms
         
-        trench_geometries.extend(
-                (exclude_distance_to_trench_radians, trench_geometry) for trench_geometry in trench_feature.get_all_geometries())
+        subducting_boundary_polygon = None
+        subducting_boundary_feature_id_string = trench_feature.get_shapefile_attribute('subducting_boundary_feature_id')
+        if subducting_boundary_feature_id_string:
+            subducting_boundary_polygon = subducting_boundary_polygons_dict.get(subducting_boundary_feature_id_string)
+        
+        # During pre-processing we've ensured that each feature will have a single geometry.
+        # We don't really know what the geometry property *name* is, so let's not require it to be the default geometry property name (in case it isn't).
+        trench_geometries.append(trench_feature.get_geometry(lambda property: True))
+        trench_distances.append(trench_distance_radians)
+        trench_subducting_boundary_polygons.append(subducting_boundary_polygon)
 
     included_grid_samples = []
     for grid_sample in grid_samples:
@@ -802,18 +821,24 @@ def _exclude_grid_samples_near_trenches(
         grid_longitude, grid_latitude = grid_sample[0], grid_sample[1]
         grid_location = pygplates.PointOnSphere(grid_latitude, grid_longitude)
         # See if current grid sample is near any trenches.
-        is_grid_location_near_a_trench = False
-        for exclude_distance_to_trench_radians, trench_geometry in trench_geometries:
-            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, exclude_distance_to_trench_radians) is not None:
-                is_grid_location_near_a_trench = True
-                break
+        is_grid_location_near_subducting_side_of_a_trench = False
+        for trench_index, trench_geometry in enumerate(trench_geometries):
+            trench_distance_radians = trench_distances[trench_index]
+            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, trench_distance_radians) is not None:
+                # Current grid sample is near the current trench.
+                # So see if it's on the subducting side of the current trench.
+                # This is done by testing if current grid sample is inside the subducting polygon adjoining the current trench.
+                trench_subducting_boundary_polygon = trench_subducting_boundary_polygons[trench_index]
+                if trench_subducting_boundary_polygon and trench_subducting_boundary_polygon.is_point_in_polygon(grid_location):
+                    is_grid_location_near_subducting_side_of_a_trench = True
+                    break
 
-        # Skip current grid sample if it's near any trench.
-        if is_grid_location_near_a_trench:
+        # Skip current grid sample if it's near the subducting side of any trench.
+        if is_grid_location_near_subducting_side_of_a_trench:
             continue
         
         included_grid_samples.append(grid_sample)
-    
+
     return included_grid_samples
 
 

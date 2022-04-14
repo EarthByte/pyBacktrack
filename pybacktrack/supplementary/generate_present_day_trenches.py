@@ -56,7 +56,7 @@ def generate_present_day_trenches(
     
     Returns
     -------
-    list of pygplates.Feature (with a single geometry per feature)
+    2-tuple of (list of pygplates.Feature with a single geometry per feature, list of subducting boundaries)
     """
     
     # Check the imported pygplates version.
@@ -86,17 +86,32 @@ def generate_present_day_trenches(
 
     # Extract resolved features for trench sub-segments (each containing a single sub-segment geometry).
     resolved_trench_features = []
+    resolved_subducting_boundary_features = {}
     for resolved_topological_section in resolved_topological_sections:
         if resolved_topological_section.get_feature().get_feature_type() == pygplates.FeatureType.gpml_subduction_zone:
             trench_sub_segments = resolved_topological_section.get_shared_sub_segments()
-            resolved_trench_features.extend(trench_sub_segment.get_resolved_feature() for trench_sub_segment in trench_sub_segments)
+            for trench_sub_segment in trench_sub_segments:
+
+                resolved_trench_feature = trench_sub_segment.get_resolved_feature()
+                resolved_trench_features.append(resolved_trench_feature)
+
+                # Get subducting plate.
+                resolved_subducting_boundary = trench_sub_segment.get_subducting_plate()
+                if resolved_subducting_boundary:
+                    # If first time visiting subducting boundary then add it to the dictionary.
+                    if resolved_subducting_boundary not in resolved_subducting_boundary_features:
+                        resolved_subducting_boundary_features[resolved_subducting_boundary] = resolved_subducting_boundary.get_resolved_feature()
+                    # Link the resolved trench to its subducting plate feature (using feature ID).
+                    resolved_trench_feature.set_shapefile_attribute(
+                            'subducting_boundary_feature_id',
+                            resolved_subducting_boundary_features[resolved_subducting_boundary].get_feature_id().get_string())
 
     # Set the default exclude distance to trenches as a shapefile attribute (to be read by paleo bathymetry gridding workflow).
     for resolved_trench_feature in resolved_trench_features:
         resolved_trench_feature.set_shapefile_attribute('exclude_distance_to_trench_kms', float(exclude_distance_to_trenches_kms))
 
     # Return resolved features each containing a single shared sub-segment geometry.
-    return resolved_trench_features
+    return resolved_trench_features, resolved_subducting_boundary_features.values()
 
 
 def _read_list_of_files(
@@ -173,14 +188,19 @@ if __name__ == '__main__':
             metavar='rotation_filename',
             help='One or more rotation files (to create topological model with).')
         
+        parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=float, default=DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS,
+            help='The distance to present-day trenches (in kms) that will be used to exclude grid points during paleobathymetry gridding. '
+                 'Defaults to {} kms.'.format(DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS))
+        
         parser.add_argument(
             'trench_filename', type=argparse_unicode,
             metavar='trench_filename',
             help='The output trench filename containing present-day trench locations.')
         
-        parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=float, default=DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS,
-                help='The distance to present-day trenches (in kms) that will be used to exclude grid points during paleobathymetry gridding. '
-                     'Defaults to {} kms.'.format(DEFAULT_EXCLUDE_DISTANCE_TO_TRENCHES_KMS))
+        parser.add_argument(
+            'subducting_boundary_filename', type=argparse_unicode,
+            metavar='subducting_boundary_filename',
+            help='The output subducting boundary filename containing subducting plate boundaries of present-day trenchs.')
         
         # Parse command-line options.
         args = parser.parse_args()
@@ -206,10 +226,11 @@ if __name__ == '__main__':
             rotation_filenames = None
         
         # Generate the present-day trenches.
-        trench_features = generate_present_day_trenches(topology_filenames, rotation_filenames, args.exclude_distance_to_trenches_kms)
+        trench_features, subducting_boundary_features = generate_present_day_trenches(topology_filenames, rotation_filenames, args.exclude_distance_to_trenches_kms)
 
         # Create the trenches feature collection and save to file.
         pygplates.FeatureCollection(trench_features).write(args.trench_filename)
+        pygplates.FeatureCollection(subducting_boundary_features).write(args.subducting_boundary_filename)
         
         sys.exit(0)
     
