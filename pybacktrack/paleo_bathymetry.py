@@ -37,6 +37,7 @@ import itertools
 import math
 import multiprocessing
 import numpy as np
+import os
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
@@ -249,7 +250,7 @@ def reconstruct_backtrack_bathymetry(
     base_lithology_components = [(base_lithology_name, 1.0)]
 
     # Sample the total sediment thickness grid.
-    grid_samples = _gmt_grdtrack(input_points, total_sediment_thickness_filename, force_positive=True)
+    grid_samples = _read_grid(input_points, total_sediment_thickness_filename, force_positive=True)
 
     # Ignore samples outside total sediment thickness grid (masked region) since we can only backtrack where there's sediment.
     #
@@ -314,8 +315,8 @@ def reconstruct_backtrack_bathymetry(
         grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
     
     # Add age and topography to the total sediment thickness grid samples.
-    grid_samples = _gmt_grdtrack(grid_samples, age_grid_filename, force_positive=True)
-    grid_samples = _gmt_grdtrack(grid_samples, topography_filename)
+    grid_samples = _read_grid(grid_samples, age_grid_filename, force_positive=True)
+    grid_samples = _read_grid(grid_samples, topography_filename)
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
@@ -343,9 +344,9 @@ def reconstruct_backtrack_bathymetry(
     # Add crustal thickness and builtin rift start/end times to continental grid samples.
     #
     # Note: For some reason we get a GMT error if we combine these grids in a single 'grdtrack' call, so we separate them instead.
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, crustal_thickness_filename, force_positive=True)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME, force_positive=True)
-    continental_grid_samples = _gmt_grdtrack(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, crustal_thickness_filename, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME, force_positive=True)
 
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
@@ -888,12 +889,12 @@ def generate_lon_lat_points(grid_spacing_degrees):
     return input_points
 
 
-def _gmt_grdtrack(
+def _read_grid(
         input,
         grid_filename,
         force_positive=False):
     """
-    Samples one or more grid files at the specified locations.
+    Samples a grid file at the specified locations.
     
     'input' is a list of (longitude, latitude, [other_values ...]) tuples where latitude and longitude are in degrees.
     Should at least have 2-tuples (longitude, latitude) but 'grdtrack' allows extra columns.
@@ -936,13 +937,13 @@ def _gmt_grdtrack(
     return output_values
 
 
-def _gmt_nearneighbor(
+def _write_grid(
         input,
         grid_spacing_degrees,
         grid_filename,
         xyz_filename=None):
     """
-    Run 'gmt nearneighbor' on grid locations/values to output a grid file.
+    Grid the input data and write to an output grid file.
     
     'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
     'grid_spacing_degrees' is spacing of output grid points in degrees.
@@ -954,6 +955,34 @@ def _gmt_nearneighbor(
             ' '.join(str(item) for item in row) + '\n' for row in input)
 
     # The command-line strings to execute GMT 'nearneighbor'.
+    #
+    # Our first call to GMT 'nearneighbor' essentially creates a mask of non-NaN regions using a small search radius.
+    #
+    # This mask will ensure that we don't expand the final output grid too far into NaN regions
+    # (because the second GMT 'nearneighbor' will use a larger search radius that would normally cause this expansion).
+    #
+    # First generate a temporary grid filename (based on output grid filename so that multiprocessing processes don't clobber each other).
+    non_nan_mask_filename, _ = os.path.splitext(grid_filename)
+    non_nan_mask_filename += '_non_nan_mask.nc'
+    non_nan_mask_command_line = [
+        "gmt",
+        "nearneighbor",
+        "-N1+m1", # Divide search radius into 1 sectors and require a value in that sector.
+        "-S{0}d".format(0.9 * grid_spacing_degrees), # Search radius is a smaller multiple of the grid spacing.
+        "-I{0}".format(grid_spacing_degrees),
+        # Use GMT gridline registration since our input point grid has data points on the grid lines.
+        # Gridline registration is the default so we don't need to force pixel registration...
+        # "-r", # Force pixel registration since data points are at centre of cells.
+        "-Rg",
+        "-fg",
+        "-G{0}".format(non_nan_mask_filename)]
+    
+    # Call the system command.
+    call_system_command(non_nan_mask_command_line, stdin=input_data)
+    
+    # The command-line strings to execute GMT 'nearneighbor'.
+    #
+    # Our second call to GMT 'nearneighbor' increases the search radius for the following reasons:
     #
     # As the present day grid of points is rotated/reconstructed, it sweeps across the static output grid
     # (used by GMT nearneighbor) and should be sampled/filtered appropriately for the high spatial-frequency
@@ -969,29 +998,55 @@ def _gmt_nearneighbor(
     # And using a 75% min-sector/total-sector ratio (eg, -N8+m6) rather than 100% means the bathymetry boundary
     # (between non-NaN and NaN) isn't brought too far inward towards the interior non-NaN regions since not
     # all sectors are required to contain data (bathymetry).
+    #
+    # First generate a temporary grid filename (based on output grid filename so that multiprocessing processes don't clobber each other).
+    anti_aliasing_filename, _ = os.path.splitext(grid_filename)
+    anti_aliasing_filename += '_anti_aliasing.nc'
     nearneighbor_command_line = [
         "gmt",
         "nearneighbor",
         "-N8+m6", # Divide search radius into 8 sectors but only require values in 6 sectors.
-        "-S{0}d".format(3.0 * grid_spacing_degrees), # Search radius is 3.0 times the grid spacing.
+        "-S{0}d".format(3.0 * grid_spacing_degrees), # Search radius is a larger multiple the grid spacing.
         "-I{0}".format(grid_spacing_degrees),
         # Use GMT gridline registration since our input point grid has data points on the grid lines.
         # Gridline registration is the default so we don't need to force pixel registration...
         # "-r", # Force pixel registration since data points are at centre of cells.
         "-Rg",
         "-fg",
-        "-G{0}".format(grid_filename)]
+        "-G{0}".format(anti_aliasing_filename)]
+    
+    # Call the system command.
+    call_system_command(nearneighbor_command_line, stdin=input_data)
+    
+    # The command-line strings to execute GMT 'grdmath'.
+    #
+    # This combines the previous two GMT 'nearneighbor' grids such that the output is NaN where
+    # 'non_nan_mask_filename' is NaN, otherwise the value from 'anti_aliasing_filename' (which also has NaNs).
+    grdmath_command_line = [
+        "gmt",
+        "grdmath",
+        anti_aliasing_filename,  # A
+        non_nan_mask_filename,   # B
+        "OR",  # GMT: NaN if B == NaN, else A
+        "=",
+        grid_filename]
+    
+    # Call the system command.
+    call_system_command(grdmath_command_line)
+
+    # Remove the two temporary grid files.
+    if os.access(non_nan_mask_filename, os.R_OK):
+        os.remove(non_nan_mask_filename)
+    if os.access(anti_aliasing_filename, os.R_OK):
+        os.remove(anti_aliasing_filename)
     
     # Also create an xyz file (from 'input') if requested.
     if xyz_filename is not None:
         with open(xyz_filename, 'w') as xyz_file:
             xyz_file.write(input_data)
-    
-    # Call the system command.
-    call_system_command(nearneighbor_command_line, stdin=input_data)
 
 
-def _gmt_nearneighbor_multiprocessing(
+def _write_grid_multiprocessing(
         paleo_bathymetry_and_reconstruction_time,
         grid_spacing,
         grid_file_prefix,
@@ -1005,7 +1060,7 @@ def _gmt_nearneighbor_multiprocessing(
     if output_xyz:
         paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
         paleo_bathymetry_xyz_filename += '.xyz'
-    _gmt_nearneighbor(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+    _write_grid(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
 
 
 def write_bathymetry_grids(
@@ -1059,7 +1114,7 @@ def write_bathymetry_grids(
             if output_xyz:
                 paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
                 paleo_bathymetry_xyz_filename += '.xyz'
-            _gmt_nearneighbor(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+            _write_grid(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
 
@@ -1079,7 +1134,7 @@ def write_bathymetry_grids(
         with multiprocessing.Pool(num_cpus) as pool:
             pool.map(
                     partial(
-                        _gmt_nearneighbor_multiprocessing,
+                        _write_grid_multiprocessing,
                         grid_spacing=grid_spacing_degrees,
                         grid_file_prefix=output_file_prefix,
                         output_xyz=output_xyz),
