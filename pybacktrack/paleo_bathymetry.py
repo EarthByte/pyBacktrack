@@ -597,7 +597,10 @@ def _reconstruct_backtrack_oceanic_bathymetry(
                 bathymetry = -bathymetry
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
-            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
+            #
+            # NOTE: We specify 'from_time=0' since there could be a non-zero finite rotation at present day (generally there shouldn't be) and
+            #       we don't want our present day location to move when 'decompaction_time' is zero (or have this offset for non-zero times).
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, from_time=0, anchor_plate_id=anchor_plate_id)
             # Reconstruct location to current decompaction time.
             reconstructed_location = rotation * present_day_location
             reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
@@ -718,16 +721,13 @@ def _reconstruct_backtrack_continental_bathymetry(
         
         # Initial (pre-rift) crustal thickness is beta times present day crustal thickness.
         pre_rift_crustal_thickness = rift_beta * present_day_crustal_thickness
-
-        # Calculate rifting subsidence at present day.
-        rift_present_day_tectonic_subsidence = rifting.total_subsidence(rift_beta, pre_rift_crustal_thickness, 0.0, rift_end_age, rift_start_age)
         
         # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
         present_day_location = pygplates.PointOnSphere(latitude, longitude)
         partitioning_plate = plate_partitioner.partition_point(present_day_location)
         if not partitioning_plate:
             # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
-            # but might if there's tiny cracks between polygons).
+            # but might if there's tiny cracks between polygons.
             continue
         reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
 
@@ -770,7 +770,10 @@ def _reconstruct_backtrack_continental_bathymetry(
                 bathymetry = -bathymetry
         
             # Get rotation from present day to current decompaction time using the reconstruction plate ID of the location.
-            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, anchor_plate_id=anchor_plate_id)
+            #
+            # NOTE: We specify 'from_time=0' since there could be a non-zero finite rotation at present day (generally there shouldn't be) and
+            #       we don't want our present day location to move when 'decompaction_time' is zero (or have this offset for non-zero times).
+            rotation = rotation_model.get_rotation(decompaction_time, reconstruction_plate_id, from_time=0, anchor_plate_id=anchor_plate_id)
             # Reconstruct location to current decompaction time.
             reconstructed_location = rotation * present_day_location
             reconstructed_latitude, reconstructed_longitude = reconstructed_location.to_lat_lon()
