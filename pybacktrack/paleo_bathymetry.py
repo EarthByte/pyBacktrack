@@ -81,7 +81,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
-        exclude_distance_to_trenches_kms=None,
+        exclude_distances_to_trenches_kms=None,
         region_plate_ids=None,
         anchor_plate_id=0,
         output_positive_bathymetry_below_sea_level=False,
@@ -103,7 +103,7 @@ def reconstruct_backtrack_bathymetry(
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
-        exclude_distance_to_trenches_kms=None,\
+        exclude_distances_to_trenches_kms=None,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
         output_positive_bathymetry_below_sea_level=False,\
@@ -173,8 +173,9 @@ def reconstruct_backtrack_bathymetry(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
-    exclude_distance_to_trenches_kms : float, optional
-        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None to use built-in per-trench defaults. Default is None.
+    exclude_distances_to_trenches_kms : 2-tuple of float, optional
+        The two distances to present-day trenches (on subducting and overriding sides, in that order) to exclude bathymetry grid points (in kms), or
+        None to use built-in per-trench defaults. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -289,7 +290,7 @@ def reconstruct_backtrack_bathymetry(
     #
     if num_cpus == 1:
         grid_samples = _exclude_grid_samples_near_trenches(
-                grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, pybacktrack.bundle_data.BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME, exclude_distance_to_trenches_kms)
+                grid_samples, pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME, pybacktrack.bundle_data.BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME, exclude_distances_to_trenches_kms)
     else:
         # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
         num_grid_sample_groups = 2 * num_cpus
@@ -302,7 +303,7 @@ def reconstruct_backtrack_bathymetry(
                         _exclude_grid_samples_near_trenches,
                         trench_filename=pybacktrack.bundle_data.BUNDLE_TRENCHES_FILENAME,
                         subducting_boundary_filename=pybacktrack.bundle_data.BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME,
-                        threshold_distance_to_trenches_kms=exclude_distance_to_trenches_kms),
+                        threshold_distances_to_trenches_kms=exclude_distances_to_trenches_kms),
                     (
                         grid_samples[
                             grid_sample_group_index * num_grid_samples_per_group :
@@ -784,7 +785,7 @@ def _exclude_grid_samples_near_trenches(
         grid_samples,
         trench_filename,
         subducting_boundary_filename,
-        threshold_distance_to_trenches_kms=None):
+        threshold_distances_to_trenches_kms=None):
 
     trench_features = pygplates.FeatureCollection(trench_filename)
 
@@ -798,22 +799,29 @@ def _exclude_grid_samples_near_trenches(
     trench_distances = []
     trench_subducting_boundary_polygons = []
     for trench_feature in trench_features:
-        if threshold_distance_to_trenches_kms is None:
-            # Default to using built-in per-trench defaults (each trench potentially has a different distance extracted from the trench feature).
-            trench_distance_radians = trench_feature.get_shapefile_attribute('exclude_distance_to_trench_kms') / pygplates.Earth.mean_radius_in_kms
+        if threshold_distances_to_trenches_kms is None:
+            # Default to using built-in per-trench defaults (each trench potentially has different distances extracted from the trench feature).
+            trench_subduction_distance_radians = trench_feature.get_shapefile_attribute('exclude_subducting_distance_to_trenches_kms') / pygplates.Earth.mean_radius_in_kms
+            trench_overriding_distance_radians = trench_feature.get_shapefile_attribute('exclude_overriding_distance_to_trenches_kms') / pygplates.Earth.mean_radius_in_kms
         else:
-            # User has specified a global default distance.
-            trench_distance_radians = threshold_distance_to_trenches_kms / pygplates.Earth.mean_radius_in_kms
+            # User has specified a global default distance for the subducting and overriding sides of all trenches.
+            trench_subduction_distance_radians = threshold_distances_to_trenches_kms[0] / pygplates.Earth.mean_radius_in_kms
+            trench_overriding_distance_radians = threshold_distances_to_trenches_kms[1] / pygplates.Earth.mean_radius_in_kms
         
+        # Get the subducting polygon attached to the current trench segment.
         subducting_boundary_polygon = None
         subducting_boundary_feature_id_string = trench_feature.get_shapefile_attribute('subducting_boundary_feature_id')
         if subducting_boundary_feature_id_string:
             subducting_boundary_polygon = subducting_boundary_polygons_dict.get(subducting_boundary_feature_id_string)
+        # There should always be one since the pre-processing script has ensured this.
+        # If for some reason there isn't then we'll just skip the current trench segment.
+        if not subducting_boundary_polygon:
+            continue
         
         # During pre-processing we've ensured that each feature will have a single geometry.
         # We don't really know what the geometry property *name* is, so let's not require it to be the default geometry property name (in case it isn't).
         trench_geometries.append(trench_feature.get_geometry(lambda property: True))
-        trench_distances.append(trench_distance_radians)
+        trench_distances.append((trench_subduction_distance_radians, trench_overriding_distance_radians))
         trench_subducting_boundary_polygons.append(subducting_boundary_polygon)
 
     included_grid_samples = []
@@ -821,21 +829,44 @@ def _exclude_grid_samples_near_trenches(
         # Extract the grid sample location.
         grid_longitude, grid_latitude = grid_sample[0], grid_sample[1]
         grid_location = pygplates.PointOnSphere(grid_latitude, grid_longitude)
-        # See if current grid sample is near any trenches.
-        is_grid_location_near_subducting_side_of_a_trench = False
-        for trench_index, trench_geometry in enumerate(trench_geometries):
-            trench_distance_radians = trench_distances[trench_index]
-            if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, trench_distance_radians) is not None:
-                # Current grid sample is near the current trench.
-                # So see if it's on the subducting side of the current trench.
-                # This is done by testing if current grid sample is inside the subducting polygon adjoining the current trench.
-                trench_subducting_boundary_polygon = trench_subducting_boundary_polygons[trench_index]
-                if trench_subducting_boundary_polygon and trench_subducting_boundary_polygon.is_point_in_polygon(grid_location):
-                    is_grid_location_near_subducting_side_of_a_trench = True
-                    break
 
-        # Skip current grid sample if it's near the subducting side of any trench.
-        if is_grid_location_near_subducting_side_of_a_trench:
+        # See if current grid sample is near any trenches.
+        mask_grid_location = False
+        for trench_index in range(len(trench_geometries)):
+            trench_geometry = trench_geometries[trench_index]
+            trench_subduction_distance_radians, trench_overriding_distance_radians = trench_distances[trench_index]
+            trench_subducting_boundary_polygon = trench_subducting_boundary_polygons[trench_index]
+
+            is_grid_location_on_subducting_side_of_trench = None  # None means haven't done point-in-subducting-polygon test yet.
+
+            # First test if current grid location is near the subducting side of the trench.
+            if trench_subduction_distance_radians:  # Only need to test if distance is non-zero.
+                if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, trench_subduction_distance_radians) is not None:
+                    # Current grid sample is near the current trench (within subduction distance threshold).
+                    # So see if it's on the subducting side of the current trench.
+                    # This is done by testing if current grid sample is inside the subducting polygon adjoining the current trench.
+                    if is_grid_location_on_subducting_side_of_trench is None:  # First do point-in-polygon test if not yet done.
+                        is_grid_location_on_subducting_side_of_trench = trench_subducting_boundary_polygon.is_point_in_polygon(grid_location)
+                    if is_grid_location_on_subducting_side_of_trench:
+                        mask_grid_location = True
+                        # We've got our result so skip all remaining trench segments.
+                        break
+
+            # Next test if current grid location is near the overriding side of the trench.
+            if trench_overriding_distance_radians:  # Only need to test if distance is non-zero.
+                if pygplates.GeometryOnSphere.distance(grid_location, trench_geometry, trench_overriding_distance_radians) is not None:
+                    # Current grid sample is near the current trench (within overriding distance threshold).
+                    # So see if it's on the overriding side of the current trench.
+                    # This is done by testing if current grid sample is *not* inside the subducting polygon adjoining the current trench.
+                    if is_grid_location_on_subducting_side_of_trench is None:  # First do point-in-polygon test if not yet done.
+                        is_grid_location_on_subducting_side_of_trench = trench_subducting_boundary_polygon.is_point_in_polygon(grid_location)
+                    if not is_grid_location_on_subducting_side_of_trench:
+                        mask_grid_location = True
+                        # We've got our result so skip all remaining trench segments.
+                        break
+
+        # Skip current grid sample if it should be masked.
+        if mask_grid_location:
             continue
         
         included_grid_samples.append(grid_sample)
@@ -1161,7 +1192,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model=None,
         base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
-        exclude_distance_to_trenches_kms=None,
+        exclude_distances_to_trenches_kms=None,
         region_plate_ids=None,
         anchor_plate_id=0,
         output_positive_bathymetry_below_sea_level=False,
@@ -1185,7 +1216,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model=None,\
         base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
-        exclude_distance_to_trenches_kms=None,\
+        exclude_distances_to_trenches_kms=None,\
         region_plate_ids=None,\
         anchor_plate_id=0,\
         output_positive_bathymetry_below_sea_level=False,\
@@ -1259,8 +1290,9 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
         It can be one of the enumerated values, or a callable function accepting a single non-negative age parameter and returning depth (in metres).
-    exclude_distance_to_trenches_kms : float, optional
-        The distance to present-day trenches to exclude bathymetry grid points (in kms), or None to use built-in per-trench defaults. Default is None.
+    exclude_distances_to_trenches_kms : 2-tuple of float, optional
+        The two distances to present-day trenches (on subducting and overriding sides, in that order) to exclude bathymetry grid points (in kms), or
+        None to use built-in per-trench defaults. Default is None.
     region_plate_ids : list of int, optional
         Plate IDs of one or more plates to restrict paleobathymetry reconstruction to.
         Defaults to global.
@@ -1314,7 +1346,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         sea_level_model,
         base_lithology_name,
         ocean_age_to_depth_model,
-        exclude_distance_to_trenches_kms,
+        exclude_distances_to_trenches_kms,
         region_plate_ids,
         anchor_plate_id,
         output_positive_bathymetry_below_sea_level,
@@ -1436,9 +1468,10 @@ def main():
             dest='region_plate_ids',
             help='Plate IDs of one or more plates to restrict paleobathymetry reconstruction to. Defaults to global.')
     
-    parser.add_argument('-et', '--exclude_distance_to_trenches_kms', type=parse_positive_float,
-            help='The distance to present-day trenches to exclude bathymetry grid points (in kms). '
-                 'Defaults to using built-in per-trench defaults.')
+    parser.add_argument('-et', '--exclude_distances_to_trenches_kms', type=parse_non_negative_float, nargs=2,
+            metavar=('SUBDUCTING_DISTANCE_KMS', 'OVERRIDING_DISTANCE_KMS'),
+            help='The two distances to present-day trenches (on subducting and overriding sides, in that order) '
+                 'to exclude bathymetry grid points (in kms). Defaults to using built-in per-trench defaults.')
     
     # Allow user to override the default lithology filename, and also specify bundled lithologies.
     parser.add_argument(
@@ -1651,7 +1684,7 @@ def main():
         sea_level_model,
         args.base_lithology_name,
         args.ocean_age_to_depth_model,
-        args.exclude_distance_to_trenches_kms,
+        args.exclude_distances_to_trenches_kms,
         args.region_plate_ids,
         args.anchor_plate_id,
         args.output_positive_bathymetry_below_sea_level,
