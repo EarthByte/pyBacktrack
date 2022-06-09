@@ -28,18 +28,21 @@ RUN pip3 install --upgrade cython numpy pyshp
 RUN pip3 install shapely --no-binary shapely
 RUN pip3 install cartopy
 
-# Install matplotlib and jupyter for the example notebooks.
-RUN pip3 install matplotlib jupyter
+# Install matplotlib, jupyter, numpy and netCDF4 for the example notebooks.
+RUN pip3 install matplotlib jupyter numpy netCDF4
 
 WORKDIR /usr/src/pybacktrack
 
 # Install pygplates for Python 3.
 RUN apt-get install -y --no-install-recommends wget
-RUN wget https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-28/ubuntu/pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
-RUN apt-get install -y --no-install-recommends /usr/src/pybacktrack/pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
-RUN rm pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
+# Download pyGPlates 0.36 for Ubuntu 18.04 ("pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb").
+# This unique link was obtained from the pyGPlates 0.36 download page (https://www.earthbyte.org/download-pygplates-0-36/ ).
+# Each download link provided (after entering user information) is a unique link (but it's a permanent link).
+RUN wget https://www.earthbyte.org/download/9081/?uid=46bef20416 -O pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb
+RUN apt-get install -y --no-install-recommends /usr/src/pybacktrack/pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb
+RUN rm pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb
 # Tell Python where to find pyGPlates.
-ENV PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision28/
+ENV PYTHONPATH ${PYTHONPATH}:/usr/lib
 
 # Install pybacktrack (either latest public release, or directly from Github repo).
 RUN pip3 install pybacktrack
