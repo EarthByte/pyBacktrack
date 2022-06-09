@@ -110,8 +110,8 @@ and the ``GDH1`` :ref:`oceanic subsidence model <pybacktrack_oceanic_subsidence>
     python -m pybacktrack.paleo_bathymetry_cli -gm 12 -ym M7 -m GDH1 --use_all_cpus -- 240 paleo_bathymetry_12m_M7_GDH1
 
 ...where the ``-gm`` option specifies the grid spacing (in minutes), the ``-ym`` specifies the dynamic topography model, the ``-m`` option specifies the
-oceanic subsidence model, the ``--use_all_cpus`` option uses all CPUs (so it runs faster) and the generated paleobathymetry grid files are named
-``paleo_bathymetry_12m_M7_GDH1_<time>.nc``.
+oceanic subsidence model, the ``--use_all_cpus`` option uses all CPUs (it also accepts an optional number of CPUs) and
+the generated paleobathymetry grid files are named ``paleo_bathymetry_12m_M7_GDH1_<time>.nc``.
 
 There are other command-line options available to the ``paleo_bathymetry`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
@@ -268,7 +268,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
         240,
         dynamic_topography_model='M7',
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_MODEL_GDH1,
-        use_all_cpus=True)
+        use_all_cpus=True)  # can also be an integer (the number of CPUs to use)
 
 ...is equivalent to :ref:`running the paleobathymetry script example <pybacktrack_running_the_paleo_bathymetry_script>`:
 
