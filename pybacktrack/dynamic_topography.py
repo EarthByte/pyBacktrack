@@ -101,6 +101,12 @@ class DynamicTopography(object):
 
         Each present day location is also assigned a plate ID using the static polygons,
         and the rotations are used to reconstruct each location when sampling the grids at a reconstructed time.
+        
+        .. versionchanged:: 1.4
+           The following changes were made:
+
+           - Added ability to specify a list of point locations (as an alternative to specifying a single location).
+           - Raises ``ValueError`` if there's no present day grid or if any age is negative.
         """
         
         # For interpolating dynamic topography grids at reconstructed locations.
