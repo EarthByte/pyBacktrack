@@ -232,6 +232,10 @@ oceanic crust (since this does not need rift start and end ages). If an error me
 :ref:`running backtrack <pybacktrack_running_backtrack>` then you'll need to determine the rift start and end age, then
 add these to your drill site file as ``RiftStartAge`` and ``RiftEndAge`` attributes, and then run backtrack again.
 
+.. note:: In pyBacktrack version 1.4 if the ``RiftStartAge`` and ``RiftEndAge`` attributes are not specified in your drill site file then
+          they are obtained implicitly from the builtin rift start/end time grids (see :ref:`pybacktrack_continental_subsidence`), so an
+          error message is unlikely to be generated when your drill site file is on *continental* crust.
+
 .. _pybacktrack_present_day_tectonic_subsidence:
 
 Present-day tectonic subsidence
