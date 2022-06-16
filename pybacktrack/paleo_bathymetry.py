@@ -258,32 +258,42 @@ def reconstruct_backtrack_bathymetry(
     # Note: The 3rd value (index 2) of each sample is the total sediment thickness (first two values are longitude and latitude).
     #       A value of NaN means the sample is outside the masked region of the grid.
     grid_samples = [grid_sample for grid_sample in grid_samples if not math.isnan(grid_sample[2])]
+    
+    #
+    # Assign reconstruction plate IDs.
+    #
+    # This appends to each grid sample:
+    # - a reconstruction plate ID, and
+    # - a partitioning polygon appearance age.
+    #
+    # Also excludes grid samples with plate IDs not in the region plate IDs (if they're specified).
+    #
+    if num_cpus == 1:
+        grid_samples = _assign_reconstruction_plate_ids(
+                grid_samples, static_polygon_filename, rotation_filenames, region_plate_ids)
+    else:
+        # Divide the grid samples into a number of groups equal to twice the number of CPUs in case some groups of samples take longer to process than others.
+        num_grid_sample_groups = 2 * num_cpus
+        num_grid_samples_per_group = math.ceil(float(len(grid_samples)) / num_grid_sample_groups)
 
-    # If any regions were specified then skip any grid samples outside all specified regions.
-    if region_plate_ids:
-        # Static polygons partitioner used to assign plate IDs to the grid points.
-        plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_filenames)
-
-        _grid_samples = []
-        for grid_sample in grid_samples:
-            # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
-            longitude, latitude = grid_sample[0], grid_sample[1]
-            present_day_location = pygplates.PointOnSphere(latitude, longitude)
-            partitioning_plate = plate_partitioner.partition_point(present_day_location)
-            if not partitioning_plate:
-                # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
-                # but might if there's tiny cracks between polygons).
-                continue
-
-            plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-
-            # Skip current grid sample if outside all specified regions.
-            if plate_id not in region_plate_ids:
-                continue
-            
-            _grid_samples.append(grid_sample)
-
-        grid_samples = _grid_samples
+        # Distribute the groups of grid samples across the multiprocessing pool.
+        with multiprocessing.Pool(num_cpus) as pool:
+            grid_samples_list = pool.map(
+                    partial(
+                        _assign_reconstruction_plate_ids,
+                        static_polygon_filename=static_polygon_filename,
+                        rotation_filenames=rotation_filenames,
+                        region_plate_ids=region_plate_ids),
+                    (
+                        grid_samples[
+                            grid_sample_group_index * num_grid_samples_per_group :
+                            (grid_sample_group_index + 1) * num_grid_samples_per_group]
+                                    for grid_sample_group_index in range(num_grid_sample_groups)
+                    ),
+                    1) # chunksize
+        
+        # Merge output lists back into one list.
+        grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
     
     #
     # Exclude grid samples near trenches.
@@ -322,7 +332,7 @@ def reconstruct_backtrack_bathymetry(
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
     oceanic_grid_samples = []
-    for longitude, latitude, total_sediment_thickness, age, topography in grid_samples:
+    for longitude, latitude, total_sediment_thickness, reconstruction_plate_id, partitioning_plate_appearance_age, age_grid_age, topography in grid_samples:
 
         # If topography sampled outside grid then set topography to zero.
         # Shouldn't happen since topography grid is not masked anywhere.
@@ -335,12 +345,18 @@ def reconstruct_backtrack_bathymetry(
         water_depth = max(0, water_depth)
 
         # If sampled outside age grid then is on continental crust near a passive margin.
-        if math.isnan(age):
+        if math.isnan(age_grid_age):
+            # Use the age from the partitioning static polygon.
+            age = partitioning_plate_appearance_age
+
             continental_grid_samples.append(
-                    (longitude, latitude, total_sediment_thickness, water_depth))
-        else:
+                    (longitude, latitude, total_sediment_thickness, water_depth, reconstruction_plate_id, age))
+        else:  # oceanic...
+            # Use the age from the age grid.
+            age = age_grid_age
+            
             oceanic_grid_samples.append(
-                    (longitude, latitude, total_sediment_thickness, water_depth, age))
+                    (longitude, latitude, total_sediment_thickness, water_depth, reconstruction_plate_id, age))
 
     # Add crustal thickness and builtin rift start/end times to continental grid samples.
     #
@@ -352,19 +368,19 @@ def reconstruct_backtrack_bathymetry(
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
     #
-    # Note: The 6th and 7th values (indices 5 and 6) of each sample are the rift start and end ages.
+    # Note: The 8th and 9th values (indices 7 and 8) of each sample are the rift start and end ages.
     #       A value of NaN means there is no rifting at the sample location.
     continental_grid_samples = [grid_sample for grid_sample in continental_grid_samples
-                                    if not (math.isnan(grid_sample[5]) or math.isnan(grid_sample[6]))]
+                                    if not (math.isnan(grid_sample[7]) or math.isnan(grid_sample[8]))]
     # Ensure rift start ages are not younger than associated rift end ages (due to filtering during grid sampling).
     for grid_sample_index in range(len(continental_grid_samples)):
         grid_sample = continental_grid_samples[grid_sample_index]
-        rift_start_age, rift_end_age = grid_sample[5], grid_sample[6]
+        rift_start_age, rift_end_age = grid_sample[7], grid_sample[8]
         if rift_start_age < rift_end_age:
             # Clamp rift start age to the rift end age.
             rift_start_age = rift_end_age
             # Create a new tuple with the rift start age replaced.
-            grid_sample = grid_sample[:5] + (rift_start_age,) + grid_sample[6:]
+            grid_sample = grid_sample[:7] + (rift_start_age,) + grid_sample[8:]
             continental_grid_samples[grid_sample_index] = grid_sample
     
     # Find the sea levels over the requested time period.
@@ -387,7 +403,6 @@ def reconstruct_backtrack_bathymetry(
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
-                static_polygon_filename,
                 anchor_plate_id,
                 output_positive_bathymetry_below_sea_level)
         
@@ -399,7 +414,6 @@ def reconstruct_backtrack_bathymetry(
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
-                static_polygon_filename,
                 anchor_plate_id,
                 output_positive_bathymetry_below_sea_level)
         
@@ -427,7 +441,6 @@ def reconstruct_backtrack_bathymetry(
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename,
                     anchor_plate_id=anchor_plate_id,
                     output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level),
                 (
@@ -453,7 +466,6 @@ def reconstruct_backtrack_bathymetry(
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
-                    static_polygon_filename=static_polygon_filename,
                     anchor_plate_id=anchor_plate_id,
                     output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level),
                 (
@@ -483,22 +495,18 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
-        static_polygon_filename,
         anchor_plate_id,
         output_positive_bathymetry_below_sea_level):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
     rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = len(time_range))
-
-    # Static polygons partitioner used to assign plate IDs to the grid points.
-    plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
     # Create time-dependent grid object for sampling dynamic topography (if requested).
     if dynamic_topography_model:
         # Gather all the sample positions and their ages.
         longitudes, latitudes, ages = [], [], []
-        for longitude, latitude, _, _, age in oceanic_grid_samples:
+        for longitude, latitude, _, _, _, age in oceanic_grid_samples:
             longitudes.append(longitude)
             latitudes.append(latitude)
             ages.append(age)
@@ -518,7 +526,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
     paleo_bathymetry = {time : [] for time in time_range}
 
     # Iterate over the *oceanic* grid samples.
-    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, age) in enumerate(oceanic_grid_samples):
+    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, reconstruction_plate_id, age) in enumerate(oceanic_grid_samples):
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
@@ -543,19 +551,12 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         # There will be a difference between unloaded water depth and subsidence based on age-to-depth model.
         # Assume this offset is constant for all ages and use it to adjust the subsidence obtained from age-to-depth model for other ages.
         tectonic_subsidence_model_adjustment = present_day_tectonic_subsidence - present_day_tectonic_subsidence_from_model
-        
-        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
-        present_day_location = pygplates.PointOnSphere(latitude, longitude)
-        partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if not partitioning_plate:
-            # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
-            # but might if there's tiny cracks between polygons).
-            continue
-        reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
 
         # If we have dynamic topography then get present-day dynamic topography.
         if dynamic_topography:
             dynamic_topography_at_present_day = dynamic_topography[0.0][grid_sample_index]
+        
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
         
         for decompaction_time in time_range:
             # If the decompaction time has exceeded the age of ocean crust (bottom age of well) then we're finished with current well.
@@ -619,16 +620,12 @@ def _reconstruct_backtrack_continental_bathymetry(
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
-        static_polygon_filename,
         anchor_plate_id,
         output_positive_bathymetry_below_sea_level):
 
     # Rotation model used to reconstruct the grid points.
     # Cache enough internal reconstruction trees so that we're not constantly recreating them as we move from point to point.
     rotation_model = pygplates.RotationModel(rotation_filenames, reconstruction_tree_cache_size = len(time_range))
-
-    # Static polygons partitioner used to assign plate IDs to the grid points.
-    plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_model)
     
     # Use integral rift start ages when caching dynamic topography to avoid an excessive number of dynamic topography samples
     # (which can happen since the rift start ages are linearly filtered from rift start age grid and can therefore have many different values).
@@ -671,7 +668,7 @@ def _reconstruct_backtrack_continental_bathymetry(
     paleo_bathymetry = {time : [] for time in time_range}
 
     # Iterate over the *continental* grid samples.
-    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, present_day_crustal_thickness, rift_start_age, rift_end_age) in enumerate(continental_grid_samples):
+    for grid_sample_index, (longitude, latitude, present_day_total_sediment_thickness, present_day_water_depth, reconstruction_plate_id, age, present_day_crustal_thickness, rift_start_age, rift_end_age) in enumerate(continental_grid_samples):
         
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
@@ -722,17 +719,7 @@ def _reconstruct_backtrack_continental_bathymetry(
         # Initial (pre-rift) crustal thickness is beta times present day crustal thickness.
         pre_rift_crustal_thickness = rift_beta * present_day_crustal_thickness
         
-        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
         present_day_location = pygplates.PointOnSphere(latitude, longitude)
-        partitioning_plate = plate_partitioner.partition_point(present_day_location)
-        if not partitioning_plate:
-            # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
-            # but might if there's tiny cracks between polygons.
-            continue
-        reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
-
-        # The age of the continental crust is the begin time (time of appearance) of the partitioning polygon (static polygon covering this point).
-        age, _ = partitioning_plate.get_feature().get_valid_time()
         
         for decompaction_time in time_range:
             # If the decompaction time has exceeded the age of continental crust then we're finished with current well.
@@ -782,6 +769,45 @@ def _reconstruct_backtrack_continental_bathymetry(
             paleo_bathymetry[decompaction_time].append((reconstructed_longitude, reconstructed_latitude, bathymetry))
 
     return paleo_bathymetry
+
+
+def _assign_reconstruction_plate_ids(
+        grid_samples,
+        static_polygon_filename,
+        rotation_filenames,
+        region_plate_ids=None):
+    
+    # Static polygons partitioner used to assign plate IDs to the grid points.
+    plate_partitioner = pygplates.PlatePartitioner(static_polygon_filename, rotation_filenames)
+
+    updated_grid_samples = []
+    for grid_sample in grid_samples:
+        # Find the plate ID of the static polygon containing the present day location (or zero if not in any plates, which shouldn't happen).
+        longitude, latitude = grid_sample[0], grid_sample[1]
+        present_day_location = pygplates.PointOnSphere(latitude, longitude)
+        partitioning_plate = plate_partitioner.partition_point(present_day_location)
+        if not partitioning_plate:
+            # Not contained by any plates. Shouldn't happen since static polygons have global coverage,
+            # but might if there's tiny cracks between polygons.
+            continue
+
+        reconstruction_plate_id = partitioning_plate.get_feature().get_reconstruction_plate_id()
+
+        # If any regions were specified then skip any grid samples outside all specified regions.
+        if region_plate_ids:
+            if reconstruction_plate_id not in region_plate_ids:
+                # Skip current grid sample.
+                continue
+
+        # The appearance age of the partitioning polygon (static polygon covering this point).
+        partitioning_plate_appearance_age, _ = partitioning_plate.get_feature().get_valid_time()
+        
+        # Append the assigned reconstruction plate ID and the partitioning polygon appearance age to the grid sample.
+        updated_grid_sample = tuple(grid_sample) + (reconstruction_plate_id, partitioning_plate_appearance_age)
+
+        updated_grid_samples.append(updated_grid_sample)
+
+    return updated_grid_samples
 
 
 def _exclude_grid_samples_near_trenches(
@@ -930,12 +956,12 @@ def _read_grid(
     """
     Samples a grid file at the specified locations.
     
-    'input' is a list of (longitude, latitude, [other_values ...]) tuples where latitude and longitude are in degrees.
-    Should at least have 2-tuples (longitude, latitude) but 'grdtrack' allows extra columns.
+    'input' is a list of (longitude, latitude, [other_values ...]) sequences where latitude and longitude are in degrees.
+    Should at least have 2-sequences (longitude, latitude) but 'grdtrack' allows extra columns.
     
     Returns a list of tuples of float values.
-    For example, if input was (longitude, latitude) tuples then output is (longitude, latitude, sample) tuples.
-    If input was (longitude, latitude, value) tuples then output is (longitude, latitude, value, sample_grid) tuples.
+    For example, if input was (longitude, latitude) sequences then output is (longitude, latitude, sample) tuples.
+    If input was (longitude, latitude, value) sequences then output is (longitude, latitude, value, sample_grid) tuples.
     """
     
     # Create a multiline string (one line per lon/lat/value1/etc row).
@@ -979,7 +1005,7 @@ def _write_grid(
     """
     Grid the input data and write to an output grid file.
     
-    'input' is a list of (longitude, latitude, value) tuples where latitude and longitude are in degrees.
+    'input' is a list of (longitude, latitude, value) sequences where latitude and longitude are in degrees.
     'grid_spacing_degrees' is spacing of output grid points in degrees.
     If 'xyz_filename' is specified then an xyz file is also created (from 'input').
     """
