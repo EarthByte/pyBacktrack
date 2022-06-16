@@ -275,7 +275,7 @@ def reconstruct_backtrack_bathymetry(
     # - a reconstruction plate ID, and
     # - a partitioning polygon appearance age.
     #
-    # Also excludes grid samples with plate IDs not in the region plate IDs (if they're specified).
+    # Also excludes grid samples with plate IDs not in the region plate IDs (if region plate IDs specified).
     #
     if num_cpus == 1:
         grid_samples = _assign_reconstruction_plate_ids(
@@ -333,10 +333,13 @@ def reconstruct_backtrack_bathymetry(
         
         # Merge output lists back into one list.
         grid_samples = list(itertools.chain.from_iterable(grid_samples_list))
-    
+
+    # The plate IDs assigned above are integers but get converted to float by '_read_grid()' unless we tell it they are integers.
+    grid_sample_integer_input_columns = [3]
+
     # Add age and topography to the total sediment thickness grid samples.
-    grid_samples = _read_grid(grid_samples, age_grid_filename, force_positive=True)
-    grid_samples = _read_grid(grid_samples, topography_filename)
+    grid_samples = _read_grid(grid_samples, age_grid_filename, integer_input_columns=grid_sample_integer_input_columns, force_positive=True)
+    grid_samples = _read_grid(grid_samples, topography_filename, integer_input_columns=grid_sample_integer_input_columns)
 
     # Separate grid samples into oceanic and continental.
     continental_grid_samples = []
@@ -370,12 +373,15 @@ def reconstruct_backtrack_bathymetry(
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, reconstruction_plate_id, age))
 
+    # The plate IDs assigned above are integers but get converted to float by '_read_grid()' unless we tell it they are integers.
+    continental_grid_sample_integer_input_columns = [4]
+
     # Add crustal thickness and builtin rift start/end times to continental grid samples.
     #
     # Note: For some reason we get a GMT error if we combine these grids in a single 'grdtrack' call, so we separate them instead.
-    continental_grid_samples = _read_grid(continental_grid_samples, crustal_thickness_filename, force_positive=True)
-    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME, force_positive=True)
-    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, crustal_thickness_filename, integer_input_columns=continental_grid_sample_integer_input_columns, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_START_FILENAME, integer_input_columns=continental_grid_sample_integer_input_columns, force_positive=True)
+    continental_grid_samples = _read_grid(continental_grid_samples, pybacktrack.bundle_data.BUNDLE_RIFTING_END_FILENAME, integer_input_columns=continental_grid_sample_integer_input_columns, force_positive=True)
 
     # Ignore continental samples with no rifting (no rift start/end times) since there is no sediment deposition without rifting and
     # also no tectonic subsidence.
@@ -649,7 +655,7 @@ def _reconstruct_backtrack_continental_bathymetry(
         # Gather all the sample positions and their ages.
         longitudes, latitudes, ages = [], [], []
         dynamic_topography_rift_start_ages = set()
-        for longitude, latitude, _, _, _, rift_start_age, _ in continental_grid_samples:
+        for longitude, latitude, _, _, _, _, _, rift_start_age, _ in continental_grid_samples:
             longitudes.append(longitude)
             latitudes.append(latitude)
             ages.append(rift_start_age)
@@ -964,6 +970,7 @@ def generate_lon_lat_points(grid_spacing_degrees):
 def _read_grid(
         input,
         grid_filename,
+        integer_input_columns=None,
         force_positive=False):
     """
     Samples a grid file at the specified locations.
@@ -996,7 +1003,15 @@ def _read_grid(
     for line in stdout_data.splitlines():
         # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
         # Note that if GMT returns "NaN" then we'll return float('nan').
-        output_value = tuple(float(value) for value in line.split())
+        
+        # If any columns should be 'int' (instead of 'float') then convert them to 'int'.
+        if integer_input_columns:
+            output_value = tuple(
+                (float(column_value) if column not in integer_input_columns else int(column_value))
+                for column, column_value in enumerate(line.split()))
+        else:
+            # All columns are 'float'.
+            output_value = tuple(float(column_value) for column_value in line.split())
 
         # If requested to clamp negative samples to zero.
         # Note: value just sampled is the last column.
