@@ -65,6 +65,15 @@ DEFAULT_GRID_SPACING_MINUTES = 60.0 * DEFAULT_GRID_SPACING_DEGREES
 #       is getting too large and consequently pre-rift crustal thickness too close to the lithospheric thickness.
 _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 10.0
 
+# There's a static polygon (from the static polygons file) in the W Pacific that is stationary through time.
+# This is because the age grid determines the age on oceanic crust (static polygons only determine plate ID) and
+# in this region the age grid suffers from an interpolation artefact (in the age grid generation process) where it
+# should have ages around ~33 Ma but is actually 100+ Ma due to interpolation with the nearby older Pacific crust.
+#
+# So until the age grid is fixed (and it is hard to fix these types of age grid errors) we will use the static polygon
+# appearance age in place of the age grid age whenever the latter is older than the former by the following amount (in Myr).
+_MAX_AGE_GRID_ALLOWED_TO_EXCEED_OCEANIC_STATIC_POLYGON_AGE = 30.0
+
 
 def reconstruct_backtrack_bathymetry(
         input_points,  # note: you can use 'generate_input_points_grid()' to generate a global lat/lon grid
@@ -352,8 +361,11 @@ def reconstruct_backtrack_bathymetry(
             continental_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, reconstruction_plate_id, age))
         else:  # oceanic...
-            # Use the age from the age grid.
-            age = age_grid_age
+            # Use the age from the age grid unless it is too old (ie, older than the partitioning static polygon appearance age by a fixed amount).
+            if age_grid_age > partitioning_plate_appearance_age + _MAX_AGE_GRID_ALLOWED_TO_EXCEED_OCEANIC_STATIC_POLYGON_AGE:
+                age = partitioning_plate_appearance_age
+            else:
+                age = age_grid_age
             
             oceanic_grid_samples.append(
                     (longitude, latitude, total_sediment_thickness, water_depth, reconstruction_plate_id, age))
