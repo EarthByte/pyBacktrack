@@ -52,8 +52,8 @@ Also ensure that version 5 or above (supports NetCDF version 4) is installed sin
 `PyGPlates` is not currently installable as a package and so needs to be in the python path (sys.path or PYTHONPATH).
 Installation instructions are available `here <http://www.gplates.org/docs/pygplates/index.html>`_.
 
-`PyGPlates` now supports Python 3 (in addition to Python 2.7) so you can now use pyBacktrack with either Python 2.7 or 3.
-The :ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach to selecting the default Python (2.7 or 3) using ``sudo port select``.
+`PyGPlates` supports Python 3 (in addition to Python 2.7) so you can now use pyBacktrack with either.
+The :ref:`Macports install example <pybacktrack_install_requirements_mac>` below shows one approach to selecting the default Python using ``sudo port select``.
 Another approach is using Python virtual environments where each environment has its own ``python``, ``pip`` and installed packages.
 However, currently pyGPlates does not yet work in virtual environments (at least on Mac systems).
 
@@ -80,16 +80,16 @@ Then install Python 3 (and Pip):
   sudo apt install python3 python3-pip
   sudo pip3 install --upgrade pip
 
-Then download the pyGPlates Python 3 debian package `pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-28/ubuntu/>`_,
+Then download the pyGPlates Python 3 debian package `pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb <https://www.earthbyte.org/download-pygplates-0-36/>`_,
 and install it:
 ::
 
-  sudo apt install pygplates-py3-ubuntu-bionic_2.2_1_amd64.deb
+  sudo apt install ./pygplates_0.36.0_py36_ubuntu-18.04-amd64.deb
 
 Then add the installed location of pyGPlates to the PYTHONPATH environment variable:
 ::
 
-  export PYTHONPATH=$PYTHONPATH:/usr/lib/pygplates/revision28
+  export PYTHONPATH=$PYTHONPATH:/usr/lib
 
 .. _pybacktrack_install_requirements_mac:
 
@@ -129,22 +129,16 @@ Set your default ``python`` to Python 3.8:
           ...but this will require using ``python3`` on the command-line to run
           :ref:`pybacktrack <pybacktrack_use_a_builtin_module_script>` (instead of just ``python``).
 
-          Alternatively you can use Python 2.7 to run pyBacktrack (instead of Python 3) by installing pyGPlates
-          for Python 2.7 (instead of for Python 3) - see below.
-
-Then download the pyGPlates Mac zip file `pygplates_rev28_python38_MacOS64.zip <https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-28/>`_,
+Then download a pyGPlates Mac zip file, such as `pygplates_0.36.0_py38_Darwin-x86_64.zip <https://www.earthbyte.org/download-pygplates-0-36/>`_ for Python 3.8 on an Intel Mac,
 and extract it to your home directory.
 
-Then add the unzipped location of pyGPlates to the PYTHONPATH environment variable:
+Then add the unzipped location of pyGPlates to the PYTHONPATH environment variable, such as:
 ::
 
-  export PYTHONPATH=~/pygplates_rev28_python38_MacOS64:$PYTHONPATH
+  export PYTHONPATH=~/pygplates_0.36.0_py38_Darwin-x86_64:$PYTHONPATH
 
 .. note:: The above line can be added to your ``~/.bashrc``, ``~/.bash_profile`` or ``~/.zprofile`` file
           so that PYTHONPATH is set each time you open a new terminal window.
-
-.. note:: If you are using Python 2.7 to run pyBacktrack (instead of Python 3) then install the Python 2.7 version of pyGPlates instead by installing
-          ``pygplates_rev28_python27_MacOS64.zip`` and adding ``~/pygplates_rev28_python27_MacOS64`` to your ``PYTHONPATH``.
             
 
 .. _pybacktrack_install_pybacktrack:
