@@ -72,7 +72,12 @@ _MAX_TECTONIC_SUBSIDENCE_RIFTING_RESIDUAL_ERROR = 10.0
 #
 # So until the age grid is fixed (and it is hard to fix these types of age grid errors) we will use the static polygon
 # appearance age in place of the age grid age whenever the latter is older than the former by the following amount (in Myr).
-_MAX_AGE_GRID_ALLOWED_TO_EXCEED_OCEANIC_STATIC_POLYGON_AGE = 30.0
+#
+# Nicky tested a range of values between 30 and 60 Myr and found 40 Myr was the best:
+# - 30 Myr was problematic for the larger static polygons in the Atlantic because they include a large range of age grid values (ie, greater than 30 Myr).
+# - 60 Myr avoids issues in the Atlantic but doesn't remove enough of the W Pacific polygon.
+# - 40 Myr removes most of it (a small sliver remains) without creating issues in the Atlantic.
+_MAX_AGE_GRID_ALLOWED_TO_EXCEED_OCEANIC_STATIC_POLYGON_AGE = 40.0
 
 
 def reconstruct_backtrack_bathymetry(
