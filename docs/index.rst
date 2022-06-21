@@ -23,6 +23,8 @@ of the total sedimentary section, and thus bathymetry, through time.
 At drill sites on stretched continental crust where the paleo-water depth is known from benthic fossil assemblages,
 tectonic subsidence can be computed via backstripping. The workflow is similar to backtracking, but paleo-water depths and
 their uncertainties need to be supplied as part of the input.
+In addition to individual drill sites, all submerged present-day crust (assigned a single lithology) can be backtracked and reconstructed to
+generate paleo bathymetry grids through time.
 
 Reference
 ---------
