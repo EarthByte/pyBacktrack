@@ -226,22 +226,16 @@ Install using Docker
 This method of running ``pybacktrack`` relies on `Docker <https://www.docker.com/>`_, so before installing
 the ``pybacktrack`` docker image, ensure you have installed `Docker <https://www.docker.com/>`_.
 
-.. note:: | On Windows platforms you can install `Docker Toolbox <https://docs.docker.com/toolbox/overview/>`_ or
-            `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_.
-          | *Docker Desktop for Windows* offers the most "native" experience and is recommended by Docker, but has
-            higher system requirements and once it's installed you can no longer use VirtualBox (to run other Virtual Machines).
-          | In contrast, *Docker Toolbox* relies on VirtualBox, so if your system can run VirtualBox then
-            *Docker Toolbox* should work on your system.
+.. note:: | On Windows platforms you can install `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_.
+            Note that `Docker Toolbox <https://docs.docker.com/toolbox/overview/>`_ has been deprecated (and now *Docker Desktop for Windows* is recommended).
           | A similar situation applies on Mac platforms where you can install
-            `Docker Toolbox <https://docs.docker.com/toolbox/overview/>`_ or
-            `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_.
+            `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_ (with *Docker Toolbox* being deprecated).
 
-Once Docker is installed, open a Docker terminal (command-line interface).
+Once Docker is installed, open a terminal (command-line interface).
 
-.. note:: | For *Docker Toolbox* this is the *Docker Quickstart Terminal*.
-          | For `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_ and
+.. note:: | For `Docker Desktop for Windows <https://docs.docker.com/docker-for-windows/install/>`_ and
             `Docker Desktop for Mac <https://docs.docker.com/docker-for-mac/install/>`_ this a regular command-line terminal.
-          | On Linux systems this a regular command-line terminal.
+          | Also on Linux systems this a regular command-line terminal.
 
 To install the ``pybacktrack`` docker image, type:
 
@@ -289,10 +283,6 @@ Then you can start a web browser on your local machine and type the following in
 | In the web browser, navigate to ``pybacktrack_examples`` and then ``notebooks``.
 | Then click on a notebook (such as `backtrack.ipynb <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/backtrack.ipynb>`_).
 | You should be able to run the notebook, or modify it and then run it.
-
-.. note:: | If you are running *Docker Toolbox on Windows* then use the Docker Machine IP instead of ``localhost``.
-          | For example ``http://192.168.99.100:18888/tree``.
-          | To find the IP address use the command ``docker-machine ip``.
 
 .. _pybacktrack_a_backtracking_example:
 
