@@ -31,7 +31,10 @@ Documentation
 .. image:: https://readthedocs.org/projects/pybacktrack/badge
    :target: http://pybacktrack.readthedocs.io
 
-The `documentation <http://pybacktrack.readthedocs.io>`_ covers the pyBacktrack Python package. It includes installation, examples and an API reference.
+The documentation covers the pyBacktrack Python package. It includes installation, examples and an API reference.
+
+* `Documentation <http://pybacktrack.readthedocs.io/en/stable/>`_ for the latest public release.
+* `Documentation <http://pybacktrack.readthedocs.io/en/latest/>`_ for the latest development on ``master`` branch.
 
 Reference
 ---------
