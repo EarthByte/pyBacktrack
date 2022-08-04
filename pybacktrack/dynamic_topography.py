@@ -26,13 +26,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import argparse
 import codecs
 import math
+import numpy as np
 import os.path
 import pybacktrack.bundle_data
 from pybacktrack.util.call_system_command import call_system_command
 import pygplates
 import sys
+import warnings
 
 
 class DynamicTopography(object):
@@ -732,3 +735,179 @@ class TimeDependentGrid(object):
             grid_sample.append(sample_value)
         
         return grid_sample
+
+
+# Action to parse dynamic topography model information.
+class ArgParseDynamicTopographyAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if len(values) < 3:
+            parser.error('Dynamic topography model info must have three or more parameters '
+                            '(grid list filename, static polygons filename, rotation filename1 [, rotation filename2 [, ...]]).')
+        
+        grid_list_filename = values[0]
+        static_polygons_filename = values[1]
+        rotation_filenames = values[2:]  # Needs to be a list.
+        
+        setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
+
+
+########################
+# Command-line parsing #
+########################
+
+def main():
+    
+    __description__ = \
+        """Calculate dynamic topography for a present-day location reconstructed through time.
+        
+        NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
+        For example...
+
+        python -m pybacktrack.dynamic_topography_cli -ym M7 -p 0 30 -- 10
+        """
+
+    # Action to parse a longitude/latitude location.
+    class ArgParseLocationAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            # Need two numbers (lon and lat).
+            if len(values) != 2:
+                parser.error('location must be specified as two numbers (longitude and latitude)')
+            
+            try:
+                # Convert strings to float.
+                longitude = float(values[0])
+                latitude = float(values[1])
+            except ValueError:
+                raise argparse.ArgumentTypeError("encountered a longitude or latitude that is not a number")
+            
+            if longitude < -360 or longitude > 360:
+                parser.error('longitude must be in the range [-360, 360]')
+            if latitude < -90 or latitude > 90:
+                parser.error('latitude must be in the range [-90, 90]')
+            
+            setattr(namespace, self.dest, (longitude, latitude))
+        
+    def parse_positive_float(value_string):
+        try:
+            value = float(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a (floating-point) number" % value_string)
+        
+        if value <= 0:
+            raise argparse.ArgumentTypeError("%g is not a positive (floating-point) number" % value)
+        
+        return value
+        
+    def parse_non_negative_float(value_string):
+        try:
+            value = float(value_string)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%s is not a (floating-point) number" % value_string)
+        
+        if value < 0:
+            raise argparse.ArgumentTypeError("%g is a negative (floating-point) number" % value)
+        
+        return value
+    
+    #
+    # Gather command-line options.
+    #
+    
+    # The command-line parser.
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
+    
+    # Specify dynamic topography as a triplet of filenames or a model name (if using bundled data) but not both.
+    dynamic_topography_argument_group = parser.add_mutually_exclusive_group(required=True)
+    dynamic_topography_argument_group.add_argument(
+        '-ym', '--bundle_dynamic_topography_model', type=str,
+        metavar='bundle_dynamic_topography_model',
+        help='Dynamic topography through time. '
+             'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+    dynamic_topography_argument_group.add_argument(
+        '-y', '--dynamic_topography_model', nargs='+', action=ArgParseDynamicTopographyAction,
+        metavar='dynamic_topography_filename',
+        help='Dynamic topography through time. '
+             'First filename contains a list of dynamic topography grids (and associated times). '
+             'Note that each grid must be in the mantle reference frame. '
+             'Second filename contains static polygons associated with dynamic topography model '
+             '(used to assign plate ID to well location so it can be reconstructed). '
+             'Third filename (and optional fourth, etc) are the rotation files associated with model '
+             '(only the rotation files for static continents/oceans are needed - ie, deformation rotations not needed). '
+             'Each row in the grid list file should contain two columns. First column containing '
+             'filename (relative to directory of list file) of a dynamic topography grid at a particular time. '
+             'Second column containing associated time (in Ma).')
+    
+    parser.add_argument('-i', '--time_increment', type=parse_positive_float, default=1,
+            help='The time increment in My. Value must be positive (and can be non-integral). Defaults to 1 My.')
+    
+    parser.add_argument(
+        '-p', '--point_location', nargs=2, action=ArgParseLocationAction, required=True,
+        metavar=('point_longitude', 'point_latitude'),
+        help='Optional location of a present-day point to query dynamic topography over time. '
+             'Longitude and latitude are in degrees.')
+
+    parser.add_argument('oldest_time', type=parse_non_negative_float,
+        metavar='oldest_time',
+        help='Output is generated from present day back to the oldest time (in Ma). Value must not be negative.')
+    
+    # Parse command-line options.
+    args = parser.parse_args()
+   
+    # Create times from present day to the oldest requested time in the requested time increments.
+    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
+    time_range = [float(time) for time in np.arange(0, args.oldest_time + 1e-6, args.time_increment)]
+    
+    # Get dynamic topography model info.
+    if args.bundle_dynamic_topography_model is not None:
+        try:
+            # Convert dynamic topography model name to model info.
+            # We don't need to do this (since DynamicTopography.create_from_model_or_bundled_model_name() will do it for us) but it helps check user errors.
+            dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[args.bundle_dynamic_topography_model]
+        except KeyError:
+            raise ValueError("%s is not a valid dynamic topography model name" % args.bundle_dynamic_topography_model)
+    else:
+        dynamic_topography_model = args.dynamic_topography_model
+
+    point_age = None
+    point_longitude, point_latitude = args.point_location
+    dynamic_topography_model = DynamicTopography.create_from_model_or_bundled_model_name(dynamic_topography_model, point_longitude, point_latitude, point_age)
+
+    for time in time_range:
+        dynamic_topography = dynamic_topography_model.sample(time)
+        print('{}: {}'.format(time, dynamic_topography))
+
+
+if __name__ == '__main__':
+
+    import traceback
+    
+    def warning_format(message, category, filename, lineno, file=None, line=None):
+        # return '{0}:{1}: {1}:{1}\n'.format(filename, lineno, category.__name__, message)
+        return '{0}: {1}\n'.format(category.__name__, message)
+
+    # Print the warnings without the filename and line number.
+    # Users are not going to want to see that.
+    warnings.formatwarning = warning_format
+    
+    #
+    # User should use 'dynamic_topography_cli' module (instead of this module 'dynamic_topography'), when executing as a script, to avoid Python 3 warning:
+    #
+    #   RuntimeWarning: 'pybacktrack.dynamic_topography' found in sys.modules after import of package 'pybacktrack',
+    #                   but prior to execution of 'pybacktrack.dynamic_topography'; this may result in unpredictable behaviour
+    #
+    # For more details see https://stackoverflow.com/questions/43393764/python-3-6-project-structure-leads-to-runtimewarning
+    #
+    # Importing this module (eg, 'import pybacktrack.dynamic_topography') is fine though.
+    #
+    warnings.warn("Use 'python -m pybacktrack.dynamic_topography ...', instead of 'python -m pybacktrack.dynamic_topography ...'.", DeprecationWarning)
+
+    try:
+        main()
+        sys.exit(0)
+    except Exception as exc:
+        print('ERROR: {0}'.format(exc), file=sys.stderr)
+        # Uncomment this to print traceback to location of raised exception.
+        # traceback.print_exc()
+        sys.exit(1)

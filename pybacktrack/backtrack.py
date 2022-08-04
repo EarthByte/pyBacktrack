@@ -1154,6 +1154,7 @@ def main():
     """.format(''.join('        {0}\n'.format(column_name) for column_name in _DECOMPACTED_COLUMN_NAMES))
 
     import argparse
+    from pybacktrack.dynamic_topography import ArgParseDynamicTopographyAction
     from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
 
     def argparse_unicode(value_string):
@@ -1210,19 +1211,6 @@ def main():
                 parser.error('latitude must be in the range [-90, 90]')
             
             setattr(namespace, self.dest, (longitude, latitude))
-
-    # Action to parse dynamic topography model information.
-    class ArgParseDynamicTopographyAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            if len(values) < 3:
-                parser.error('Dynamic topography model info must have three or more parameters '
-                             '(grid list filename, static polygons filename, rotation filename1 [, rotation filename2 [, ...]]).')
-            
-            grid_list_filename = values[0]
-            static_polygons_filename = values[1]
-            rotation_filenames = values[2:]  # Needs to be a list.
-            
-            setattr(namespace, self.dest, (grid_list_filename, static_polygons_filename, rotation_filenames))
 
     ocean_age_to_depth_model_name_dict = dict((model, model_name) for model, model_name, _ in age_to_depth.ALL_MODELS)
     default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_to_depth.DEFAULT_MODEL]
@@ -1463,7 +1451,7 @@ def main():
     if args.bundle_dynamic_topography_model is not None:
         try:
             # Convert dynamic topography model name to model info.
-            # We don't need to do this (since backtrack() will do it for us) but it helps check user errors.
+            # We don't need to do this (since DynamicTopography.create_from_model_or_bundled_model_name() will do it for us) but it helps check user errors.
             dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[args.bundle_dynamic_topography_model]
         except KeyError:
             raise ValueError("%s is not a valid dynamic topography model name" % args.bundle_dynamic_topography_model)
@@ -1476,7 +1464,7 @@ def main():
     if args.bundle_sea_level_model is not None:
         try:
             # Convert sea level model name to filename.
-            # We don't need to do this (since backtrack() will do it for us) but it helps check user errors.
+            # We don't need to do this (since SeaLevel.create_from_model_or_bundled_model_name() will do it for us) but it helps check user errors.
             sea_level_model = pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS[args.bundle_sea_level_model]
         except KeyError:
             raise ValueError("%s is not a valid sea level model name" % args.bundle_sea_level_model)
