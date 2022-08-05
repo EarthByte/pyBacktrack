@@ -109,7 +109,17 @@ As with regular backtracking, those sediment grid points lying inside the age gr
 However, in lieu of explicitly providing the rift start and end ages (as for a 1D well site) each 2D grid point samples the builtin rift start/end age grids.
 Each grid point is also assigned a plate ID (using static polygons) and reconstructed back through time.
 
-Each grid point has a single lithology (defaults to Shale), with an initial compacted thickness sampled from the total sediment thickness grid at present day that is progressively decompacted back through geological time.
+Each grid point has a single lithology, with an initial compacted thickness sampled from the total sediment thickness grid at present day that is progressively decompacted back through geological time.
+
+.. note:: The single lithology defaults to ``Shale``. This is the same as the default :ref:`base sediment layer <pybacktrack_base_sediment_layer>` used in drill sites
+          where the undrilled portions of drill sites are usually below the Carbonate Compensation Depth (CCD) where shale dominates.
+          However a more appropriate lithology for paleobathymetry is ``Average_ocean_floor_sediment`` (see the available :ref:`bundled lithologies <pybacktrack_bundled_lithology_definitions>`).
+          It can be used (instead of the default ``Shale``) by specifying the ``-b`` command-line option
+          (eg, adding ``-b Average_ocean_floor_sediment`` to the command-line in the :ref:`above example <pybacktrack_paleo_bathymetry_example>`).
+          Also note that this documentation refers to the latest **public** release. The default lithology in the latest **development** version (:ref:`installable via Github <pybacktrack_install_pybacktrack>`)
+          is ``Average_ocean_floor_sediment`` (see the `documentation for the latest development version <https://pybacktrack.readthedocs.io/en/latest/pybacktrack_paleo_bathymetry.html#paleobathymetry-gridding-procedure>`_).
+          This will also be the default in the next public release.
+
 The decompaction progresses incrementally (eg, in 1 Myr intervals) assuming a constant (average) decompacted sedimentation rate over the entire sedimentation period calculated as the fully decompacted initial thickness
 (ie, using surface porosity only) divided by the sedimentation period (from start of rifting for continental crust, and from crustal age for oceanic crust, to present day).
 Loading each reconstructed point’s decompacted thicknesses onto its modelled tectonic subsidence (oceanic or continental) back through time, along with the effects of dynamic topography and sea level models, reveals its history of water depths.
