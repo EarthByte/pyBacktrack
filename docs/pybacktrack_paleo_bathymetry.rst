@@ -96,8 +96,12 @@ Paleobathymetry gridding procedure
 Paleobathymetry gridding uses the :ref:`builtin rift start/end age grids <pybacktrack_builtin_rift_gridding_procedure>` along with the existing subsidence models (continental rifting and oceanic) and
 the sediment decompaction functionality in pyBacktrack to generate paleo bathymetry grids (typically in 1 Myr intervals).
 
-The ``paleo_bathymetry`` module has similar options to the ``backtrack`` module such as options for present-day age/topography/crustal-thickness/sediment-thickness grids, dynamic-topography/sea-level models, etc.
-Except that, instead of a single point location for a well site, a uniform grid of points containing sediment (inside valid regions of the total sediment thickness grid) are backtracked to obtain gridded paleo water depths through time.
+The ``paleo_bathymetry`` module has similar options to the ``backtrack`` module. Such as options for the present day grids containing age, bathymetry, crustal thickness and sediment thickness.
+And options for the dynamic topography and sea level models. And the defaults for those options are the same as the ``backtrack`` module (except for the default *lithology* - see below).
+For example, the ``paleo_bathymetry`` module defaults to the same :ref:`present-day ETOPO1 bathymetry grid <pybacktrack_present_day_tectonic_subsidence>`.
+
+However the ``paleo_bathymetry`` module differs from the ``backtrack`` module in that, instead of a single point location for a drill site, a uniform grid of points containing sediment
+(inside valid regions of the total sediment thickness grid) are backtracked to obtain gridded paleo water depths through time.
 
 .. note:: Sediment grid points near trenches are excluded by default to avoid deep bathymetry areas near trenches appearing in the reconstructed grids.
           Each trench has an exclusion distance on the subducting plate side (typically 60 kms) and an exlusion distance on the overriding plate side (typically 0 kms).
@@ -106,7 +110,7 @@ Except that, instead of a single point location for a well site, a uniform grid 
           (for example, in the :ref:`paleo bathymetry example above <pybacktrack_paleo_bathymetry_example>`).
 
 As with regular backtracking, those sediment grid points lying inside the age grid (valid regions) use an oceanic subsidence model and those outside use a continental rifting model.
-However, in lieu of explicitly providing the rift start and end ages (as for a 1D well site) each 2D grid point samples the builtin rift start/end age grids.
+However, in lieu of explicitly providing the rift start and end ages (as for a 1D drill site) each 2D grid point samples the builtin rift start/end age grids.
 Each grid point is also assigned a plate ID (using static polygons) and reconstructed back through time.
 
 Each grid point has a single lithology, with an initial compacted thickness sampled from the total sediment thickness grid at present day that is progressively decompacted back through geological time.
