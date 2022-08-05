@@ -42,7 +42,7 @@ import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
 from pybacktrack.dynamic_topography import DynamicTopography
-from pybacktrack.lithology import read_lithologies_files, DEFAULT_BASE_LITHOLOGY_NAME
+from pybacktrack.lithology import read_lithologies_files
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
 from pybacktrack.util.call_system_command import call_system_command
@@ -52,6 +52,12 @@ import pygplates
 import sys
 import warnings
 
+
+# Default name of the lithology of all sediment (the total sediment thickness at all sediment locations
+# consists of a single lithology). This lithology is the average of the ocean floor sediment.
+# This differs from the base lithology of drill sites where the undrilled portions are usually
+# below the CCD where shale dominates.
+DEFAULT_LITHOLOGY_NAME = 'Average_ocean_floor_sediment'
 
 # Default grid spacing (in degrees) when generating uniform lon/lat spacing of sample points.
 DEFAULT_GRID_SPACING_DEGREES = 1.0
@@ -93,7 +99,7 @@ def reconstruct_backtrack_bathymetry(
         static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,
         dynamic_topography_model=None,
         sea_level_model=None,
-        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        lithology_name=DEFAULT_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
         exclude_distances_to_trenches_kms=None,
         region_plate_ids=None,
@@ -115,7 +121,7 @@ def reconstruct_backtrack_bathymetry(
         static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
-        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        lithology_name=pybacktrack.DEFAULT_PALEO_BATHYMETRY_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         exclude_distances_to_trenches_kms=None,\
         region_plate_ids=None,\
@@ -179,10 +185,10 @@ def reconstruct_backtrack_bathymetry(
         Used to obtain sea levels relative to present day.
         Can be either the name of a bundled sea level model, or a sea level filename.
         Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
-    base_lithology_name : string, optional
+    lithology_name : string, optional
         Lithology name of the all sediment (must be present in lithologies file).
-        The total sediment thickness at all sediment locations is consists of a single lithology.
-        Defaults to ``Shale``.
+        The total sediment thickness at all sediment locations consists of a single lithology.
+        Defaults to ``Average_ocean_floor_sediment``.
     ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
@@ -261,8 +267,8 @@ def reconstruct_backtrack_bathymetry(
     # So if the first and second files have the same lithology then the second lithology is used.
     lithologies = read_lithologies_files(lithology_filenames)
 
-    # All sediment is represented as a single lithology (of total sediment thickness) using the base lithology.
-    base_lithology_components = [(base_lithology_name, 1.0)]
+    # All sediment is represented as a single lithology (of total sediment thickness).
+    lithology_components = [(lithology_name, 1.0)]
 
     # Sample the total sediment thickness grid.
     grid_samples = _read_grid(input_points, total_sediment_thickness_filename, force_positive=True)
@@ -422,7 +428,7 @@ def reconstruct_backtrack_bathymetry(
                 time_range,
                 ocean_age_to_depth_model,
                 lithologies,
-                base_lithology_components,
+                lithology_components,
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
@@ -433,7 +439,7 @@ def reconstruct_backtrack_bathymetry(
                 continental_grid_samples,
                 time_range,
                 lithologies,
-                base_lithology_components,
+                lithology_components,
                 dynamic_topography_model,
                 sea_levels,
                 rotation_filenames,
@@ -460,7 +466,7 @@ def reconstruct_backtrack_bathymetry(
                     time_range=time_range,
                     ocean_age_to_depth_model=ocean_age_to_depth_model,
                     lithologies=lithologies,
-                    base_lithology_components=base_lithology_components,
+                    lithology_components=lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
@@ -485,7 +491,7 @@ def reconstruct_backtrack_bathymetry(
                     _reconstruct_backtrack_continental_bathymetry,
                     time_range=time_range,
                     lithologies=lithologies,
-                    base_lithology_components=base_lithology_components,
+                    lithology_components=lithology_components,
                     dynamic_topography_model=dynamic_topography_model,
                     sea_levels=sea_levels,
                     rotation_filenames=rotation_filenames,
@@ -514,7 +520,7 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         time_range,
         ocean_age_to_depth_model,
         lithologies,
-        base_lithology_components,
+        lithology_components,
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
@@ -554,13 +560,13 @@ def _reconstruct_backtrack_oceanic_bathymetry(
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition at 'age' Ma (and finished at present day).
         well = Well()
-        well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+        well.add_compacted_unit(0.0, age, 0.0, present_day_total_sediment_thickness, lithology_components, lithologies)
         # If we're reconstructing to times prior to 'age' then add an extra stratigraphic layer with zero thickness to cover the period prior
         # to ocean crust formation at the mid-ocean ridge. We won't actually reconstruct prior to crust formation, but having this zero thickness layer
         # means we don't have to test if None is returned by 'well.decompact(decompaction_time)' for special cases like an age grid value of zero
         # (where we'd still like to create a bathmetry value at present day). Also this extra layer is similar to how it's done with continental crust. 
         if time_range[-1] >= age:
-            well.add_compacted_unit(age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+            well.add_compacted_unit(age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
@@ -639,7 +645,7 @@ def _reconstruct_backtrack_continental_bathymetry(
         continental_grid_samples,
         time_range,
         lithologies,
-        base_lithology_components,
+        lithology_components,
         dynamic_topography_model,
         sea_levels,
         rotation_filenames,
@@ -696,14 +702,14 @@ def _reconstruct_backtrack_continental_bathymetry(
         # Create a well at the current grid sample location with a single stratigraphic layer of total sediment thickness
         # that began sediment deposition when rifting began (and finished at present day).
         well = Well()
-        well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+        well.add_compacted_unit(0.0, rift_start_age, 0.0, present_day_total_sediment_thickness, lithology_components, lithologies)
         # If we're reconstructing to times prior to rifting then add an extra stratigraphic layer with zero thickness to cover the period prior to rifting.
         # Having this zero thickness layer prevents us from prematurely ending bathymetry reconstruction for times prior to rifting by ensuring
         # 'well.decompact(decompaction_time)' does not return None (when 'decompaction_time >= rift_start_age').
         # The tectonic subsidence will be zero during this time period.
         # It also allows us to easily see other effects prior to sediment deposition (eg, sea level, dynamic topography). 
         if time_range[-1] >= rift_start_age:
-            well.add_compacted_unit(rift_start_age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, base_lithology_components, lithologies)
+            well.add_compacted_unit(rift_start_age, time_range[-1] + 1, present_day_total_sediment_thickness, present_day_total_sediment_thickness, lithology_components, lithologies)
 
         # Unload the present day sediment to get unloaded present day water depth.
         # Apply an isostatic correction to the total sediment thickness (we decompact the well at present day to find this).
@@ -1251,7 +1257,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,
         dynamic_topography_model=None,
         sea_level_model=None,
-        base_lithology_name=DEFAULT_BASE_LITHOLOGY_NAME,
+        lithology_name=DEFAULT_LITHOLOGY_NAME,
         ocean_age_to_depth_model=age_to_depth.DEFAULT_MODEL,
         exclude_distances_to_trenches_kms=None,
         region_plate_ids=None,
@@ -1275,7 +1281,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         static_polygon_filename=pybacktrack.bundle_data.BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME,\
         dynamic_topography_model=None,\
         sea_level_model=None,\
-        base_lithology_name=pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME,\
+        lithology_name=pybacktrack.DEFAULT_PALEO_BATHYMETRY_LITHOLOGY_NAME,\
         ocean_age_to_depth_model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL,\
         exclude_distances_to_trenches_kms=None,\
         region_plate_ids=None,\
@@ -1343,10 +1349,10 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         Used to obtain sea levels relative to present day.
         Can be either the name of a bundled sea level model, or a sea level filename.
         Bundled sea level models include ``Haq87_SealevelCurve`` and ``Haq87_SealevelCurve_Longterm``.
-    base_lithology_name : string, optional
+    lithology_name : string, optional
         Lithology name of the all sediment (must be present in lithologies file).
-        The total sediment thickness at all sediment locations is consists of a single lithology.
-        Defaults to ``Shale``.
+        The total sediment thickness at all sediment locations consists of a single lithology.
+        Defaults to ``Average_ocean_floor_sediment``.
     ocean_age_to_depth_model : {pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18, pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007, pybacktrack.AGE_TO_DEPTH_MODEL_GDH1} or function, optional
         The model to use when converting ocean age to depth at well location
         (if on ocean floor - not used for continental passive margin).
@@ -1405,7 +1411,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         static_polygon_filename,
         dynamic_topography_model,
         sea_level_model,
-        base_lithology_name,
+        lithology_name,
         ocean_age_to_depth_model,
         exclude_distances_to_trenches_kms,
         region_plate_ids,
@@ -1535,11 +1541,11 @@ def main():
                  DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
     
     parser.add_argument(
-        '-b', '--base_lithology_name', type=str, default=DEFAULT_BASE_LITHOLOGY_NAME,
-        metavar='base_lithology_name',
+        '-b', '--lithology_name', type=str, default=DEFAULT_LITHOLOGY_NAME,
+        metavar='lithology_name',
         help='Lithology name of the all sediment (must be present in lithologies file). '
-             'The total sediment thickness at all sediment locations is consists of a single lithology (in this workflow). '
-             'Defaults to "{0}".'.format(DEFAULT_BASE_LITHOLOGY_NAME))
+             'The total sediment thickness at all sediment locations consists of a single lithology (in this workflow). '
+             'Defaults to "{0}".'.format(DEFAULT_LITHOLOGY_NAME))
     
     parser.add_argument(
         '-m', '--ocean_age_to_depth_model', nargs='+', action=age_to_depth.ArgParseAgeModelAction,
@@ -1731,7 +1737,7 @@ def main():
         args.static_polygon_filename,
         dynamic_topography_model,
         sea_level_model,
-        args.base_lithology_name,
+        args.lithology_name,
         args.ocean_age_to_depth_model,
         args.exclude_distances_to_trenches_kms,
         args.region_plate_ids,

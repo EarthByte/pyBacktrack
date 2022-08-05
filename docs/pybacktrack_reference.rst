@@ -471,11 +471,21 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY``
 - ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH``
 
+Paleobathymetry
+^^^^^^^^^^^^^^^
+
+``pybacktrack.DEFAULT_PALEO_BATHYMETRY_LITHOLOGY_NAME``
+  Default name of the lithology of all sediment (for paleo bathymetry gridding the total sediment thickness at all
+  sediment locations consists of a single lithology). This lithology is the average of the ocean floor sediment.
+  This differs from the base lithology of drill sites where the undrilled portions are usually below the
+  Carbonate Compensation Depth (CCD) where shale dominates.
+
 Lithology
 ^^^^^^^^^
 
 ``pybacktrack.DEFAULT_BASE_LITHOLOGY_NAME``
-  Default name of the lithology of the stratigraphic unit at the base of the well.
+  Default name of the lithology of the stratigraphic unit at the base of a drill site (the undrilled portion).
+  This lithology is shale since the undrilled portions are usually below the Carbonate Compensation Depth (CCD) where shale dominates.
 
 Oceanic subsidence
 ^^^^^^^^^^^^^^^^^^

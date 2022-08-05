@@ -41,7 +41,7 @@ import warnings
 
 
 DEFAULT_BASE_LITHOLOGY_NAME = 'Shale'
-"""Default name of the lithology of the stratigraphic unit at the base of the well."""
+"""Default name of the lithology of the stratigraphic unit at the base of the well (the undrilled portion)."""
 
 
 class Lithology(object):

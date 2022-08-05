@@ -47,7 +47,8 @@ from .paleo_bathymetry import \
     reconstruct_backtrack_bathymetry as reconstruct_paleo_bathymetry, \
     generate_lon_lat_points, \
     write_bathymetry_grids as write_paleo_bathymetry_grids, \
-    reconstruct_backtrack_bathymetry_and_write_grids as reconstruct_paleo_bathymetry_grids
+    reconstruct_backtrack_bathymetry_and_write_grids as reconstruct_paleo_bathymetry_grids, \
+    DEFAULT_LITHOLOGY_NAME as DEFAULT_PALEO_BATHYMETRY_LITHOLOGY_NAME
 
 from .lithology import \
     Lithology, \
@@ -146,6 +147,7 @@ __all__ = [
     'generate_lon_lat_points',
     'write_paleo_bathymetry_grids',
     'reconstruct_paleo_bathymetry_grids',
+    'DEFAULT_PALEO_BATHYMETRY_LITHOLOGY_NAME',
     # From lithology module...
     'Lithology',
     'read_lithologies_file',
