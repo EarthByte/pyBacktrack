@@ -215,6 +215,49 @@ class DynamicTopography(object):
 
     
     @staticmethod
+    def get_bundled_model(dynamic_topography_model_name):
+        """get_bundled_model(dynamic_topography_model_name)
+        Get the bundled model files for the specified dynamic topography model name.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_name : str
+            Name of a bundled dynamic topography model.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18`` and ``KM16``.
+        
+        Returns
+        -------
+        3-tuple of (grid_list_filename, static_polygon_filename, rotation_filenames)
+            The bundled dynamic topography model files (see first three parameters of :meth:`pybacktrack.DynamicTopography.__init__`).
+            This consists of a 3-tuple of:
+            
+            - Filename of the grid list file.
+            - Filename of the static polygons file.
+            - List of rotation filenames.
+        
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_name`` is not the name of a bundled dynamic topography model.
+        
+        Notes
+        -----
+        The returned model information is obtained from ``pybacktrack.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS``
+        (see :ref:`pybacktrack_reference_bundle_data`).
+
+        .. versionadded:: 1.5
+        """
+        
+        if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
+            raise ValueError("'dynamic_topography_model_name' should be one of {0}.".format(
+                ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        
+        dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model_name]
+        dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model
+
+        return dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames
+    
+    @staticmethod
     def create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None):
         """create_from_bundled_model(dynamic_topography_model_name, longitude, latitude, age=None)
         Create a DynamicTopography instance from a bundled dynamic topography model name.
@@ -250,12 +293,8 @@ class DynamicTopography(object):
            Added ability to specify a list of point locations (as an alternative to specifying a single location).
         """
         
-        if dynamic_topography_model_name not in pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES:
-            raise ValueError("'dynamic_topography_model_name' should be one of {0}.".format(
-                ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
-        
-        dynamic_topography_model = pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS[dynamic_topography_model_name]
-        dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = dynamic_topography_model
+        # Get the bundled model files.
+        dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames = DynamicTopography.get_bundled_model(dynamic_topography_model_name)
         
         return DynamicTopography(
             dynamic_topography_list_filename, dynamic_topography_static_polygon_filename, dynamic_topography_rotation_filenames,
