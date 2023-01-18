@@ -391,6 +391,10 @@ dynamic topography since the start of rifting.
 
 These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
+* *Braz et al., 2021* - `Modelling the role of dynamic topography and eustasy in the evolution of the Great Artesian Basin <https://doi.org/10.1111/bre.12606>`_
+
+  * `D10_gmcm9 <http://portal.gplates.org/dynamic_topography_cesium/?model=gmcm9&name=D10_gmcm9>`_
+
 * *Cao et al., 2019* - `The interplay of dynamic topography and eustasy on continental flooding in the late Paleozoic <https://doi.org/10.1016/j.tecto.2019.04.018>`_
 
   * `AY18 <http://portal.gplates.org/dynamic_topography_cesium/?model=gld324&name=AY18>`_

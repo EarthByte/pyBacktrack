@@ -16,6 +16,12 @@ tested against the static polygons, using 'pybacktrack/supplementary/test_multip
 to make sure we associated the correct static polygons with each model.
 
 
+Braz et al., 2021
+-----------------
+Braz, C., Zahirovic, S., Salles, T., Flament, N., Harrington, L., & Müller, R. D. (2021). Modelling the role of dynamic topography and eustasy in the evolution of the Great Artesian Basin. Basin Research. doi:10.1111/bre.12606.
+
+Models: D10_gmcm9.
+
 
 Cao et al., 2019
 ----------------
