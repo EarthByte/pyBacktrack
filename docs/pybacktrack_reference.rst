@@ -315,6 +315,30 @@ Detail
    :special-members: __init__
 
 
+.. _pybacktrack_reference_converting_stratigraphic_depth_to_age:
+
+Converting stratigraphic depth to age
+-------------------------------------
+
+Convert stratigraphic depths (metres) to age (Ma) using an depth-to-age model.
+
+Summary
+^^^^^^^
+
+:func:`pybacktrack.convert_stratigraphic_depth_to_age` converts a single stratigraphic depth to an age.
+
+:func:`pybacktrack.convert_stratigraphic_depth_to_age_files` converts a sequence of stratigraphic depths (read from an input file) to ages
+(and writes both ages and depths, and any lithologies in the input file, to an output file).
+"""
+
+Detail
+^^^^^^
+
+.. autofunction:: pybacktrack.convert_stratigraphic_depth_to_age
+
+.. autofunction:: pybacktrack.convert_stratigraphic_depth_to_age_files
+
+
 .. _pybacktrack_reference_utilities:
 
 Utilities

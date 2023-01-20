@@ -157,6 +157,33 @@ using ``-w age-depth-model.txt 0 1``.
 
 .. note:: Use ``python -m pybacktrack.age_to_depth_cli --help`` to see a description of all command-line options.
 
+.. _pybacktrack_running_the_stratigraphic_depth_to_age_script:
+
+stratigraphic_depth_to_age
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``stratigraphic_depth_to_age`` module is used to convert stratigraphic depths to ages using a depth-to-age model.
+
+Here the depth-to-age model is specified as a file containing a column of ages and a column of depths that forms a piecewise linear function of age with depth
+(a model where age is a function of depth ``age=function(depth)``).
+Then another file specifies the input stratigraphic depths that you wish to convert to ages.
+Finally a third file is created containing the input depths and output ages, where each interpolated output age is a result of querying the piecewise linear function using the input depth:
+
+.. code-block:: python
+
+    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/test_data/Site1089B_age_depth.txt -- pybacktrack_examples/test_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
+
+Here the ``age=function(depth)`` model is specified with the ``-m`` option, where the ``pybacktrack_examples/test_data/Site1089B_age_depth.txt`` file
+contains a column of ages and a column of depths (by default age is the first column and depth the second but you can optionally choose any column for either).
+
+The input stratigraphic depths are in ``pybacktrack_examples/test_data/Site1089B_strat_depth.txt`` and must be in the *first* column.
+Any text after the depth value in a row (eg, lithologies) is copied to the output file. Also any metadata at the top of the file is copied to the output file.
+
+The interpolated ages and associated depths are written to the output file ``Site1089B_age_strat_depth.txt``.
+The first column contains (interpolated) age and the second column contains depth. To reverse this order you can use the ``-r`` option.
+
+.. note:: Use ``python -m pybacktrack.stratigraphic_depth_to_age_cli --help`` to see a description of all command-line options.
+
 .. _pybacktrack_running_the_interpolate_script:
 
 interpolate
@@ -165,26 +192,25 @@ interpolate
 The ``interpolate`` module can perform linear interpolation of any piecewise linear function ``y=f(x)``.
 As such it can be used for any type of data.
 
-However, for pyBacktrack, it is typically used to interpolate a model where age is a function of depth (``age=function(depth)``).
-Here the age-depth model is specified as a file containing a column of depths and a column of ages that forms a piecewise linear function of age with depth.
-Then another file specifies the input depths (which are typically stratigraphic layer boundaries).
-Finally a third file is created containing the output ages, where each interpolated age is a result of querying the piecewise linear function using a depth:
+Here the ``y=f(x)`` model is specified as a file containing a column of *x* values and a column of *y* values that forms a piecewise linear function of *y* with *x*.
+Then another file specifies the input *x* values. Finally a third file is created containing the input *x* values and the output *y* values,
+where each interpolated output *y* value is a result of querying the piecewise linear function using an input *x* value:
 
 .. code-block:: python
 
-    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt
+    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c function_y_of_x.txt -- input_x_values.txt output_x_y_values.txt
 
-Here the ``age=function(depth)`` model is specified with the ``-c``, ``-cx`` and ``-cy`` options.
-The ``-c`` option specifies the ``pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt`` file containing a column of ages and a column of depths.
+Here the ``y=f(x)`` model is specified with the ``-c``, ``-cx`` and ``-cy`` options.
+The ``-c`` option specifies the file ``function_y_of_x.txt`` containing a column of ``y`` values followed by a column of ``x`` values.
 The ``-cx`` and ``-cy`` options specify the *x* and *y* columns of the model function ``y=f(x)``.
-These default to ``0`` and ``1`` respectively. However since age (*y*) happens to be in the first column (``0``) and depth (*x*) in the second column (``1``)
-we must swap the default order of column indices using ``-cx 1 -cy 0``.
+These default to ``0`` and ``1`` respectively. However if *y* happens to be in the first column (``0``) and *x* in the second column (``1``)
+then you can swap the default order of column indices using ``-cx 1 -cy 0``.
 
-The input depths are in ``pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt`` in the first (and only) column.
-If they had been in another column, for example if there were other unused columns, then we would need to specify the depth column with the ``-ix`` option.
+The input ``x`` values are in ``input_x_values.txt`` in the first column (by default).
+If they had been in another column, for example if there were other unused columns, then we would need to specify the *x* column with the ``-ix`` option.
 
-The output depths and (interpolated) ages are written to the output file ``ODP-114-699_strat_boundaries_depth_age.txt``.
-The first column contains depth and the second column contains (interpolated) age. To reverse this order you can use the ``-r`` option.
+The output (interpolated) *y* values (and associated *x* values) are written to the output file ``output_x_y_values.txt``.
+The first column contains the *x* values and the second column contains the (interpolated) *y* values. To reverse this order you can use the ``-r`` option.
 
 .. note:: Use ``python -m pybacktrack.util.interpolate_cli --help`` to see a description of all command-line options.
 
@@ -297,6 +323,33 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
 
+stratigraphic_depth_to_age
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following Python source code (using :ref:`these functions <pybacktrack_reference_converting_stratigraphic_depth_to_age>`):
+
+.. code-block:: python
+
+    import pybacktrack
+    
+    # Read the age=f(depth) function, where 'x' is depth and 'y' is age (in the returned function y=f(x)).
+    age_column_index = 0    # age is in the first column
+    depth_column_index = 1  # depth is in the second column
+    # Ignore the x (depth) and y (age) values read from file by using '_'.
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/test_data/Site1089B_age_depth.txt', depth_column_index, age_column_index)
+    
+    # Convert depth values in input file to age and depth values in output file.
+    pybacktrack.convert_stratigraphic_depth_to_age_files(
+        'pybacktrack_examples/test_data/Site1089B_strat_depth.txt',
+        'Site1089B_age_strat_depth.txt',
+        depth_to_age_model)
+
+...is equivalent to :ref:`running the stratigraphic depth-to-age script example <pybacktrack_running_the_stratigraphic_depth_to_age_script>`:
+
+.. code-block:: python
+
+    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/test_data/Site1089B_age_depth.txt -- pybacktrack_examples/test_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
+
 interpolate
 ^^^^^^^^^^^
 
@@ -306,18 +359,18 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
     import pybacktrack
     
-    # Read the age-depth function age=function(depth) from age-depth curve file.
-    # Ignore the x (depth) and y (age) values read from file by using '_'.
-    age_depth_function, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt', 1, 0)
+    # Read the y=f(x) function from a 2-column file.
+    # Ignore the x and y values read from file by using '_'.
+    function_y_of_x, _, _ = pybacktrack.read_interpolate_function('function_y_of_x.txt', 1, 0)
     
-    # Convert x (depth) values in 1-column input file to x (depth) and y (age) values in 2-column output file.
+    # Convert x values in a 1-column input file to x and y values in a 2-column output file.
     pybacktrack.interpolate_file(
-        age_depth_function,
-        'pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt',
-        'ODP-114-699_strat_boundaries_depth_age.txt')
+        function_y_of_x,
+        'input_x_values.txt',
+        'output_x_y_values.txt')
 
 ...is equivalent to :ref:`running the interpolate script example <pybacktrack_running_the_interpolate_script>`:
 
 .. code-block:: python
 
-    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c pybacktrack_examples/test_data/ODP-114-699_age-depth-model.txt -- pybacktrack_examples/test_data/ODP-114-699_strat_boundaries.txt ODP-114-699_strat_boundaries_depth_age.txt
+    python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c function_y_of_x.txt -- input_x_values.txt output_x_y_values.txt

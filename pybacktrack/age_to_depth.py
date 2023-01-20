@@ -110,7 +110,7 @@ def convert_age_to_depth_files(
         model=DEFAULT_MODEL,
         age_column_index=0,
         reverse_output_columns=False):
-    """convert_age_to_depth_files(input_filename, output_filename, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL, age_column_index=0,reverse_output_columns=False)
+    """convert_age_to_depth_files(input_filename, output_filename, model=pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL, age_column_index=0, reverse_output_columns=False)
     Converts age to depth by reading `age` rows from input file and writing rows containing both `age` and `depth` to output file.
     
     Parameters
@@ -137,6 +137,15 @@ def convert_age_to_depth_files(
     """
     
     with open(input_filename, 'r') as input_file, open(output_filename, 'w') as output_file:
+
+        # Write the column header.
+        if reverse_output_columns:
+            column_header = 'depth', 'age'
+        else:
+            column_header = 'age', 'depth'
+        output_file.write('{}\n'.format(
+                '# {0:<20}{1:<20}'.format(*column_header).rstrip(' ')))
+
         for line_number, line in enumerate(input_file):
             
             # Make line number 1-based instead of 0-based.
@@ -174,7 +183,8 @@ def convert_age_to_depth_files(
             else:
                 output_row = age, depth
             
-            output_file.write('{0:.2f}\t{1:.2f}\n'.format(*output_row))
+            output_file.write('  {}\n'.format(
+                    '{0:<20.3f}{1:<20.3f}'.format(*output_row).rstrip(' ')))
 
 
 #########################################################################################
@@ -332,8 +342,8 @@ def main():
         Writes text data to output file where each line contains age (in Ma) and depth (in metres), optionally reversed.
         
         The age-to-depth model can be chosen using the '-m' option.
-        It can be the name of an in-built age model:{0}
-        ...defaults to {1}.
+        It can be the name of an in-built age model:{}
+        ...defaults to {}.
         Or it can be an age model filename followed by two integers representing the age and depth column indices,
         where the file should contain at least two columns (one containing the age and the other the depth).
         
@@ -341,7 +351,7 @@ def main():
         NOTE: Separate the positional and optional arguments with '--' (workaround for bug in argparse module).
         For example...
 
-        python -m pybacktrack.age_to_depth_cli -m {1} age_points.xy depth_points.xy
+        python -m pybacktrack.age_to_depth_cli -m GDH1 -- age_points.xy age_depth_points.xy
         """.format(
             ''.join('\n\n        {0}: {1}.\n'.format(model_name, model_desc)
                     for _, model_name, model_desc in ALL_MODELS),
@@ -395,7 +405,7 @@ def main():
     parser.add_argument(
         'output_filename', type=argparse_unicode,
         metavar='output_filename',
-        help='The output filename containing the converted "depth" values.')
+        help='The output filename containing the converted "depth" values (and associated age values).')
     
     # Parse command-line options.
     args = parser.parse_args()

@@ -75,6 +75,10 @@ from .age_to_depth import \
     MODEL_RHCW18 as AGE_TO_DEPTH_MODEL_RHCW18, \
     DEFAULT_MODEL as AGE_TO_DEPTH_DEFAULT_MODEL
 
+from .stratigraphic_depth_to_age import \
+    convert_stratigraphic_depth_to_age, \
+    convert_stratigraphic_depth_to_age_files
+
 from .rifting import \
     estimate_beta as estimate_rift_beta, \
     total_subsidence as total_rift_subsidence, \
@@ -170,6 +174,9 @@ __all__ = [
     'AGE_TO_DEPTH_MODEL_CROSBY_2007',
     'AGE_TO_DEPTH_MODEL_RHCW18',
     'AGE_TO_DEPTH_DEFAULT_MODEL',
+    # From stratigraphic_depth_to_age module...
+    'convert_stratigraphic_depth_to_age',
+    'convert_stratigraphic_depth_to_age_files',
     # From rifting module...
     'estimate_rift_beta',
     'total_rift_subsidence',

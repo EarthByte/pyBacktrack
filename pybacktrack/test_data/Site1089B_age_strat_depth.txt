@@ -1,0 +1,65 @@
+#Site1089B
+#Date: 13/05/20
+#Author: Adriana Dutkiewicz
+#Age-depth from NSB (Gradstein 2012), depth and lithology from ODP Proceedings volume graphic logs
+
+# SiteLongitude = 9.8941
+# SiteLatitude = -40.9364
+# SurfaceAge = 0
+
+# Depth_base_(mbsf)	Lithology_and_proportions
+
+# age                 depth
+  0.027               4.800               Coccolith_ooze 0.2 Diatomite 0.3 Mud 0.5
+  0.056               10.000              Coccolith_ooze 0.5 Diatomite 0.15 Mud 0.35
+  0.081               14.300              Coccolith_ooze 0.5 Diatomite 0.15 Mud 0.35
+  0.113               20.000              Coccolith_ooze 0.5 Diatomite 0.15 Mud 0.35
+  0.159               23.800              Coccolith_ooze 0.5 Diatomite 0.15 Mud 0.35
+  0.195               30.000              Coccolith_ooze 0.5 Diatomite 0.25 Mud 0.25
+  0.237               33.300              Coccolith_ooze 0.5 Diatomite 0.25 Mud 0.25
+  0.308               40.000              Diatomite 0.33 Mud 0.67
+  0.319               42.800              Diatomite 0.33 Mud 0.67
+  0.370               50.000              Coccolith_ooze 0.25 Diatomite 0.25 Mud 0.5
+  0.384               52.300              Coccolith_ooze 0.25 Diatomite 0.25 Mud 0.5
+  0.425               60.000              Coccolith_ooze 0.5 Diatomite 0.25 Mud 0.25
+  0.435               61.800              Coccolith_ooze 0.5 Diatomite 0.25 Mud 0.25
+  0.448               63.500              Coccolith_ooze 1
+  0.458               65.000              Diatomite 0.5 Mud 0.5
+  0.467               66.200              Coccolith_ooze 1
+  0.494               70.000              Diatomite 0.5 Mud 0.5
+  0.503               71.300              Diatomite 0.5 Mud 0.5
+  0.565               80.000              Coccolith_ooze 0.4 Mud 0.3 Diatomite 0.3
+  0.571               80.800              Coccolith_ooze 0.4 Mud 0.3 Diatomite 0.3
+  0.637               90.000              Diatomite 0.2 Coccolith_ooze 0.5 Mud 0.3
+  0.639               90.300              Diatomite 0.2 Coccolith_ooze 0.5 Mud 0.3
+  0.708               100.000             Mud 0.5 Diatomite 0.25 Coccolith_ooze 0.25
+  0.775               109.300             Mud 0.5 Diatomite 0.25 Coccolith_ooze 0.25
+  0.780               110.000             Mud 0.4 Diatomite 0.3 Coccolith_ooze 0.3
+  0.851               120.000             Mud 0.4 Diatomite 0.3 Coccolith_ooze 0.3
+  0.910               128.300             Mud 0.4 Diatomite 0.3 Coccolith_ooze 0.3
+  0.923               130.000             Mud 0.6 Diatomite 0.3 Coccolith_ooze 0.1
+  0.994               140.000             Mud 0.6 Diatomite 0.3 Coccolith_ooze 0.1
+  1.046               147.300             Mud 0.6 Diatomite 0.3 Coccolith_ooze 0.1
+  1.065               150.000             Coccolith_ooze 0.4 Mud 0.4 Diatomite 0.2
+  1.137               160.000             Coccolith_ooze 0.4 Mud 0.4 Diatomite 0.2
+  1.249               166.300             Coccolith_ooze 0.4 Mud 0.4 Diatomite 0.2
+  1.282               170.000             Mud 0.6 Diatomite 0.15 Coccolith_ooze 0.25
+  1.334               175.800             Mud 0.6 Diatomite 0.15 Coccolith_ooze 0.25
+  1.371               180.000             Diatomite 0.27 Mud 0.73
+  1.418               185.300             Diatomite 0.27 Mud 0.73
+  1.460               190.000             Diatomite 0.25 Mud 0.65 Coccolith_ooze 0.1
+  1.503               194.800             Diatomite 0.25 Mud 0.65 Coccolith_ooze 0.1
+  1.549               200.000             Diatomite 0.3 Coccolith_ooze 0.3 Mud 0.4
+  1.587               204.300             Diatomite 0.3 Coccolith_ooze 0.3 Mud 0.4
+  1.718               210.000             Mud 0.6 Diatomite 0.1 Coccolith_ooze 0.3
+  1.767               213.800             Mud 0.6 Diatomite 0.1 Coccolith_ooze 0.3
+  1.854               220.000             Diatomite 0.35 Mud 0.45 Coccolith_ooze 0.2
+  1.900               223.300             Diatomite 0.35 Mud 0.45 Coccolith_ooze 0.2
+  1.980               230.000             Mud 0.8 Coccolith_ooze 0.1 Mud 0.1
+  1.980               232.800             Mud 0.8 Coccolith_ooze 0.1 Mud 0.1
+  1.980               240.000             Diatomite 0.35 Coccolith_ooze 0.1 Mud 0.55
+  1.980               242.300             Diatomite 0.35 Coccolith_ooze 0.1 Mud 0.55
+  1.980               250.000             Diatomite 0.4 Mud 0.6
+  1.980               257.900             Diatomite 0.4 Mud 0.6
+  1.980               260.000             Diatomite 0.29 Mud 0.71
+  1.980               264.900             Diatomite 0.29 Mud 0.71
