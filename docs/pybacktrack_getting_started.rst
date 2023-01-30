@@ -264,7 +264,7 @@ or any :ref:`other examples <pybacktrack_overview>` in this documentation. For e
 
 .. code-block:: python
 
-    python3 -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
+    python3 -m pybacktrack.backtrack_cli -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
 If you wish to run the `example notebooks <https://github.com/EarthByte/pyBacktrack/tree/master/pybacktrack/notebooks>`_
 then there is a ``notebook.sh`` script to start a Jupyter notebook server in the running docker container:
@@ -296,7 +296,7 @@ Once :ref:`installed <pybacktrack_installation>`, ``pybacktrack`` is available t
 
 The following example is used to demonstrate both approaches. It backtracks an ocean drill site and saves the output to a text file by:
 
-- reading the ocean drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``,
+- reading the ocean drill site file ``pybacktrack_examples/example_data/ODP-114-699-Lithology.txt``,
 
   .. note:: | This file is part of the :ref:`example data <pybacktrack_install_examples>`.
             | However if you have your own ocean drill site file then you can substitute it in the example below if you want.
@@ -341,7 +341,7 @@ The backtracking example can now be demonstrated by running the script as:
 .. code-block:: python
 
     python -m pybacktrack.backtrack_cli \
-        -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
+        -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
@@ -365,7 +365,7 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     import pybacktrack
     
     # Input and output filenames.
-    input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
+    input_well_filename = 'pybacktrack_examples/example_data/ODP-114-699-Lithology.txt'
     amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
     decompacted_output_filename = 'ODP-114-699_backtrack_decompacted.txt'
     

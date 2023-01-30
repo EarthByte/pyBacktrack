@@ -30,9 +30,9 @@ def install(
     is chosen to make collision less likely / problematic.
     """
 
-    # We're using the test data as the example data.
-    test_data_src_path = pkg_resources.resource_filename('pybacktrack', 'test_data')
-    test_data_dest_path = os.path.join(dest_path, 'test_data')
+    # The example data source and destination paths.
+    example_data_src_path = pkg_resources.resource_filename('pybacktrack', 'example_data')
+    example_data_dest_path = os.path.join(dest_path, 'example_data')
 
     # The notebooks are the examples.
     notebooks_src_path = pkg_resources.resource_filename('pybacktrack', 'notebooks')
@@ -40,5 +40,5 @@ def install(
 
     # The distutils.dir_util.copy_tree function works very similarly to shutil.copytree except that
     # dir_util.copy_tree will just overwrite a directory that exists instead of raising an exception.
-    dir_util.copy_tree(test_data_src_path, test_data_dest_path, preserve_mode=1, preserve_times=1, preserve_symlinks=1, update=0, verbose=1, dry_run=0)
+    dir_util.copy_tree(example_data_src_path, example_data_dest_path, preserve_mode=1, preserve_times=1, preserve_symlinks=1, update=0, verbose=1, dry_run=0)
     dir_util.copy_tree(notebooks_src_path, notebooks_dest_path, preserve_mode=1, preserve_times=1, preserve_symlinks=1, update=0, verbose=1, dry_run=0)

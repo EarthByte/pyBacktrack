@@ -1,0 +1,15 @@
+# SiteLongitude = -46.7837
+# SiteLatitude = -50.8713
+# RiftStartAge = 160
+# RiftEndAge = 120
+# SurfaceAge = 0 
+
+## bottom_age bottom_depth lithology
+   1.5        10.0         Shaley_sand 1
+   55.8       30.0         Clay 1
+   59.9       68.0         Diatomite 0.7 Clay 0.3
+   62.2       90.0         Clay 1
+   77.4       142.0        Coccolith_ooze 0.7 Biogenic_sand 0.3 
+   86.4       154.0        Clay 1
+   113.1      324.0        Coccolith_ooze 0.3 Clay 0.7
+   122.3      469.5        Clay 1

@@ -46,7 +46,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
 .. code-block:: python
 
     python -m pybacktrack.backstrip_cli \
-        -w pybacktrack_examples/test_data/sunrise_lithology.txt \
+        -w pybacktrack_examples/example_data/sunrise_lithology.txt \
         -l primary extended \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth lithology \
         -slm Haq87_SealevelCurve_Longterm \
@@ -61,7 +61,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
     import pybacktrack
     
     # Input and output filenames.
-    input_well_filename = 'pybacktrack_examples/test_data/sunrise_lithology.txt'
+    input_well_filename = 'pybacktrack_examples/example_data/sunrise_lithology.txt'
     amended_well_output_filename = 'sunrise_backstrip_amended.txt'
     decompacted_output_filename = 'sunrise_backstrip_decompacted.txt'
     
@@ -89,7 +89,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
         # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
         ammended_well_output_filename=amended_well_output_filename)
 
-.. note:: The drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
+.. note:: The drill site file ``pybacktrack_examples/example_data/sunrise_lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
 
 .. _pybacktrack_backstrip_output:
 
@@ -100,7 +100,7 @@ For each stratigraphic layer in the input drill site file, ``backstrip`` can wri
 
 Running the :ref:`above example <pybacktrack_backstrip_example>` on the sunrise drill site:
 
-.. include:: ../pybacktrack/test_data/sunrise_lithology.txt
+.. include:: ../pybacktrack/example_data/sunrise_lithology.txt
    :literal:
 
 ...produces an :ref:`amended drill site output file <pybacktrack_backstrip_output_amended_drill_site>`,
@@ -114,6 +114,7 @@ Amended drill site output
 
 The amended drill site output file:
 
+.. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_amended.txt
    :literal:
 
@@ -130,6 +131,7 @@ Decompacted output
 
 The decompacted output file:
 
+.. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
 .. include:: ../pybacktrack/test_data/sunrise_backstrip_decompacted.txt
    :literal:
 

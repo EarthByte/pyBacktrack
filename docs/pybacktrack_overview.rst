@@ -25,7 +25,7 @@ other modules, into your own script. This also gives a finer granularity of cont
 
 The following two sections give an overview of both approaches.
 
-.. note:: | The input files used in the examples below are available in the example data.
+.. note:: | The input files used in the examples below (except :ref:`interpolate <pybacktrack_running_the_interpolate_script>`) are available in the example data.
           | Please ensure you have :ref:`installed the example data <pybacktrack_install_examples>` before running any of these examples.
 
 .. _pybacktrack_running_the_scripts_built_into_pybacktrack:
@@ -55,9 +55,9 @@ This example takes an ocean drill site as input and outputs a file containing a 
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
-...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
+...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/example_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
 the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-114-699_backtrack_decompacted.txt`` is the output file.
 
 There are other command-line options available to the ``backtrack`` module (use the ``--help`` option to list them) but they all have default values and
@@ -76,9 +76,9 @@ This example takes a passive margin site as input and outputs a file containing 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/example_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
 
-...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt``, the ``-l`` option specifies the
+...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/example_data/sunrise_lithology.txt``, the ``-l`` option specifies the
 lithology definitions, the ``-d`` option specifies the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file,
 and ``sunrise_backstrip_decompacted.txt`` is the output file.
 
@@ -129,12 +129,12 @@ This example takes an input file containing a column of ages, and outputs a file
 
 .. code-block:: python
 
-    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
+    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/example_data/ages.txt ages_and_depths.txt
 
-Here the input file ``pybacktrack_examples/test_data/test_ages.txt`` contains ages in the first (and only) column.
+Here the input file ``pybacktrack_examples/example_data/ages.txt`` contains ages in the first (and only) column.
 If they had been in another column, for example if there were other unused columns, then we would need to specify the age column with the ``-a`` option.
 
-The output file ``test_ages_and_depths.txt`` contains ages in the first column and depths in the second column.
+The output file ``ages_and_depths.txt`` contains ages in the first column and depths in the second column.
 To reverse this order you can use the ``-r`` option.
 
 There are three built-in age-to-depth ocean models:
@@ -171,12 +171,14 @@ Finally a third file is created containing the input depths and output ages, whe
 
 .. code-block:: python
 
-    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/test_data/Site1089B_age_depth.txt -- pybacktrack_examples/test_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
+    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/example_data/Site1089B_age_depth.txt -- pybacktrack_examples/example_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
 
-Here the ``age=function(depth)`` model is specified with the ``-m`` option, where the ``pybacktrack_examples/test_data/Site1089B_age_depth.txt`` file
-contains a column of ages and a column of depths (by default age is the first column and depth the second but you can optionally choose any column for either).
+Here the ``age=function(depth)`` model is specified with the ``-m`` option, where the ``pybacktrack_examples/example_data/Site1089B_age_depth.txt`` file
+contains a column of ages and a column of depths. By default, age is the first column and depth the second but you can optionally choose any column by specifying
+two integers representing the age and depth column indices in the ``-m`` option. For example, you can change ``-m pybacktrack_examples/example_data/Site1089B_age_depth.txt``
+to ``-m pybacktrack_examples/example_data/Site1089B_age_depth.txt 1 0`` to select the second column (index ``1``) for age and the first column (index ``0``) for depth.
 
-The input stratigraphic depths are in ``pybacktrack_examples/test_data/Site1089B_strat_depth.txt`` and must be in the *first* column.
+The input stratigraphic depths are in ``pybacktrack_examples/example_data/Site1089B_strat_depth.txt`` and must be in the *first* column.
 Any text after the depth value in a row (eg, lithologies) is copied to the output file. Also any metadata at the top of the file is copied to the output file.
 
 The interpolated ages and associated depths are written to the output file ``Site1089B_age_strat_depth.txt``.
@@ -199,6 +201,9 @@ where each interpolated output *y* value is a result of querying the piecewise l
 .. code-block:: python
 
     python -m pybacktrack.util.interpolate_cli -cx 1 -cy 0 -c function_y_of_x.txt -- input_x_values.txt output_x_y_values.txt
+
+.. note:: These files, specifically ``function_y_of_x.txt`` and ``input_x_values.txt``, do not exist in the :ref:`example data <pybacktrack_install_examples>`.
+          They are just placeholders for your own data that you would like to interpolate.
 
 Here the ``y=f(x)`` model is specified with the ``-c``, ``-cx`` and ``-cy`` options.
 The ``-c`` option specifies the file ``function_y_of_x.txt`` containing a column of ``y`` values followed by a column of ``x`` values.
@@ -242,7 +247,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     
     pybacktrack.backtrack_and_write_well(
         'ODP-114-699_backtrack_decompacted.txt',
-        'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt',
+        'pybacktrack_examples/example_data/ODP-114-699-Lithology.txt',
         decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE,
                              pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH])
 
@@ -250,7 +255,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
 .. note:: The ``backtrack`` module is covered in more detail :ref:`here <pybacktrack_backtrack>`.
 
@@ -265,7 +270,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     
     pybacktrack.backstrip_and_write_well(
         'sunrise_backstrip_decompacted.txt',
-        'pybacktrack_examples/test_data/sunrise_lithology.txt',
+        'pybacktrack_examples/example_data/sunrise_lithology.txt',
         lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
                              pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
         decompacted_columns=[pybacktrack.BACKSTRIP_COLUMN_AGE,
@@ -275,7 +280,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/example_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
 
 .. note:: The ``backstrip`` module is covered in more detail :ref:`here <pybacktrack_backstrip>`.
 
@@ -314,14 +319,14 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     import pybacktrack
     
     pybacktrack.convert_age_to_depth_files(
-        'pybacktrack_examples/test_data/test_ages.txt',
-        'test_ages_and_depths.txt')
+        'pybacktrack_examples/example_data/ages.txt',
+        'ages_and_depths.txt')
 
 ...is equivalent to :ref:`running the age-to-depth script example <pybacktrack_running_the_age_to_depth_script>`:
 
 .. code-block:: python
 
-    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/test_data/test_ages.txt test_ages_and_depths.txt
+    python -m pybacktrack.age_to_depth_cli -- pybacktrack_examples/example_data/ages.txt ages_and_depths.txt
 
 stratigraphic_depth_to_age
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -336,11 +341,11 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     age_column_index = 0    # age is in the first column
     depth_column_index = 1  # depth is in the second column
     # Ignore the x (depth) and y (age) values read from file by using '_'.
-    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/test_data/Site1089B_age_depth.txt', depth_column_index, age_column_index)
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/example_data/Site1089B_age_depth.txt', depth_column_index, age_column_index)
     
     # Convert depth values in input file to age and depth values in output file.
     pybacktrack.convert_stratigraphic_depth_to_age_files(
-        'pybacktrack_examples/test_data/Site1089B_strat_depth.txt',
+        'pybacktrack_examples/example_data/Site1089B_strat_depth.txt',
         'Site1089B_age_strat_depth.txt',
         depth_to_age_model)
 
@@ -348,7 +353,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/test_data/Site1089B_age_depth.txt -- pybacktrack_examples/test_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
+    python -m pybacktrack.stratigraphic_depth_to_age_cli -m pybacktrack_examples/example_data/Site1089B_age_depth.txt -- pybacktrack_examples/example_data/Site1089B_strat_depth.txt Site1089B_age_strat_depth.txt
 
 interpolate
 ^^^^^^^^^^^

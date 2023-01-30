@@ -47,7 +47,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 .. code-block:: python
 
     python -m pybacktrack.backtrack_cli \
-        -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt \
+        -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt \
         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
@@ -62,7 +62,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
     import pybacktrack
     
     # Input and output filenames.
-    input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
+    input_well_filename = 'pybacktrack_examples/example_data/ODP-114-699-Lithology.txt'
     amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
     decompacted_output_filename = 'ODP-114-699_backtrack_decompacted.txt'
     
@@ -87,7 +87,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
         # Might be an extra stratigraphic well layer added from well bottom to ocean basement...
         ammended_well_output_filename=amended_well_output_filename)
 
-.. note:: The drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
+.. note:: The drill site file ``pybacktrack_examples/example_data/ODP-114-699-Lithology.txt`` is part of the :ref:`example data <pybacktrack_install_examples>`.
 
 .. _pybacktrack_backtrack_output:
 
@@ -98,7 +98,7 @@ For each stratigraphic layer in the input drill site file, ``backtrack`` can wri
 
 Running the :ref:`above example <pybacktrack_backtrack_example>` on ODP drill site 699:
 
-.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+.. include:: ../pybacktrack/example_data/ODP-114-699-Lithology.txt
    :literal:
 
 ...produces an :ref:`amended drill site output file <pybacktrack_backtrack_output_amended_drill_site>` containing an extra base sediment layer,
@@ -112,6 +112,7 @@ Amended drill site output
 
 The amended drill site output file:
 
+.. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
@@ -131,6 +132,7 @@ Decompacted output
 
 The decompacted output file:
 
+.. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompacted.txt
    :literal:
 
@@ -209,7 +211,7 @@ Oceanic versus continental drill sites
 
 ODP drill site 699 is located on deeper *ocean* crust (as opposed to shallower continental crust):
 
-.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+.. include:: ../pybacktrack/example_data/ODP-114-699-Lithology.txt
    :literal:
 
 So it will use the *oceanic* subsidence model.
@@ -218,7 +220,7 @@ So it will use the *oceanic* subsidence model.
 
 In contrast, DSDP drill site 327 is located on shallower *continental* crust (as opposed to deeper ocean crust):
 
-.. include:: ../pybacktrack/test_data/DSDP-36-327-Lithology.txt
+.. include:: ../pybacktrack/example_data/DSDP-36-327-Lithology.txt
    :literal:
 
 So it will use the *continental* subsidence model. Since continental subsidence involves rifting, it requires a rift start and end time.

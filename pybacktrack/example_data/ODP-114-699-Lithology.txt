@@ -1,0 +1,13 @@
+# SiteLongitude = -30.677
+# SiteLatitude = -51.542
+# SurfaceAge = 0 
+
+## bottom_age bottom_depth lithology
+   18.7       85.7         Diatomite 0.7 Clay 0.3
+   25.0       142.0        Coccolith_ooze 0.3 Diatomite 0.5 Mud 0.2
+   31.3       233.6        Coccolith_ooze 0.3 Diatomite 0.7
+   31.9       243.1        Sand 1
+   36.7       335.4        Coccolith_ooze 0.8 Diatomite 0.2
+   40.8       382.6        Chalk 1
+   54.5       496.6        Chalk 1
+   55.3       516.3        Chalk 0.5 Clay 0.5

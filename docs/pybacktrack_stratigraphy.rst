@@ -32,14 +32,14 @@ Backtracking versus backstripping sites
 
 ODP drill site 699 is located on deep *ocean* crust and has no recorded paleo-water depths:
 
-.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+.. include:: ../pybacktrack/example_data/ODP-114-699-Lithology.txt
    :literal:
 
 So it is suitable for :ref:`backtracking <pybacktrack_backtrack>`, to find the unknown paleo-water depths.
 
 In contrast, the sunrise drill site is located on shallower *continental* crust and has a record of paleo-water depths:
 
-.. include:: ../pybacktrack/test_data/sunrise_lithology.txt
+.. include:: ../pybacktrack/example_data/sunrise_lithology.txt
    :literal:
 
 So it is suitable for :ref:`backstripping <pybacktrack_backstrip>`, to find the unknown history of tectonic subsidence.
@@ -127,11 +127,12 @@ This is useful when you want to know the basement depth at the drill site locati
 
 For example, backtracking the ODP drill site 699 (located on *ocean* crust):
 
-.. include:: ../pybacktrack/test_data/ODP-114-699-Lithology.txt
+.. include:: ../pybacktrack/example_data/ODP-114-699-Lithology.txt
    :literal:
 
 ...generates the following amended drill site file:
 
+.. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
 .. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
