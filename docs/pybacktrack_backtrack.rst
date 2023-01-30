@@ -53,7 +53,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
         -- \
-        ODP-114-699_backtrack_decompat.txt
+        ODP-114-699_backtrack_decompacted.txt
 
 ...or write some Python code to do the same thing:
 
@@ -64,7 +64,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
     # Input and output filenames.
     input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
     amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
-    decompacted_output_filename = 'ODP-114-699_backtrack_decompat.txt'
+    decompacted_output_filename = 'ODP-114-699_backtrack_decompacted.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
     pybacktrack.backtrack_and_write_well(
@@ -131,7 +131,7 @@ Decompacted output
 
 The decompacted output file:
 
-.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompat.txt
+.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompacted.txt
    :literal:
 
 The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth* and *lithology* columns

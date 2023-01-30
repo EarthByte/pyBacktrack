@@ -264,7 +264,7 @@ or any :ref:`other examples <pybacktrack_overview>` in this documentation. For e
 
 .. code-block:: python
 
-    python3 -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python3 -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
 If you wish to run the `example notebooks <https://github.com/EarthByte/pyBacktrack/tree/master/pybacktrack/notebooks>`_
 then there is a ``notebook.sh`` script to start a Jupyter notebook server in the running docker container:
@@ -307,7 +307,7 @@ The following example is used to demonstrate both approaches. It backtracks an o
   * the ``Haq87_SealevelCurve_Longterm`` sea-level model,
 
 - writing the amended drill site to ``ODP-114-699_backtrack_amended.txt``, and
-- writing the following columns to ``ODP-114-699_backtrack_decompat.txt``:
+- writing the following columns to ``ODP-114-699_backtrack_decompacted.txt``:
 
   * age
   * compacted_depth
@@ -347,7 +347,7 @@ The backtracking example can now be demonstrated by running the script as:
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
         -- \
-        ODP-114-699_backtrack_decompat.txt
+        ODP-114-699_backtrack_decompacted.txt
 
 .. _pybacktrack_import_into_your_own_script:
 
@@ -367,7 +367,7 @@ The following Python code does the same as the :ref:`built-in script<pybacktrack
     # Input and output filenames.
     input_well_filename = 'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt'
     amended_well_output_filename = 'ODP-114-699_backtrack_amended.txt'
-    decompacted_output_filename = 'ODP-114-699_backtrack_decompat.txt'
+    decompacted_output_filename = 'ODP-114-699_backtrack_decompacted.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
     pybacktrack.backtrack_and_write_well(

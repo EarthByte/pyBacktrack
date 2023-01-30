@@ -55,10 +55,10 @@ This example takes an ocean drill site as input and outputs a file containing a 
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
 ...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/ODP-114-699-Lithology.txt``, the ``-d`` option specifies
-the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-114-699_backtrack_decompat.txt`` is the output file.
+the desired columns (``age`` and ``water_depth``) of the output file, and ``ODP-114-699_backtrack_decompacted.txt`` is the output file.
 
 There are other command-line options available to the ``backtrack`` module (use the ``--help`` option to list them) but they all have default values and
 hence only need to be specified if the default does not suit.
@@ -76,11 +76,11 @@ This example takes a passive margin site as input and outputs a file containing 
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
 
 ...where the ``-w`` option specifies the input drill site file ``pybacktrack_examples/test_data/sunrise_lithology.txt``, the ``-l`` option specifies the
 lithology definitions, the ``-d`` option specifies the desired columns (``age`` and ``average_tectonic_subsidence``) of the output file,
-and ``sunrise_backstrip_decompat.txt`` is the output file.
+and ``sunrise_backstrip_decompacted.txt`` is the output file.
 
 .. note:: It is necessary to specify the bundled ``primary`` and ``extended`` lithology definitions, with ``-l primary extended``, because the input drill site
           references lithologies in both lithology definition files. See :ref:`pybacktrack_bundled_lithology_definitions`. This is unlike the
@@ -241,7 +241,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     import pybacktrack
     
     pybacktrack.backtrack_and_write_well(
-        'ODP-114-699_backtrack_decompat.txt',
+        'ODP-114-699_backtrack_decompacted.txt',
         'pybacktrack_examples/test_data/ODP-114-699-Lithology.txt',
         decompacted_columns=[pybacktrack.BACKTRACK_COLUMN_AGE,
                              pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH])
@@ -250,7 +250,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompat.txt
+    python -m pybacktrack.backtrack_cli -w pybacktrack_examples/test_data/ODP-114-699-Lithology.txt -d age water_depth -- ODP-114-699_backtrack_decompacted.txt
 
 .. note:: The ``backtrack`` module is covered in more detail :ref:`here <pybacktrack_backtrack>`.
 
@@ -264,7 +264,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     import pybacktrack
     
     pybacktrack.backstrip_and_write_well(
-        'sunrise_backstrip_decompat.txt',
+        'sunrise_backstrip_decompacted.txt',
         'pybacktrack_examples/test_data/sunrise_lithology.txt',
         lithology_filenames=[pybacktrack.PRIMARY_BUNDLE_LITHOLOGY_FILENAME,
                              pybacktrack.EXTENDED_BUNDLE_LITHOLOGY_FILENAME],
@@ -275,7 +275,7 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
 
 .. code-block:: python
 
-    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompat.txt
+    python -m pybacktrack.backstrip_cli -w pybacktrack_examples/test_data/sunrise_lithology.txt -l primary extended -d age average_tectonic_subsidence -- sunrise_backstrip_decompacted.txt
 
 .. note:: The ``backstrip`` module is covered in more detail :ref:`here <pybacktrack_backstrip>`.
 

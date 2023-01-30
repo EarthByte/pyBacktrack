@@ -21,7 +21,7 @@ def test_backstrip_script(tmpdir):
     input_well_filename = TEST_DATA_DIR.join('sunrise_lithology.txt')
     ammended_well_output_base_filename = 'sunrise_backstrip_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'sunrise_backstrip_decompat.txt'
+    decompacted_output_base_filename = 'sunrise_backstrip_decompacted.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -42,7 +42,7 @@ def test_backstrip_script(tmpdir):
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o sunrise_backstrip_amended.txt
     #         --
-    #         sunrise_backstrip_decompat.txt
+    #         sunrise_backstrip_decompacted.txt
     #
     backstrip_script_command_line = [python, '-m', 'pybacktrack.backstrip_cli',
                                      '-w', str(input_well_filename),
@@ -72,7 +72,7 @@ def test_backstrip(tmpdir):
     input_well_filename = TEST_DATA_DIR.join('sunrise_lithology.txt')
     ammended_well_output_base_filename = 'sunrise_backstrip_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'sunrise_backstrip_decompat.txt'
+    decompacted_output_base_filename = 'sunrise_backstrip_decompacted.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -89,7 +89,7 @@ def test_backstrip(tmpdir):
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o sunrise_backstrip_amended.txt
     #         --
-    #         sunrise_backstrip_decompat.txt
+    #         sunrise_backstrip_decompacted.txt
     #
     with warnings.catch_warnings():
         # Ignore user warnings related to well thickness being larger than total sediment thickness.

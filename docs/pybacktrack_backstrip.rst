@@ -52,7 +52,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
         -slm Haq87_SealevelCurve_Longterm \
         -o sunrise_backstrip_amended.txt \
         -- \
-        sunrise_backstrip_decompat.txt
+        sunrise_backstrip_decompacted.txt
 
 ...or write some Python code to do the same thing:
 
@@ -63,7 +63,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
     # Input and output filenames.
     input_well_filename = 'pybacktrack_examples/test_data/sunrise_lithology.txt'
     amended_well_output_filename = 'sunrise_backstrip_amended.txt'
-    decompacted_output_filename = 'sunrise_backstrip_decompat.txt'
+    decompacted_output_filename = 'sunrise_backstrip_decompacted.txt'
     
     # Read input well file, and write amended well and decompacted results to output files.
     pybacktrack.backstrip_and_write_well(
@@ -130,7 +130,7 @@ Decompacted output
 
 The decompacted output file:
 
-.. include:: ../pybacktrack/test_data/sunrise_backstrip_decompat.txt
+.. include:: ../pybacktrack/test_data/sunrise_backstrip_decompacted.txt
    :literal:
 
 The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth*,

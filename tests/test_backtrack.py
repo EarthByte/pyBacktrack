@@ -21,7 +21,7 @@ def test_backtrack_script(tmpdir):
     input_well_filename = TEST_DATA_DIR.join('ODP-114-699-Lithology.txt')
     ammended_well_output_base_filename = 'ODP-114-699_backtrack_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'ODP-114-699_backtrack_decompat.txt'
+    decompacted_output_base_filename = 'ODP-114-699_backtrack_decompacted.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -43,7 +43,7 @@ def test_backtrack_script(tmpdir):
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
     #         --
-    #         ODP-114-699_backtrack_decompat.txt
+    #         ODP-114-699_backtrack_decompacted.txt
     #
     backtrack_script_command_line = [python, '-m', 'pybacktrack.backtrack_cli',
                                      '-w', str(input_well_filename),
@@ -72,7 +72,7 @@ def test_backtrack_ODP(tmpdir):
     input_well_filename = TEST_DATA_DIR.join('ODP-114-699-Lithology.txt')
     ammended_well_output_base_filename = 'ODP-114-699_backtrack_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'ODP-114-699_backtrack_decompat.txt'
+    decompacted_output_base_filename = 'ODP-114-699_backtrack_decompacted.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -90,7 +90,7 @@ def test_backtrack_ODP(tmpdir):
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o ODP-114-699_backtrack_amended.txt
     #         --
-    #         ODP-114-699_backtrack_decompat.txt
+    #         ODP-114-699_backtrack_decompacted.txt
     #
     pybacktrack.backtrack_and_write_well(
         str(test_decompacted_output_filename),
@@ -117,7 +117,7 @@ def test_backtrack_DSDP(tmpdir):
     input_well_filename = TEST_DATA_DIR.join('DSDP-36-327-Lithology.txt')
     ammended_well_output_base_filename = 'DSDP-36-327_backtrack_amended.txt'
     ammended_well_output_filename = TEST_DATA_DIR.join(ammended_well_output_base_filename)
-    decompacted_output_base_filename = 'DSDP-36-327_backtrack_decompat.txt'
+    decompacted_output_base_filename = 'DSDP-36-327_backtrack_decompacted.txt'
     decompacted_output_filename = TEST_DATA_DIR.join(decompacted_output_base_filename)
     
     # We'll be writing to temporary directory (provided by pytest 'tmpdir' fixture).
@@ -134,7 +134,7 @@ def test_backtrack_DSDP(tmpdir):
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o DSDP-36-327_backtrack_amended.txt
     #         --
-    #         DSDP-36-327_backtrack_decompat.txt
+    #         DSDP-36-327_backtrack_decompacted.txt
     #
     with warnings.catch_warnings():
         # Ignore user warnings related to dynamic topography.
