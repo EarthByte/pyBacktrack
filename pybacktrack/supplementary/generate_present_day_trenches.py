@@ -102,15 +102,15 @@ def generate_present_day_trenches(
                 if not resolved_subducting_boundary:
                     continue
 
-                    # If first time visiting subducting boundary then add it to the dictionary.
-                    if resolved_subducting_boundary not in resolved_subducting_boundary_features:
-                        resolved_subducting_boundary_features[resolved_subducting_boundary] = resolved_subducting_boundary.get_resolved_feature()
-                
-                    # Link the resolved trench to its subducting plate feature (using feature ID).
+                # If first time visiting subducting boundary then add it to the dictionary.
+                if resolved_subducting_boundary not in resolved_subducting_boundary_features:
+                    resolved_subducting_boundary_features[resolved_subducting_boundary] = resolved_subducting_boundary.get_resolved_feature()
+            
+                # Link the resolved trench to its subducting plate feature (using feature ID).
                 resolved_trench_feature = trench_sub_segment.get_resolved_feature()
-                    resolved_trench_feature.set_shapefile_attribute(
-                            'subducting_boundary_feature_id',
-                            resolved_subducting_boundary_features[resolved_subducting_boundary].get_feature_id().get_string())
+                resolved_trench_feature.set_shapefile_attribute(
+                        'subducting_boundary_feature_id',
+                        resolved_subducting_boundary_features[resolved_subducting_boundary].get_feature_id().get_string())
                 
                 resolved_trench_features.append(resolved_trench_feature)
 
