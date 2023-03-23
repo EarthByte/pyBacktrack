@@ -329,7 +329,6 @@ Summary
 
 :func:`pybacktrack.convert_stratigraphic_depth_to_age_files` converts a sequence of stratigraphic depths (read from an input file) to ages
 (and writes both ages and depths, and any lithologies in the input file, to an output file).
-"""
 
 Detail
 ^^^^^^

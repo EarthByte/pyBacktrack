@@ -184,6 +184,11 @@ Any text after the depth value in a row (eg, lithologies) is copied to the outpu
 The interpolated ages and associated depths are written to the output file ``Site1089B_age_strat_depth.txt``.
 The first column contains (interpolated) age and the second column contains depth. To reverse this order you can use the ``-r`` option.
 
+.. note:: The output file ``Site1089B_age_strat_depth.txt`` does *not* contain rows for depths that are *outside* the depth range of the model ``Site1089B_age_depth.txt``.
+          This is the default behaviour. You can change this using the ``-m`` option which, in addition to specifying optional age and depth column indices, allows you to
+          optionally specify how to handle out-of-bounds depth values with ``exclude`` (to exclude rows outside depth range), ``clamp`` (to use boundary age values) or
+          ``extrapolate`` (to extrapolate age from boundary).
+
 .. note:: Use ``python -m pybacktrack.stratigraphic_depth_to_age_cli --help`` to see a description of all command-line options.
 
 .. _pybacktrack_running_the_interpolate_script:
@@ -340,8 +345,12 @@ The following Python source code (using :ref:`these functions <pybacktrack_refer
     # Read the age=f(depth) function, where 'x' is depth and 'y' is age (in the returned function y=f(x)).
     age_column_index = 0    # age is in the first column
     depth_column_index = 1  # depth is in the second column
+    # This determines the age values for depth values outside the depth range of the depth-to-model model.
+    # It can be 'exclude' to exclude age values outside range, or 'clamp' to use boundary age values, or 'extrapolate' to extrapolate age from boundary.
+    # Here we use 'exclude' (instead of the default 'clamp') to avoid getting the same age value for different depth values (outside depth range).
+    out_of_bounds = 'exclude'
     # Ignore the x (depth) and y (age) values read from file by using '_'.
-    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/example_data/Site1089B_age_depth.txt', depth_column_index, age_column_index)
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function('pybacktrack_examples/example_data/Site1089B_age_depth.txt', depth_column_index, age_column_index, out_of_bounds)
     
     # Convert depth values in input file to age and depth values in output file.
     pybacktrack.convert_stratigraphic_depth_to_age_files(

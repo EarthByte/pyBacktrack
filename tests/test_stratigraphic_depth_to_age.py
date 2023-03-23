@@ -20,7 +20,7 @@ def test_convert_stratigraphic_depth_to_age():
     age_depth_filename = TEST_DATA_DIR.join('Site1089B_age_depth.txt')
     depth_column_index = 1
     age_column_index = 0
-    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index)
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index, out_of_bounds='exclude')
    
     assert(0.331424 == pytest.approx(pybacktrack.convert_stratigraphic_depth_to_age(46, depth_to_age_model)))
     assert(1.710399 == pytest.approx(pybacktrack.convert_stratigraphic_depth_to_age(209.438, depth_to_age_model)))
@@ -36,7 +36,7 @@ def test_convert_stratigraphic_depth_to_age_files(tmpdir):
     age_depth_filename = TEST_DATA_DIR.join('Site1089B_age_depth.txt')
     depth_column_index = 1
     age_column_index = 0
-    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index)
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index, out_of_bounds='exclude')
     
     # Original input/output depth-to-age test data.
     input_filename = TEST_DATA_DIR.join('Site1089B_strat_depth.txt')
@@ -63,7 +63,7 @@ def test_stratigraphic_depth_to_age_script(tmpdir):
     age_depth_filename = TEST_DATA_DIR.join('Site1089B_age_depth.txt')
     depth_column_index = 1
     age_column_index = 0
-    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index)
+    depth_to_age_model, _, _ = pybacktrack.read_interpolate_function(age_depth_filename, depth_column_index, age_column_index, out_of_bounds='exclude')
     
     # Original input/output age-to-depth test data.
     input_filename = TEST_DATA_DIR.join('Site1089B_strat_depth.txt')

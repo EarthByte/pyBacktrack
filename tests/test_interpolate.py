@@ -31,7 +31,7 @@ def test_interpolate_file(tmpdir):
     #     python -m pybacktrack.util.interpolate_cli
     #         -cx 1 -cy 0
     #         -r
-    #         -c test_data/ODP-114-699_age-depth-model.txt
+    #         -c ODP-114-699_age-depth-model.txt
     #         ODP-114-699_strat_boundaries.txt
     #         ODP-114-699_strat_boundaries_age_depth.txt
     #
@@ -75,7 +75,7 @@ def test_interpolate_script(tmpdir):
     #     python -m pybacktrack.util.interpolate_cli
     #         -cx 1 -cy 0
     #         -r
-    #         -c test_data/ODP-114-699_age-depth-model.txt
+    #         -c ODP-114-699_age-depth-model.txt
     #         ODP-114-699_strat_boundaries.txt
     #         ODP-114-699_strat_boundaries_age_depth.txt
     #

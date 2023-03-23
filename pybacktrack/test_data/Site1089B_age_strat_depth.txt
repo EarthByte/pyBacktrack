@@ -55,11 +55,3 @@
   1.767               213.800             Mud 0.6 Diatomite 0.1 Coccolith_ooze 0.3
   1.854               220.000             Diatomite 0.35 Mud 0.45 Coccolith_ooze 0.2
   1.900               223.300             Diatomite 0.35 Mud 0.45 Coccolith_ooze 0.2
-  1.980               230.000             Mud 0.8 Coccolith_ooze 0.1 Mud 0.1
-  1.980               232.800             Mud 0.8 Coccolith_ooze 0.1 Mud 0.1
-  1.980               240.000             Diatomite 0.35 Coccolith_ooze 0.1 Mud 0.55
-  1.980               242.300             Diatomite 0.35 Coccolith_ooze 0.1 Mud 0.55
-  1.980               250.000             Diatomite 0.4 Mud 0.6
-  1.980               257.900             Diatomite 0.4 Mud 0.6
-  1.980               260.000             Diatomite 0.29 Mud 0.71
-  1.980               264.900             Diatomite 0.29 Mud 0.71

@@ -62,7 +62,7 @@ def convert_stratigraphic_depth_to_age(
     ValueError
         If `depth` is negative.
     TypeError
-        If `model` is not a function accepting a single parameter.
+        If `depth_to_age_model` is not a function accepting a single parameter.
         
     Notes
     -----
@@ -91,9 +91,9 @@ def convert_stratigraphic_depth_to_age_files(
     output_filename : string
         Name of output text file containing `age` and `depth` values.
         Each row of output file contains an `age` value and its associated `depth` value (with order depending on `reverse_output_columns`).
-    model : function
+    depth_to_age_model : function
         The model to use when converting stratigraphic depth to age.
-        A callable function accepting a single non-negative depth parameter (in metres) and returning age (in Ma).
+        A callable function accepting a single non-negative depth parameter (in metres), and returning age (in Ma) or `None` to exclude from output.
     reverse_output_columns : bool, optional
         Determines order of `age` and `depth` columns in output file.
         If `True` then output `depth age`, otherwise output `age depth`.
@@ -158,6 +158,11 @@ def convert_stratigraphic_depth_to_age_files(
             
             # Convert depth to age.
             age = convert_stratigraphic_depth_to_age(depth, depth_to_age_model)
+
+            # Skip output if requested.
+            # For example, if depth is outside the depth range of the model (avoids the same age to multiple depths).
+            if age is None:
+                continue
             
             if reverse_output_columns:
                 output_row = depth, age
@@ -192,28 +197,48 @@ class ArgParseAgeModelAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         model = None
         
-        if not (len(values) == 1 or len(values) == 3):
-            parser.error('depth-to-age model must be a depth-to-age model filename, and optional age and depth column indices')
+        if len(values) < 1 or len(values) > 4:
+            parser.error('depth-to-age model must be a depth-to-age model filename, '
+                         'and optional age and depth column indices, and optional out-of-bounds parameter')
         
         # Read 2-column text file to get a function of age(depth).
         depth_to_age_model_filename = values[0]
         
-        if len(values) == 3:
-            # User-specified age and depth column indices.
+        # Default age and depth column indices.
+        age_column_index = 0
+        depth_column_index = 1
+        # Default out-of-bounds parameter.
+        # Note: Default is 'exclude' (instead of 'clamp') to avoid getting the same age value for different depth values.
+        out_of_bounds = 'exclude'
+
+        # User-specified age and depth column indices.
+        def get_age_depth_column_indices(params):
             try:
-                age_column_index = int(values[1])
-                depth_column_index = int(values[2])
+                nonlocal age_column_index, depth_column_index
+                age_column_index = int(params[0])
+                depth_column_index = int(params[1])
                 if age_column_index < 0 or depth_column_index < 0:
                     parser.error('age and depth column indices must be non-negative')
             except ValueError:
                 raise argparse.ArgumentTypeError("encountered an age or depth column index that is not an integer")
-        else:
-            # Default age and depth column indices.
-            age_column_index = 0
-            depth_column_index = 1
+        
+        def get_out_of_bounds(param):
+            nonlocal out_of_bounds
+            # Note that we don't allow 'clamp' to avoid getting the same age value for different depth values.
+            if param != 'exclude' and param != 'clamp' and param != 'extrapolate':
+                raise argparse.ArgumentTypeError("out-of-bounds parameter must be 'exclude', 'clamp' or 'extrapolate'")
+            out_of_bounds = param
+
+        if len(values) == 2:
+            get_out_of_bounds(values[1])
+        elif len(values) == 3:
+            get_age_depth_column_indices(values[1:3])
+        elif len(values) == 4:
+            get_age_depth_column_indices(values[1:3])
+            get_out_of_bounds(values[3])
         
         # Read the model age(depth) where 'x' is depth and 'y' is age (in the returned function y=f(x)).
-        model, _, _ = read_curve_function(depth_to_age_model_filename, depth_column_index, age_column_index)
+        model, _, _ = read_curve_function(depth_to_age_model_filename, depth_column_index, age_column_index, out_of_bounds)
         
         setattr(namespace, self.dest, model)
 
@@ -268,7 +293,9 @@ def main():
         help='The model used to convert depth to age. '
              'The first parameter is a depth-to-age model filename containing at least two columns (one containing the age and the other the depth). '
              'The filename can optionally be followed by two integers representing the age and depth column indices '
-             '(if not specified then they default to 0 and 1 respectively).')
+             '(if not specified then they default to 0 and 1 respectively), and/or a string that determines the age values for depth values outside the range in the model '
+             '(this can be "exclude" to exclude age value from output, or "clamp" to use boundary age value, or "extrapolate" to extrapolate age from boundary; '
+             'defaults to "exclude" to avoid getting the same age value for different depth values, outside depth range, as with "clamp").')
     
     parser.add_argument(
         '-r', '--reverse_output_columns', action='store_true',

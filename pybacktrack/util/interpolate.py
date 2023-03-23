@@ -37,7 +37,8 @@ import warnings
 def read_curve_function(
         curve_filename,
         x_column_index=0,
-        y_column_index=1):
+        y_column_index=1,
+        out_of_bounds='clamp'):
     """Read x and y columns from a curve file and return a function y(x) that linearly interpolates.
     
     Parameters
@@ -48,11 +49,18 @@ def read_curve_function(
         Determines which column of input text file to read `x` values from.
     y_column_index : int, optional
         Determines which column of input text file to read `y` values from.
+    out_of_bounds : string, optional
+        Determines the `y` value returned by curve function when `x` is outside the range of `x` values in curve file.
+        This can be:
+
+        - `clamp` to return the boundary `y` value, or
+        - `exclude` to return `None` (eg, to indicate that there's no `y` value), or
+        - `extrapolate` to return an extrapolated value.
     
     Returns
     -------
     curve_function : function
-        A callable function `y=f(x)` accepting a single `x` argument and returning a `y` value.
+        A callable function `y=f(x)` accepting a single `x` argument, and returning a `y` value or `None` (if no `y` value).
     x_column : list of float
         The `x` values read from the curve file.
     y_column : list of float
@@ -64,6 +72,8 @@ def read_curve_function(
         If cannot read x and y columns, as floating-point numbers, from the curve file at column indices `x_column_index` and `y_column_index`.
     ValueError
         If curve file contains no data.
+    ValueError
+        If `out_of_bounds` is not `clamp`, `exclude` or `extrapolate`.
     
     Notes
     -----
@@ -125,12 +135,29 @@ def read_curve_function(
     if not x_column:
         raise ValueError('Curve file {0} contains no data.'.format(curve_filename))
     
-    # Function will return (y_xmin, y_xmax) fill values on bounds error instead of raising ValueError.
-    interpolate_func = scipy.interpolate.interp1d(x_column, y_column, bounds_error=False, fill_value=(y_xmin, y_xmax))
+    # Handling of out-of-bounds (when x is outside the range [xmin, xmax]).
+    if out_of_bounds == 'clamp':
+        # Clamp y to boundary value when x is outside range [xmin, xmax].
+        interpolate_func = scipy.interpolate.interp1d(x_column, y_column, bounds_error=False, fill_value=(y_xmin, y_xmax))
+    elif out_of_bounds == 'exclude':
+        # Raise ValueError when x is outside range [xmin, xmax].
+        interpolate_func = scipy.interpolate.interp1d(x_column, y_column, bounds_error=True)
+    elif out_of_bounds == 'extrapolate':
+        # Extrapolate the boundary y value when x is outside range [xmin, xmax].
+        interpolate_func = scipy.interpolate.interp1d(x_column, y_column, bounds_error=False, fill_value='extrapolate')
+    else:
+        raise ValueError('out_of_bounds should be clamp, exclude or extrapolate')
     
-    # Wrap in 'float()' since scipy.interpolate.interp1d can return np.array(np.nan) which isn't really a float.
     def interpolate_func_wrapper(x):
-        return float(interpolate_func(x))
+        try:
+            y = interpolate_func(x)
+        except ValueError:
+            # Return None to indicate there's no y value for the specified x.
+            # This happens when x is outside range and bounds_error=True (in scipy.interpolate.interp1d).
+            return None
+        
+        # Wrap in 'float()' since scipy.interpolate.interp1d can return np.array(np.nan) which isn't really a float.
+        return float(y)
     
     return interpolate_func_wrapper, x_column, y_column
 
@@ -146,7 +173,7 @@ def interpolate_file(
     Parameters
     ----------
     curve_function : function
-        A callable function `y=f(x)` accepting a single `x` argument and returning a `y` value.
+        A callable function `y=f(x)` accepting a single `x` argument and returning a `y` value (or `None` to exclude from output).
     input_filename : string
         Name of input text file containing the `x` positions at which to sample `curve_function`.
         A single `x` value is obtained from each row by indexing the `input_x_column_index` column (zero-based index).
@@ -196,7 +223,12 @@ def interpolate_file(
                 raise ValueError('Cannot read x value at line {0} of input file {1}.'.format(
                                  line_number, input_filename))
             
+            # Sample curve function.
             y = curve_function(x)
+
+            # Skip output if requested (eg, if x is outside a specific range).
+            if y is None:
+                continue
             
             if reverse_output_columns:
                 output_row = y, x
@@ -269,6 +301,13 @@ def main():
         help='Reverse the order of output columns to output as "y x". Defaults to "x y".')
     
     parser.add_argument(
+        '-b', '--out_of_bounds', type=str, default='clamp',
+        metavar='out_of_bounds',
+        help='Determines the output y values for input x values outside the range in the curve file. '
+             'This can be "clamp" to use boundary y values, or "exclude" to exclude values from output, or "extrapolate" to use extrapolated boundary values. '
+             'Defaults to "clamp".')
+    
+    parser.add_argument(
         'input_filename', type=argparse_unicode,
         metavar='input_filename',
         help='The input filename containing the "x" positions to interpolate at.')
@@ -282,7 +321,7 @@ def main():
     args = parser.parse_args()
     
     # Read the curve function y=f(x) from curve file.
-    curve_function, _, _ = read_curve_function(args.curve_filename, args.curve_x_column, args.curve_y_column)
+    curve_function, _, _ = read_curve_function(args.curve_filename, args.curve_x_column, args.curve_y_column, args.out_of_bounds)
     
     # Convert x values in 1-column input file to x and y values in 2-column output file.
     interpolate_file(
