@@ -214,28 +214,29 @@ class ArgParseAgeModelAction(argparse.Action):
         # User-specified age and depth column indices.
         def get_age_depth_column_indices(params):
             try:
-                nonlocal age_column_index, depth_column_index
                 age_column_index = int(params[0])
                 depth_column_index = int(params[1])
                 if age_column_index < 0 or depth_column_index < 0:
                     parser.error('age and depth column indices must be non-negative')
             except ValueError:
                 raise argparse.ArgumentTypeError("encountered an age or depth column index that is not an integer")
+
+            return age_column_index, depth_column_index
         
         def get_out_of_bounds(param):
-            nonlocal out_of_bounds
             # Note that we don't allow 'clamp' to avoid getting the same age value for different depth values.
             if param != 'exclude' and param != 'clamp' and param != 'extrapolate':
                 raise argparse.ArgumentTypeError("out-of-bounds parameter must be 'exclude', 'clamp' or 'extrapolate'")
-            out_of_bounds = param
+            return param
 
+        # If any optional values are provided.
         if len(values) == 2:
-            get_out_of_bounds(values[1])
+            out_of_bounds = get_out_of_bounds(values[1])
         elif len(values) == 3:
-            get_age_depth_column_indices(values[1:3])
+            age_column_index, depth_column_index = get_age_depth_column_indices(values[1:3])
         elif len(values) == 4:
-            get_age_depth_column_indices(values[1:3])
-            get_out_of_bounds(values[3])
+            age_column_index, depth_column_index = get_age_depth_column_indices(values[1:3])
+            out_of_bounds = get_out_of_bounds(values[3])
         
         # Read the model age(depth) where 'x' is depth and 'y' is age (in the returned function y=f(x)).
         model, _, _ = read_curve_function(depth_to_age_model_filename, depth_column_index, age_column_index, out_of_bounds)
