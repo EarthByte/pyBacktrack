@@ -79,6 +79,10 @@ def read_curve_function(
     -----
     The returned `x` and `y` columns are useful if integrating the curve function with ``scipy.integrate.quad``
     (since can pass x column to its `points` argument and `len(x)` to its `limit`).
+        
+    .. versionchanged:: 1.5
+        Added `out_of_bounds` argument.
+        If `out_of_bounds` is `exclude` then returned curve function will return `None` for any input `x` outside the range of `x` values in curve file.
     """
     
     # Each row in each file should have at least a minimum number of columns.
@@ -190,6 +194,11 @@ def interpolate_file(
     ------
     ValueError
         If cannot read an `x` value, as a floating-point number, from input file at column index `input_x_column_index`.
+        
+    Notes
+    -----
+    .. versionchanged:: 1.5
+        `curve_function` can return `None`, in which case there is no output row for the input `x`.
     """
     
     with open(input_filename, 'r') as input_file, open(output_filename, 'w') as output_file:
