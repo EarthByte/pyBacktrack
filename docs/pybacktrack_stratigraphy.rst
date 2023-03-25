@@ -133,7 +133,7 @@ For example, backtracking the ODP drill site 699 (located on *ocean* crust):
 ...generates the following amended drill site file:
 
 .. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
-.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
+.. include:: ../tests/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
 ...containing the extra base shale layer with a bottom age equal to the age grid sampled at the drill site

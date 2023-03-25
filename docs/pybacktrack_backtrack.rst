@@ -113,7 +113,7 @@ Amended drill site output
 The amended drill site output file:
 
 .. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
-.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_amended.txt
+.. include:: ../tests/test_data/ODP-114-699_backtrack_amended.txt
    :literal:
 
 There is an extra :ref:`base sediment layer <pybacktrack_base_sediment_layer>` that extends from the bottom
@@ -133,7 +133,7 @@ Decompacted output
 The decompacted output file:
 
 .. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
-.. include:: ../pybacktrack/test_data/ODP-114-699_backtrack_decompacted.txt
+.. include:: ../tests/test_data/ODP-114-699_backtrack_decompacted.txt
    :literal:
 
 The *age*, *compacted_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth* and *lithology* columns

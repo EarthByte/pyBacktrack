@@ -115,7 +115,7 @@ Amended drill site output
 The amended drill site output file:
 
 .. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
-.. include:: ../pybacktrack/test_data/sunrise_backstrip_amended.txt
+.. include:: ../tests/test_data/sunrise_backstrip_amended.txt
    :literal:
 
 .. note:: No extra :ref:`base sediment layer <pybacktrack_base_sediment_layer>` is added from the bottom of the
@@ -132,7 +132,7 @@ Decompacted output
 The decompacted output file:
 
 .. Note we're using 'test_data' instead of 'example_data' since only the former directory contains output files.
-.. include:: ../pybacktrack/test_data/sunrise_backstrip_decompacted.txt
+.. include:: ../tests/test_data/sunrise_backstrip_decompacted.txt
    :literal:
 
 The *age*, *compacted_depth*, *min_water_depth*, *max_water_depth* and *lithology* columns are the same as the *bottom_age*, *bottom_depth*,

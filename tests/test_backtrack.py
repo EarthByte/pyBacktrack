@@ -11,7 +11,7 @@ import warnings
 
 
 # Test data directory is inside the pybacktrack module.
-TEST_DATA_DIR = py.path.local(__file__).dirpath('..', 'pybacktrack', 'test_data')
+TEST_DATA_DIR = py.path.local(__file__).dirpath('test_data')
 
 
 def test_backtrack_script(tmpdir):
