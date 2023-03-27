@@ -16,7 +16,6 @@ build:
 requirements:
   host:
     - python >=3.5
-    - pytest-runner
     - pip
   run:
     - python >=3.5

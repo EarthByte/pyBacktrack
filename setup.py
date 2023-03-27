@@ -1,5 +1,6 @@
 from io import open
 from setuptools import setup
+import sys
 
 # Project short description.
 short_description = 'A tool for reconstructing paleobathymetry on oceanic and continental crust.'
@@ -10,6 +11,17 @@ with open('README.rst', encoding='utf-8') as long_description_file:
 
 # Read package __version__.
 exec(open('pybacktrack/version.py').read())
+
+# Only require 'pytest-runner' when user calls 'python setup.py test' (as opposed to just 'pytest').
+# This avoids issues with conda-build generating the error:
+#   "Could not find a version that satisfies the requirement pytest-runner"
+# ...although that can be fixed by putting 'pytest-runner' in 'host' requirements.
+#
+# See https://github.com/pytest-dev/pytest-runner#conditional-requirement
+needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
+# 'pytest-runner' is needed so that 'python setup.py test' works.
+# It gets installed to local './.eggs', not installed on the system...
+pytest_runner = ['pytest-runner'] if needs_pytest else []
 
 setup(
     name='pybacktrack',
@@ -37,9 +49,7 @@ setup(
     },
     packages=['pybacktrack', 'pybacktrack.util'],
     install_requires=['numpy', 'scipy'],
-    # 'pytest-runner' is needed so that 'python setup.py test' works.
-    # It gets installed to local './.eggs', not installed on the system...
-    setup_requires=['pytest-runner'],
+    setup_requires=[] + pytest_runner,
     tests_require=['pytest', 'pytest-pep8'],
     python_requires='>=2.7',
     #
