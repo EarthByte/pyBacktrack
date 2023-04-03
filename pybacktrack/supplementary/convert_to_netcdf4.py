@@ -1,4 +1,4 @@
-from call_system_command import call_system_command
+from ptt.utils.call_system_command import call_system_command
 import glob
 import os.path
 import re
@@ -10,8 +10,8 @@ import re
 # We also strip away all
 #
 
-input_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\AY18\MantleFrame'
-output_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\models\Cao2019\AY18'
+input_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\models\Young2022\gld428\MantleFrame'
+output_path = r'C:\Users\John\Development\Usyd\source_code\repositories\Earthbyte\pyBacktrack\pybacktrack\bundle_data\dynamic_topography\models\Young2022\gld428'
 grid_ext = 'nc'
 grid_spacing_degrees = 1.0
 

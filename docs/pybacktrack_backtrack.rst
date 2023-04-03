@@ -393,6 +393,10 @@ dynamic topography since the start of rifting.
 
 These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
+* *Young et al., 2022* - `Long-term Phanerozoic sea level change from solid Earth processes <https://doi.org/10.1016/j.epsl.2022.117451>`_
+
+  * `gld428 <http://portal.gplates.org/dynamic_topography_cesium/?model=gld428&name=Gld428_250-0Ma>`_
+
 * *Braz et al., 2021* - `Modelling the role of dynamic topography and eustasy in the evolution of the Great Artesian Basin <https://doi.org/10.1111/bre.12606>`_
 
   * `D10_gmcm9 <http://portal.gplates.org/dynamic_topography_cesium/?model=gmcm9&name=D10_gmcm9>`_

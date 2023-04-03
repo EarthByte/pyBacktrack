@@ -428,7 +428,7 @@ The following attributes are available to access the bundled data:
 ``pybacktrack.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES``
   A list of bundled dynamic topography model *names* (keys in `BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS`).
   
-  Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16`` and ``D10_gmcm9``.
+  Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16``, ``D10_gmcm9`` and ``gld428``.
 
 ``pybacktrack.BUNDLE_SEA_LEVEL_MODELS``
   Bundled sea level models.

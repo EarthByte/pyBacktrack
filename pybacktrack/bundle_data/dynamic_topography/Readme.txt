@@ -16,36 +16,53 @@ tested against the static polygons, using 'pybacktrack/supplementary/test_multip
 to make sure we associated the correct static polygons with each model.
 
 
+Young et al., 2022
+------------------
+Alexander Young, Nicolas Flament, Simon E. Williams, Andrew Merdith, Xianzhi Cao, R. Dietmar Müller (2022).
+Long-term Phanerozoic sea level change from solid Earth processes.
+Earth and Planetary Science Letters, Volume 584, ISSN 0012-821X, doi:10.1016/j.epsl.2022.117451
+
+
 Braz et al., 2021
 -----------------
-Braz, C., Zahirovic, S., Salles, T., Flament, N., Harrington, L., & Müller, R. D. (2021). Modelling the role of dynamic topography and eustasy in the evolution of the Great Artesian Basin. Basin Research. doi:10.1111/bre.12606.
+Braz, C., Zahirovic, S., Salles, T., Flament, N., Harrington, L., & Müller, R. D. (2021).
+Modelling the role of dynamic topography and eustasy in the evolution of the Great Artesian Basin.
+Basin Research. doi:10.1111/bre.12606.
 
 Models: D10_gmcm9.
 
 
 Cao et al., 2019
 ----------------
-Cao, W., Flament, N., Zahirovic, S., Williams, S. and Müller, R.D. 2019. The interplay of dynamic topography and eustasy on continental flooding in the late Paleozoic. Tectonophysics. 761. 10.1016/j.tecto.2019.04.018. 
+Cao, W., Flament, N., Zahirovic, S., Williams, S. and Müller, R.D. 2019.
+The interplay of dynamic topography and eustasy on continental flooding in the late Paleozoic.
+Tectonophysics. 761. 10.1016/j.tecto.2019.04.018.
 
 Models: AY18, KM16.
 
 
 Müller et al., 2017
 -------------------
-Müller R.D., Hassan, R., Gurnis, M., Flament, N., and Williams, S.E., 2017, Dynamic topography of passive continental margins and their hinterlands since the Cretaceous, Gondwana Research, in press, accepted 21 March 2017.
+Müller R.D., Hassan, R., Gurnis, M., Flament, N., and Williams, S.E., 2017.
+Dynamic topography of passive continental margins and their hinterlands since the Cretaceous.
+Gondwana Research, in press, accepted 21 March 2017.
 
 Models: M1, M2, M3, M4, M5, M6, M7.
 
 
 Rubey et al., 2017
 ------------------
-Rubey, M., Brune, S., Heine, C., Davies, D. R., Williams, S. E., and Müller R. D.: Global patterns of Earth's dynamic topography since the Jurassic, Solid Earth Discuss., doi:10.5194/se-2017-26, in review, 2017.
+Rubey, M., Brune, S., Heine, C., Davies, D. R., Williams, S. E., and Müller R. D.
+Global patterns of Earth's dynamic topography since the Jurassic.
+Solid Earth Discuss., doi:10.5194/se-2017-26, in review, 2017.
 
 Models: terra.
 
 
 Müller et al., 2008
 -------------------
-Müller, R.D., Sdrolias, M., Gaina, C., Steinberger, B. and Heine, C., 2008. Long-term sea-level fluctuations driven by ocean basin dynamics. science, 319(5868), pp.1357-1362.
+Müller, R.D., Sdrolias, M., Gaina, C., Steinberger, B. and Heine, C., 2008.
+Long-term sea-level fluctuations driven by ocean basin dynamics.
+science, 319(5868), pp.1357-1362.
 
 Models: ngrand, s20rts, smean.

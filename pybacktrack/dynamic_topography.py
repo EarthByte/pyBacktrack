@@ -223,7 +223,7 @@ class DynamicTopography(object):
         ----------
         dynamic_topography_model_name : str
             Name of a bundled dynamic topography model.
-            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16`` and ``D10_gmcm9``.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16``, ``D10_gmcm9`` and ``gld428``.
         
         Returns
         -------
@@ -266,7 +266,7 @@ class DynamicTopography(object):
         ----------
         dynamic_topography_model_name : str
             Name of a bundled dynamic topography model.
-            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16`` and ``D10_gmcm9``.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16``, ``D10_gmcm9`` and ``gld428``.
         longitude : float or list of float
             Longitude of the point location, or list of longitudes (if multiple point locations).
         latitude : float or list of float
@@ -497,7 +497,7 @@ class InterpolateDynamicTopography(object):
         ----------
         dynamic_topography_model_name : str
             Name of a bundled dynamic topography model.
-            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16`` and ``D10_gmcm9``.
+            Choices include ``terra``, ``M1``, ``M2``, ``M3``, ``M4``, ``M5``, ``M6``, ``M7``, ``ngrand``, ``s20rts``, ``smean``, ``AY18``, ``KM16``, ``D10_gmcm9`` and ``gld428``.
         
         Returns
         -------
