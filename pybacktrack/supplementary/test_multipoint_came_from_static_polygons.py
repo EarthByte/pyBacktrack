@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os.path
 import pygplates
 import sys
@@ -40,15 +41,15 @@ for multipoint in pygplates.FeatureCollection(multipoints_file):
     for partitioned_multipoint in partitioned_multipoints:
         if partitioned_multipoint.get_reconstruction_plate_id() != multipoint.get_reconstruction_plate_id():
             failed_multipoints.append(partitioned_multipoint)
-            print 'Failed ({0} points): original plate {1}, new plate {2}'.format(
+            print('Failed ({0} points): original plate {1}, new plate {2}'.format(
                   sum(len(geometry) for geometry in partitioned_multipoint.get_geometries()),
                   multipoint.get_reconstruction_plate_id(),
-                  partitioned_multipoint.get_reconstruction_plate_id())
+                  partitioned_multipoint.get_reconstruction_plate_id()))
         elif partitioned_multipoint.get_valid_time()[0] != multipoint.get_valid_time()[0]:
-            print 'Failed ({0} points): original appearance {1}, new appearance {2}'.format(
+            print('Failed ({0} points): original appearance {1}, new appearance {2}'.format(
                   sum(len(geometry) for geometry in partitioned_multipoint.get_geometries()),
                   multipoint.get_valid_time()[0],
-                  partitioned_multipoint.get_valid_time()[0])
+                  partitioned_multipoint.get_valid_time()[0]))
             failed_multipoints.append(partitioned_multipoint)
 
 if failed_multipoints:

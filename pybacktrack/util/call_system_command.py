@@ -112,7 +112,7 @@ def call_system_command(
 #       call_system_command('dir /w', shell=True)
 #       call_system_command(['dir', '/w'], print_errors=False, shell=True)
 #       if not call_system_command(['dir', '/w'], raise_errors=False, shell=True):
-#           print 'Failed directory listing.'
+#           print('Failed directory listing.')
 #
 #       # Info on a grid file.
 #       call_system_command(['gmt', 'grdinfo', 'mohoGOCE180.nc'])
