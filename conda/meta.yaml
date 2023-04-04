@@ -2,11 +2,12 @@
 {% set version = "1.4.0" %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name }}
   version: {{ version }}
 
 source:
-  path: ../
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 6277fc5263e2a38c1c472435fea612fa9fb7923a14ba33b4dc30ba2e984411e7
 
 build:
   noarch: python
@@ -16,6 +17,7 @@ build:
 requirements:
   host:
     - python >=3.5
+    - pytest-runner
     - pip
   run:
     - python >=3.5
@@ -25,17 +27,12 @@ requirements:
     - scipy
 
 test:
-  source_files:
-    - tests
   imports:
     - pybacktrack
   commands:
     - pip check
-    - pytest
   requires:
     - pip
-    - pytest
-    - py
 
 about:
   home: https://github.com/EarthByte/pyBacktrack
