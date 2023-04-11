@@ -13,12 +13,40 @@ Getting Started
 Installation
 ++++++++++++
 
-You can install ``pybacktrack`` either:
+You can install ``pybacktrack`` using:
 
-#. using :ref:`pip <pybacktrack_install_using_pip>`, or
-#. using :ref:`Docker <pybacktrack_install_using_docker>`.
+#. :ref:`conda <pybacktrack_install_using_conda>`, or
+#. :ref:`pip <pybacktrack_install_using_pip>`, or
+#. :ref:`Docker <pybacktrack_install_using_docker>`.
 
-Docker is typically more straightforward since all the dependencies of ``pybacktrack`` have been pre-installed.
+We recommend using :ref:`conda <pybacktrack_install_using_conda>` since it installs all the dependencies of ``pybacktrack``
+(using :ref:`pip <pybacktrack_install_using_pip>` currently only installs some of the dependencies, the rest must be install manually).
+Using :ref:`Docker <pybacktrack_install_using_docker>` is also more straightforward than ``pip`` since all the dependencies have been pre-installed.
+
+.. _pybacktrack_install_using_conda:
+
+Install using conda
+-------------------
+
+We recommend installing pyBacktrack using `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/index.html>`_.
+
+To install the latest stable version of pyBacktrack type the following in a terminal or command window
+(on macOS and Ubuntu this is a *Terminal* window, and on Windows you'll need to open an *Anaconda prompt* from the Start menu):
+::
+
+  conda install -c conda-forge pybacktrack
+
+We recommend installing pyBacktrack into a new conda environment.
+For example, the following creates and activates a Python 3.10 environment named ``pybacktrack_py310`` containing pyBacktrack and all its dependencies:
+::
+
+  conda create -n pybacktrack_py310 -c conda-forge python=3.10 pybacktrack
+  conda activate pybacktrack_py310
+
+You can then use pyBacktrack. For example, to see the pyBacktrack version:
+::
+
+  python -c "import pybacktrack; print(pybacktrack.__version__)"
 
 .. _pybacktrack_install_using_pip:
 
