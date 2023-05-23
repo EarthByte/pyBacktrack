@@ -13,6 +13,11 @@ Getting Started
 Installation
 ++++++++++++
 
+.. _pybacktrack_install_pybacktrack:
+
+Install pybacktrack
+-------------------
+
 You can install ``pybacktrack`` using:
 
 #. :ref:`conda <pybacktrack_install_using_conda>`, or
@@ -25,8 +30,8 @@ Using :ref:`Docker <pybacktrack_install_using_docker>` is also more straightforw
 
 .. _pybacktrack_install_using_conda:
 
-Install using conda
--------------------
+Using conda
+^^^^^^^^^^^
 
 We recommend installing pyBacktrack using `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/index.html>`_.
 
@@ -50,8 +55,8 @@ You can then use pyBacktrack. For example, to see the pyBacktrack version:
 
 .. _pybacktrack_install_using_pip:
 
-Install using pip
------------------
+Using pip
+^^^^^^^^^
 
 Python packages installed using `pip <https://pypi.org/project/pip/>`_ will typically also have their dependency packages automatically installed also.
 However ``pybacktrack`` requires manual installation of some of its dependencies.
@@ -63,7 +68,7 @@ However ``pybacktrack`` requires manual installation of some of its dependencies
 .. _pybacktrack_requirements:
 
 Requirements
-^^^^^^^^^^^^
+************
 
 PyBacktrack depends on:
 
@@ -72,7 +77,7 @@ PyBacktrack depends on:
 - `Generic Mapping Tools (GMT) <http://gmt.soest.hawaii.edu/>`_ (>=5.0.0)
 - `PyGPlates <http://www.gplates.org/>`_
 
-`NumPy` and `SciPy` are automatically installed by `pip` when :ref:`pybacktrack is installed <pybacktrack_install_pybacktrack>`, however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
+`NumPy` and `SciPy` are automatically installed by `pip` when :ref:`pybacktrack is installed <pybacktrack_pip_install_pybacktrack>`, however `GMT` (version 5 or above) and `pyGPlates` need to be manually installed.
 
 `GMT` is called via the command-line (shell) and so just needs to be in the PATH in order for `pyBacktrack` to find it.
 Also ensure that version 5 or above (supports NetCDF version 4) is installed since the :ref:`bundled grid files in pyBacktrack<pybacktrack_reference_bundle_data>` are in NetCDF4 format.
@@ -88,7 +93,7 @@ However, currently pyGPlates does not yet work in virtual environments (at least
 .. _pybacktrack_install_requirements_ubuntu:
 
 Install Python, Pip, GMT and pyGPlates on Ubuntu
-************************************************
+""""""""""""""""""""""""""""""""""""""""""""""""
 
 This is an example demonstrating how to install GMT and pyGPlates on Ubuntu 18.04 (Bionic).
 
@@ -122,7 +127,7 @@ Then add the installed location of pyGPlates to the PYTHONPATH environment varia
 .. _pybacktrack_install_requirements_mac:
 
 Install Python, Pip, GMT and pyGPlates on Mac using Macports
-************************************************************
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 This is an example demonstrating how to install GMT and pyGPlates on a Mac system using `Macports <https://www.macports.org/>`_.
 
@@ -169,10 +174,10 @@ Then add the unzipped location of pyGPlates to the PYTHONPATH environment variab
           so that PYTHONPATH is set each time you open a new terminal window.
             
 
-.. _pybacktrack_install_pybacktrack:
+.. _pybacktrack_pip_install_pybacktrack:
 
 Install pybacktrack
-^^^^^^^^^^^^^^^^^^^
+*******************
 
 To install the latest stable version, run:
 ::
@@ -209,47 +214,10 @@ To install the latest development version (requires Git on local system), run:
 .. note:: Installing `pyBacktrack` will automatically install the `NumPy` and `SciPy` :ref:`requirements <pybacktrack_requirements>`.
           However, as mentioned in :ref:`requirements <pybacktrack_requirements>`, `GMT` and `pyGPlates` still need to be manually installed.
 
-.. _pybacktrack_install_examples:
-
-Install the examples
-^^^^^^^^^^^^^^^^^^^^
-
-Before running the example below, or any :ref:`other examples <pybacktrack_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
-This assumes you've already :ref:`installed the pybacktrack package <pybacktrack_install_pybacktrack>`.
-
-The following command installs the examples (example data and notebooks) to a new sub-directory of your *current working directory* called ``pybacktrack_examples``:
-
-.. code-block:: python
-
-    python -c "import pybacktrack; pybacktrack.install_examples()"
-
-.. note:: The *current working directory* is whatever directory you are in when you run the above command.
-
-.. note:: | Alternatively you can choose a different sub-directory by providing an argument to the ``install_examples()`` function above.
-          | For example, ``python -c "import pybacktrack; pybacktrack.install_examples('pybacktrack/examples')"``
-            creates a new sub-directory of your *current working directory* called ``pybacktrack/examples``.
-          | However the example below assumes the default directory (``pybacktrack_examples``).
-
-.. _pybacktrack_install_supplementary:
-
-Install supplementary scripts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can optionally install supplementary scripts. These are not necessary for running the ``pybacktrack`` module.
-They are various pre/post processing, conversion and test scripts that have only been included for reference (for those interested).
-
-The following command installs the supplementary scripts to a new sub-directory of your *current working directory* called ``pybacktrack_supplementary``:
-
-.. code-block:: python
-
-    python -c "import pybacktrack; pybacktrack.install_supplementary()"
-
-.. note:: Like :ref:`the examples <pybacktrack_install_examples>` you can specify your own sub-directory.
-
 .. _pybacktrack_install_using_docker:
 
-Install using Docker
---------------------
+Using Docker
+^^^^^^^^^^^^
 
 This method of running ``pybacktrack`` relies on `Docker <https://www.docker.com/>`_, so before installing
 the ``pybacktrack`` docker image, ensure you have installed `Docker <https://www.docker.com/>`_.
@@ -311,6 +279,43 @@ Then you can start a web browser on your local machine and type the following in
 | In the web browser, navigate to ``pybacktrack_examples`` and then ``notebooks``.
 | Then click on a notebook (such as `backtrack.ipynb <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/backtrack.ipynb>`_).
 | You should be able to run the notebook, or modify it and then run it.
+
+.. _pybacktrack_install_examples:
+
+Install the examples
+--------------------
+
+Before running the example below, or any :ref:`other examples <pybacktrack_overview>`, you'll also need to install the example data (from the pybacktrack package itself).
+This assumes you've already :ref:`installed pybacktrack <pybacktrack_install_pybacktrack>`.
+
+The following command installs the examples (example data and notebooks) to a new sub-directory of your *current working directory* called ``pybacktrack_examples``:
+
+.. code-block:: python
+
+    python -c "import pybacktrack; pybacktrack.install_examples()"
+
+.. note:: The *current working directory* is whatever directory you are in when you run the above command.
+
+.. note:: | Alternatively you can choose a different sub-directory by providing an argument to the ``install_examples()`` function above.
+          | For example, ``python -c "import pybacktrack; pybacktrack.install_examples('pybacktrack/examples')"``
+            creates a new sub-directory of your *current working directory* called ``pybacktrack/examples``.
+          | However the example below assumes the default directory (``pybacktrack_examples``).
+
+.. _pybacktrack_install_supplementary:
+
+Install supplementary scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can optionally install supplementary scripts. These are not necessary for running the ``pybacktrack`` module.
+They are various pre/post processing, conversion and test scripts that have only been included for reference (for those interested).
+
+The following command installs the supplementary scripts to a new sub-directory of your *current working directory* called ``pybacktrack_supplementary``:
+
+.. code-block:: python
+
+    python -c "import pybacktrack; pybacktrack.install_supplementary()"
+
+.. note:: Like :ref:`the examples <pybacktrack_install_examples>` you can specify your own sub-directory.
 
 .. _pybacktrack_a_backtracking_example:
 
