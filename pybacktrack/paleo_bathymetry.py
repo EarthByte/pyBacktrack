@@ -88,7 +88,7 @@ _MAX_AGE_GRID_ALLOWED_TO_EXCEED_OCEANIC_STATIC_POLYGON_AGE = 40.0
 
 def reconstruct_backtrack_bathymetry(
         input_points,  # note: you can use 'generate_input_points_grid()' to generate a global lat/lon grid
-        oldest_time,
+        oldest_time=None,
         time_increment=1,
         lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
@@ -110,7 +110,7 @@ def reconstruct_backtrack_bathymetry(
     # the expanded values of the bundle filenames.
     """reconstruct_paleo_bathymetry(\
         input_points,\
-        oldest_time,\
+        oldest_time=None,\
         time_increment=1,\
         lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
@@ -135,8 +135,10 @@ def reconstruct_backtrack_bathymetry(
     input_points : sequence of (longitude, latitude) tuples
         The point locations to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
-    oldest_time : float
+    oldest_time : float, optional
         The oldest time (in Ma) that output is generated back to (from present day). Value must not be negative.
+        If not specified then the oldest of oceanic crustal ages (for those input points on oceanic crust) and rift start ages
+        (for those input points on continental crust) is used instead.
     time_increment: float
         The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
     lithology_filenames : list of string, optional
@@ -214,14 +216,14 @@ def reconstruct_backtrack_bathymetry(
     Returns
     -------
     dict mapping each time to a list of 3-tuple (longitude, latitude, bathymetry)
-        The reconstructed paleo bathymetry points from present day to 'oldest_time' (in increments of 'time_increment').
+        The reconstructed paleo bathymetry points from present day to the oldest time (see ``oldest_time``) in increments of ``time_increment``.
         Each key in the returned dict is one of those times and each value in the dict is a list of reconstructed paleo bathymetries
         represented as a 3-tuple containing reconstructed longitude, reconstructed latitude and paleo bathmetry.
     
     Raises
     ------
     ValueError
-        If ``oldest_time`` is negative or if ``time_increment`` is not positive.
+        If ``oldest_time`` is negative (if specified) or if ``time_increment`` is not positive.
 
     Notes
     -----
@@ -231,6 +233,9 @@ def reconstruct_backtrack_bathymetry(
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
         
     .. versionadded:: 1.4
+
+    .. versionchanged:: 1.5
+        ``oldest_time`` no longer needs to be specified (defaults to oldest of ocean crust ages and continental rift start ages of input points).
     """
    
     #
@@ -251,14 +256,11 @@ def reconstruct_backtrack_bathymetry(
     else:
         num_cpus = 1
     
-    if oldest_time < 0:
+    if (oldest_time is not None and
+        oldest_time < 0):
         raise ValueError("'oldest_time' should not be negative")
     if time_increment <= 0:
         raise ValueError("'time_increment' should be positive")
-    
-    # Create times from present day to the oldest requested time in the requested time increments.
-    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
-    time_range = [float(time) for time in np.arange(0, oldest_time + 1e-6, time_increment)]
     
     # Read the lithologies from one or more text files.
     #
@@ -411,6 +413,22 @@ def reconstruct_backtrack_bathymetry(
             # Create a new tuple with the rift start age replaced.
             grid_sample = grid_sample[:7] + (rift_start_age,) + grid_sample[8:]
             continental_grid_samples[grid_sample_index] = grid_sample
+    
+    # If the oldest time was not specified then instead use the oldest of ocean crust ages and continental rift start ages of the input points.
+    if oldest_time is None:
+        oldest_time = 0.0
+        if oceanic_grid_samples:
+            # Oceanic ages (at index 5 of each oceanic grid sample).
+            oldest_oceanic_time = max(oceanic_grid_sample[5] for oceanic_grid_sample in oceanic_grid_samples)
+            oldest_time = max(oldest_time, oldest_oceanic_time)
+        if continental_grid_samples:
+            # Continental rift start ages (at index 7 of each continental grid sample).
+            oldest_continental_time = max(continental_grid_sample[7] for continental_grid_sample in continental_grid_samples)
+            oldest_time = max(oldest_time, oldest_continental_time)
+    
+    # Create times from present day to the oldest requested time in the requested time increments.
+    # Note: Using 1e-6 to ensure the oldest time gets included (if it's an exact multiple of the time increment, which it likely will be).
+    time_range = [float(time) for time in np.arange(0, oldest_time + 1e-6, time_increment)]
     
     # Find the sea levels over the requested time period.
     if sea_level_model:
@@ -1246,7 +1264,7 @@ def write_bathymetry_grids(
 def reconstruct_backtrack_bathymetry_and_write_grids(
         output_file_prefix,
         grid_spacing_degrees,
-        oldest_time,
+        oldest_time=None,
         time_increment=1,
         lithology_filenames=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
         age_grid_filename=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
@@ -1270,7 +1288,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     """reconstruct_paleo_bathymetry_grids(\
         output_file_prefix,\
         grid_spacing_degrees,\
-        oldest_time,\
+        oldest_time=None,\
         time_increment=1,\
         lithology_filenames=[pybacktrack.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],\
         age_grid_filename=pybacktrack.BUNDLE_AGE_GRID_FILENAME,\
@@ -1299,8 +1317,10 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     grid_spacing_degrees : float
         Spacing between lat/lon points (in degrees) to sample bathymetry at present day.
         Note that any samples outside the masked region of the total sediment thickness grid are ignored.
-    oldest_time : float
+    oldest_time : float, optional
         The oldest time (in Ma) that output is generated back to (from present day). Value must not be negative.
+        If not specified then the oldest of oceanic crustal ages (for those grid points on oceanic crust) and rift start ages
+        (for those grid points on continental crust) is used instead.
     time_increment: float
         The time increment (in My) that output is generated (from present day back to oldest time). Value must be positive.
     lithology_filenames : list of string, optional
@@ -1382,7 +1402,7 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     Raises
     ------
     ValueError
-        If ``oldest_time`` is negative or if ``time_increment`` is not positive.
+        If ``oldest_time`` is negative (if specified) or if ``time_increment`` is not positive.
 
     Notes
     -----
@@ -1392,6 +1412,9 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     Any input points outside the masked region of the total sediment thickness grid are ignored (since bathymetry relies on sediment decompaction over time).
         
     .. versionadded:: 1.4
+
+    .. versionchanged:: 1.5
+        ``oldest_time`` no longer needs to be specified (defaults to oldest of ocean crust ages and continental rift start ages of grid points).
     """
 
     # Generate a global latitude/longitude grid of points (with the requested grid spacing).
@@ -1671,9 +1694,10 @@ def main():
         help='Use all CPUs (cores), or if an optional integer is also specified then use the specified number of CPUs. '
              'Defaults to using a single CPU.')
 
-    parser.add_argument('oldest_time', type=parse_non_negative_float,
+    parser.add_argument('oldest_time', nargs='?', type=parse_non_negative_float,
             metavar='oldest_time',
-            help='Output is generated from present day back to the oldest time (in Ma). Value must not be negative.')
+            help='Output is generated from present day back to the oldest time (in Ma). Value must not be negative. '
+                 'If not specified then defaults to oldest of ocean crust ages and continental rift start ages of grid points.')
     
     parser.add_argument(
         'output_file_prefix', type=argparse_unicode,
