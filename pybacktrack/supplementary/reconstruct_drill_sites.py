@@ -108,7 +108,7 @@ def reconstruct_drill_sites(
                 reconstructed_drill_site_latitude, reconstructed_drill_site_longitude = reconstructed_drill_site_location.to_lat_lon()
                 
                 # Write reconstructed location to output file.
-                drill_site_output_writer.writerow((reconstructed_drill_site_longitude, reconstructed_drill_site_latitude))
+                drill_site_output_writer.writerow((reconstructed_drill_site_longitude, reconstructed_drill_site_latitude, time))
 
 
 if __name__ == '__main__':
@@ -196,9 +196,8 @@ if __name__ == '__main__':
             args.start_time,
             args.time_increment,
             args.output_filename_suffix)
-        
-        sys.exit(0)
-    
+
+
     import traceback
     
     try:
