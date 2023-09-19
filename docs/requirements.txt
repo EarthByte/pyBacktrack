@@ -1,5 +1,5 @@
 numpy
 scipy
-mock
-sphinx
-sphinx-rtd-theme
+mock==5.0.2
+sphinx==7.0.1
+sphinx-rtd-theme==1.2.2
