@@ -16,15 +16,14 @@ import sys
 import os
 import re
 from mock import Mock as MagicMock
-import sphinx
 
 #
-# "Read the Docs" does not support dependencies that are C extensions so we need to
-# mock them out to avoid import errors when Sphinx builds documentation.
+# Since we haven't (yet) configured "Read the Docs" to install pygplates we
+# need to mock it out to avoid import errors when Sphinx builds documentation.
 #
-# Well, in the *advanced settings* of the "Read the Docs" project you can check the
-# "Use system packages" check box and this will work for numpy and scipy, however
-# it won't work for pygplates (since it's not installed in their build system).
+# There's also the "autodoc_mock_imports" config variable, but we 'import pybacktrack'
+# in this file (presumably before the config variable is processed) which imports pygplates,
+# so we need to manually mock pygplates instead.
 #
 # See http://docs.readthedocs.io/en/latest/faq.html
 #
@@ -33,8 +32,6 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return MagicMock()
 MOCK_MODULES = [
-    #'numpy',
-    #'scipy',
     'pygplates'
 ]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
@@ -47,8 +44,9 @@ import pybacktrack  # For package __version__ attribute.
 
 # -- General configuration ------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+# For Sphinx >= 1.3, napolean comes bundled with Sphinx (as an extension), rather
+# than having to do 'pip install sphinxcontrib.napoleon' (and specify that extension).
+needs_sphinx = '1.3'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -56,16 +54,9 @@ import pybacktrack  # For package __version__ attribute.
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
+    # Napoleon enables conversion of numpydoc and google style docstrings to reST...
+    'sphinx.ext.napoleon',
 ]
-#
-# Napoleon enables conversion of numpydoc and google style docstrings to reST...
-#
-if sphinx.__version__ >= "1.3":
-    # For Sphinx >= 1.3, napolean comes bundled with Sphinx (as an extension).
-    extensions.append('sphinx.ext.napoleon')
-else:
-    # For Sphinx < 1.3, you need to 'pip install sphinxcontrib.napoleon'.
-    extensions.append('sphinxcontrib.napoleon')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -81,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyBacktrack'
-copyright = u'2022, John Cannon'
+copyright = u'2023, John Cannon'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -136,7 +127,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
