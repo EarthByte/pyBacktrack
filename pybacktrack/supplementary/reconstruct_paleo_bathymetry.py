@@ -269,12 +269,16 @@ def main():
              'So the default matches typical topography/bathymetry grids (outputs negative bathymetry values below sea level).')
 
     parser.add_argument(
-        '-ot', '--output_time', action='store_true',
-        help='Output the reconstruction time (in Ma) as the last column. Default is not to output.')
+        '-ol', '--output_long_lat', action='store_true',
+        help='Output the reconstructed longitude and latitude as the first and second columns (before bathymetry column). Default is not to output.')
 
     parser.add_argument(
-        '-ol', '--output_long_lat', action='store_true',
-        help='Output the reconstructed longitude and latitude as the first and second columns. Default is not to output.')
+        '-od', '--output_dynamic_topography', action='store_true',
+        help='Output the change in dynamic topography since present day (after bathymetry column). Default is not to output.')
+
+    parser.add_argument(
+        '-ot', '--output_time', action='store_true',
+        help='Output the reconstruction time (in Ma) as the last column. Default is not to output.')
 
     parser.add_argument(
         '-mt', '--max_time', type=parse_non_negative_float,
@@ -315,6 +319,10 @@ def main():
     else:
         dynamic_topography_model = None
     
+    # If outputting dynamic topography then must also specify a dynamic topography model.
+    if args.output_dynamic_topography and not dynamic_topography_model:
+        raise ValueError("Must specify a dynamic topography model when outputting dynamic topography")
+    
     # Get sea level filename.
     if args.bundle_sea_level_model is not None:
         try:
@@ -351,6 +359,13 @@ def main():
         args.anchor_plate_id,
         args.output_positive_bathymetry_below_sea_level)
     
+    if args.output_dynamic_topography:
+        # We want dynamic topography for the entire time range so specify the maximum time (of paleobathymetry keyed by time).
+        # Although it doesn't really matter because we will sample using fallback so that non-NaN dynamic topography is returned for times prior to the location's appearance age.
+        max_age = max(paleo_bathymetry.keys())
+        dynamic_topography_model = pybacktrack.DynamicTopography.create_from_model_or_bundled_model_name(dynamic_topography_model, input_longitude, input_latitude, max_age)
+        dynamic_topography_at_present_day = dynamic_topography_model.sample(0.0)
+    
     # Open the output file for writing.
     with open(args.output_filename, 'w', newline='') as output_file:
         # Write the header information.
@@ -367,7 +382,12 @@ def main():
             # Determine which columns go into the row.
             row = (bathymetry,)
             if args.output_long_lat:
-                row = (reconstructed_longitude, reconstructed_latitude) + row  # add as first two columns
+                row = (reconstructed_longitude, reconstructed_latitude) + row  # add as first two columns (before bathymetry)
+            if args.output_dynamic_topography:
+                # Output the change in dynamic topography since present day.
+                dynamic_topography_at_reconstruction_time = dynamic_topography_model.sample(reconstruction_time)  # sample using fallback (ignores location's age)
+                dynamic_topography = dynamic_topography_at_reconstruction_time - dynamic_topography_at_present_day
+                row = row + (dynamic_topography,)  # add after bathymetry
             if args.output_time:
                 row = row + (reconstruction_time,)  # add as last column
             # Write the row to the output file.
