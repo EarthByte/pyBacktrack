@@ -1215,12 +1215,20 @@ def main():
     ocean_age_to_depth_model_name_dict = dict((model, model_name) for model, model_name, _ in age_to_depth.ALL_MODELS)
     default_ocean_age_to_depth_model_name = ocean_age_to_depth_model_name_dict[age_to_depth.DEFAULT_MODEL]
     
+    # Basically an argparse.RawDescriptionHelpFormatter that will also preserve formatting of
+    # argument help messages if they start with "R|".
+    class PreserveHelpFormatter(argparse.RawDescriptionHelpFormatter):
+        def _split_lines(self, text, width):
+            if text.startswith('R|'):
+                return text[2:].splitlines()
+            return super(PreserveHelpFormatter, self)._split_lines(text, width)
+
     #
     # Gather command-line options.
     #
     
     # The command-line parser.
-    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=PreserveHelpFormatter)
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
@@ -1235,11 +1243,14 @@ def main():
         '-l', '--lithology_filenames', nargs='+', action=ArgParseLithologyAction,
         metavar='lithology_filename',
         default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
-        help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
-             'If more than one file provided then conflicting lithologies in latter files override those in former files. '
-             'You can also choose built-in (bundled) lithologies (in any order) - choices include {0}. '
-             'Defaults to "{1}" if nothing specified.'.format(
+        help='R|Optional lithology filenames used to lookup density, surface porosity and porosity decay.\n'
+             'If more than one file provided then conflicting lithologies in latter files override those in former files.\n'
+             'You can also choose built-in (bundled) lithologies (in any order) - choices include {}\n'
+             '(see {}).\n'
+             'Defaults to "{}" if nothing specified.'
+             .format(
                  ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
+                 pybacktrack.bundle_data.BUNDLE_LITHOLOGY_DOC_URL,
                  DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
     
     parser.add_argument(
@@ -1284,29 +1295,34 @@ def main():
         '-m', '--ocean_age_to_depth_model', nargs='+', action=age_to_depth.ArgParseAgeModelAction,
         metavar='model_parameter',
         default=age_to_depth.DEFAULT_MODEL,
-        help='The oceanic model used to convert age to depth. '
-             'It can be the name of an in-built oceanic age model: {0} (defaults to {1}). '
-             'Or it can be an age model filename followed by two integers representing the age and depth column indices, '
-             'where the file should contain at least two columns (one containing the age and the other the depth).'.format(
+        help='R|The oceanic model used to convert age to depth.\n'
+             'It can be the name of an in-built oceanic age model: {} (defaults to {})\n'
+             '(see {}).\n'
+             'Or it can be an age model filename followed by two integers representing the age and depth column indices,\n'
+             'where the file should contain at least two columns (one containing the age and the other the depth).'
+             .format(
                  ', '.join(model_name for _, model_name, _ in age_to_depth.ALL_MODELS),
-                 default_ocean_age_to_depth_model_name))
+                 default_ocean_age_to_depth_model_name,
+                 pybacktrack.bundle_data.BUNDLE_AGE_TO_DEPTH_MODEL_DOC_URL))
     
     parser.add_argument(
         '-rs', '--rift_start_time', type=argparse_non_negative_float,
         metavar='rift_start_time',
-        help='Optional start time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid). '
-             'If not specified (but "rift_end_time" is specified) then it defaults to "rift_end_time". '
-             'However providing a rift start time will result in more accurate subsidence values generated during rifting. '
+        help='R|Optional start time of rifting (in My).\n'
+             'Only used if well is located on continental passive margin (outside age grid).\n'
+             'If not specified (but "rift_end_time" is specified) then it defaults to "rift_end_time".\n'
+             'However providing a rift start time will result in more accurate subsidence values generated during rifting.\n'
              'If it is specified then "rift_end_time" must also be specified.')
     parser.add_argument(
         '-re', '--rift_end_time', type=argparse_non_negative_float,
         metavar='rift_end_time',
-        help='Optional end time of rifting (in My). '
-             'Only used if well is located on continental passive margin (outside age grid), in which case it '
-             'must be specified if it is not provided inside the well file (as "# RiftEndTime = <rift_end_time>") '
-             'and well location is not inside rifting region of builtin rift start/end grids. '
-             'Overrides well file (and builtin rifting start/end grids) if specified.')
+        help='R|Optional end time of rifting (in My).\n'
+             'Only used if well is located on continental passive margin (outside age grid), in which case it\n'
+             'must be specified if it is not provided inside the well file (as "# RiftEndTime = <rift_end_time>")\n'
+             'and well location is not inside rifting region of builtin rift start/end grids\n'
+             '(see {}).\n'
+             'Overrides well file (and builtin rifting start/end grids) if specified.'
+             .format(pybacktrack.bundle_data.BUNDLE_RIFTING_GRIDS_DOC_URL))
     
     parser.add_argument(
         '-o', '--output_well_filename', type=argparse_unicode,
@@ -1323,8 +1339,9 @@ def main():
         '-a', '--age_grid_filename', type=argparse_unicode,
         default=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
         metavar='age_grid_filename',
-        help='Optional age grid filename used to obtain age of seafloor at well location. '
-             'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
+        help='R|Optional age grid filename used to obtain age of seafloor at well location.\n'
+             'Defaults to the bundled data file "{}"\n'
+             '(see {}).'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME, pybacktrack.bundle_data.BUNDLE_AGE_GRID_DOC_URL))
     age_grid_argument_group.add_argument(
         '-cc', '--continental_crust', action='store_true',
         help='The well site is known to be on continental crust (not oceanic). '
@@ -1338,8 +1355,12 @@ def main():
         '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
         default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         metavar='total_sediment_thickness_filename',
-        help='Optional filename used to obtain total sediment thickness at well location. '
-                'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+        help='R|Optional filename used to obtain total sediment thickness at well location.\n'
+             'Defaults to the bundled data file "{}"\n'
+             '(see {}).'
+             .format(
+                    pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+                    pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_DOC_URL))
     total_sediment_thickness_argument_group.add_argument(
         '-ns', '--no_total_sediment_thickness', action='store_true',
         help='The well site was drilled to basement depth (and so represents total sediment thickness). '
@@ -1350,27 +1371,35 @@ def main():
         '-k', '--crustal_thickness_filename', type=argparse_unicode,
         default=pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
         metavar='crustal_thickness_filename',
-        help='Optional filename used to obtain crustal thickness at well location. '
-             'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME))
+        help='R|Optional filename used to obtain crustal thickness at well location.\n'
+             'Defaults to the bundled data file "{}"\n'
+             '(see {}).'
+             .format(
+                    pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_FILENAME,
+                    pybacktrack.bundle_data.BUNDLE_CRUSTAL_THICKNESS_DOC_URL))
     
     # Allow user to override default topography filename (if they don't want the one in the bundled data).
     parser.add_argument(
         '-t', '--topography_filename', type=argparse_unicode,
         default=pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME,
         metavar='topography_filename',
-        help='Optional topography filename used to obtain water depth at well location. '
-             'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME))
+        help='R|Optional topography filename used to obtain water depth at well location.\n'
+             'Defaults to the bundled data file "{}"\n'
+             '(see {}).'.format(pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_FILENAME, pybacktrack.bundle_data.BUNDLE_TOPOGRAPHY_DOC_URL))
     
     # Can optionally specify dynamic topography as a triplet of filenames or a model name (if using bundled data) but not both.
     dynamic_topography_argument_group = parser.add_mutually_exclusive_group()
     dynamic_topography_argument_group.add_argument(
         '-ym', '--bundle_dynamic_topography_model', type=str,
         metavar='bundle_dynamic_topography_model',
-        help='Optional dynamic topography through time at well location. '
-             'If no model specified then dynamic topography is ignored. '
-             'Can be used both for oceanic floor and continental passive margin '
-             '(ie, well location inside or outside age grid). '
-             'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        help='R|Optional dynamic topography through time at well location.\n'
+             'If no model specified then dynamic topography is ignored.\n'
+             'Can be used both for oceanic floor and continental passive margin (ie, well location inside or outside age grid).\n'
+             'Choices include {}\n'
+             '(see {})'
+             .format(
+                    ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES),
+                    pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_DOC_URL))
     dynamic_topography_argument_group.add_argument(
         '-y', '--dynamic_topography_model', nargs='+', action=ArgParseDynamicTopographyAction,
         metavar='dynamic_topography_filename',
@@ -1392,9 +1421,13 @@ def main():
     sea_level_argument_group.add_argument(
         '-slm', '--bundle_sea_level_model', type=str,
         metavar='bundle_sea_level_model',
-        help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
-             'If no model (or filename) is specified then sea level is ignored. '
-             'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
+        help='R|Optional sea level model used to obtain sea level (relative to present-day) over time.\n'
+             'If no model (or filename) is specified then sea level is ignored.\n'
+             'Choices include {}\n'
+             '(see {}).'
+             .format(
+                    ', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES),
+                    pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS_DOC_URL))
     sea_level_argument_group.add_argument(
         '-sl', '--sea_level_model', type=argparse_unicode,
         metavar='sea_level_model',

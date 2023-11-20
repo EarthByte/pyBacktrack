@@ -111,9 +111,20 @@ The following module attributes are available:
 
 
 import os.path
+import pybacktrack.version
 
 
 BUNDLE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundle_data')
+
+# Documentation is on ReadTheDocs.
+BUNDLE_DOC_URL_PREFIX = 'https://pybacktrack.rtfd.io/'
+if pybacktrack.version.VERSION_PRERELEASE_SUFFIX:
+    # A pre-release version (ie, not a public release) uses 'latest' documentation.
+    BUNDLE_DOC_URL_PREFIX += 'en/latest/'
+else:
+    # Public release uses 'stable' documentation.
+    # Note: This could also be 'page' since ReadTheDocs redirects that to the default version (which is 'stable' for us).
+    BUNDLE_DOC_URL_PREFIX += 'en/stable/'
 
 # Primary lithologies file contains the lithologies in the pyBacktrack paper.
 PRIMARY_BUNDLE_LITHOLOGY_FILENAME = os.path.join(BUNDLE_PATH, 'lithologies', 'primary.txt')
@@ -124,23 +135,32 @@ BUNDLE_LITHOLOGY_FILENAMES = [
 ]
 # Default lithologies file is the primary lithologies file.
 DEFAULT_BUNDLE_LITHOLOGY_FILENAME = PRIMARY_BUNDLE_LITHOLOGY_FILENAME
+BUNDLE_LITHOLOGY_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_stratigraphy.html#pybacktrack-bundled-lithology-definitions'
 
 BUNDLE_AGE_GRID_FILENAME = os.path.join(BUNDLE_PATH, 'age', 'agegrid_6m.nc')
+BUNDLE_AGE_GRID_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-bundled-age-grid'
 
 BUNDLE_RIFTING_START_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rift_start_grid.nc')
 BUNDLE_RIFTING_END_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rift_end_grid.nc')
+BUNDLE_RIFTING_GRIDS_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_paleo_bathymetry.html#pybacktrack-builtin-rift-gridding-procedure'
+
 BUNDLE_TRENCHES_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'trenches.gpmlz')
 BUNDLE_SUBDUCTING_BOUNDARIES_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'subducting_boundaries.gpmlz')
 BUNDLE_RECONSTRUCTION_ROTATION_FILENAMES = [os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'rotations_250-0Ma.rot')]
 BUNDLE_RECONSTRUCTION_STATIC_POLYGON_FILENAME = os.path.join(BUNDLE_PATH, 'reconstruction', '2019_v2', 'static_polygons.shp')
+BUNDLE_PALEOBATHYMETRY_GRIDDING_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_paleo_bathymetry.html#pybacktrack-paleo-bathymetry-gridding-procedure'
 
 BUNDLE_AGE_TO_DEPTH_MODEL_RHCW18_FILENAME = os.path.join(BUNDLE_PATH, 'ocean_age_to_depth', 'RHCW18', 'depth-1333-130-2500.dat')
+BUNDLE_AGE_TO_DEPTH_MODEL_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-oceanic-subsidence'
 
 BUNDLE_TOPOGRAPHY_FILENAME = os.path.join(BUNDLE_PATH, 'topography', 'ETOPO1_0.1.grd')
+BUNDLE_TOPOGRAPHY_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-bundled-topography-grid'
 
 BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME = os.path.join(BUNDLE_PATH, 'sediment_thickness', 'GlobSed.nc')
+BUNDLE_TOTAL_SEDIMENT_THICKNESS_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_stratigraphy.html#pybacktrack-bundled-total-sediment-thickness-grid'
 
 BUNDLE_CRUSTAL_THICKNESS_FILENAME = os.path.join(BUNDLE_PATH, 'crustal_thickness', 'crsthk.grd')
+BUNDLE_CRUSTAL_THICKNESS_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-bundled-crustal-thickness-grid'
 
 BUNDLE_DYNAMIC_TOPOGRAPHY_PATH = os.path.join(BUNDLE_PATH, 'dynamic_topography')
 BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_PATH = os.path.join(BUNDLE_DYNAMIC_TOPOGRAPHY_PATH, 'models')
@@ -262,6 +282,7 @@ BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS = {
 }
 
 BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES = BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS.keys()
+BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-bundled-dynamic-topography-models'
 
 BUNDLE_SEA_LEVEL_PATH = os.path.join(BUNDLE_PATH, 'sea_level')
 BUNDLE_SEA_LEVEL_MODELS = {
@@ -270,3 +291,4 @@ BUNDLE_SEA_LEVEL_MODELS = {
 }
 
 BUNDLE_SEA_LEVEL_MODEL_NAMES = BUNDLE_SEA_LEVEL_MODELS.keys()
+BUNDLE_SEA_LEVEL_MODELS_DOC_URL = BUNDLE_DOC_URL_PREFIX + 'pybacktrack_backtrack.html#pybacktrack-bundled-sea-level-models'

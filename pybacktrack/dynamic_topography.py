@@ -848,12 +848,20 @@ def main():
         
         return value
     
+    # Basically an argparse.RawDescriptionHelpFormatter that will also preserve formatting of
+    # argument help messages if they start with "R|".
+    class PreserveHelpFormatter(argparse.RawDescriptionHelpFormatter):
+        def _split_lines(self, text, width):
+            if text.startswith('R|'):
+                return text[2:].splitlines()
+            return super(PreserveHelpFormatter, self)._split_lines(text, width)
+    
     #
     # Gather command-line options.
     #
     
     # The command-line parser.
-    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=PreserveHelpFormatter)
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
@@ -862,8 +870,12 @@ def main():
     dynamic_topography_argument_group.add_argument(
         '-ym', '--bundle_dynamic_topography_model', type=str,
         metavar='bundle_dynamic_topography_model',
-        help='Dynamic topography through time. '
-             'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+        help='R|Dynamic topography through time.\n'
+             'Choices include {}\n'
+             '(see {}).'
+             .format(
+                    ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES),
+                    pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODELS_DOC_URL))
     dynamic_topography_argument_group.add_argument(
         '-y', '--dynamic_topography_model', nargs='+', action=ArgParseDynamicTopographyAction,
         metavar='dynamic_topography_filename',

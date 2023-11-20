@@ -110,6 +110,8 @@ total sediment thickness, a grid is sampled at the drill site location. The defa
 own grid by using the ``-s`` command-line option in the :ref:`backtrack <pybacktrack_backtrack>` and
 :ref:`backstrip <pybacktrack_backstrip>` modules.
 
+.. _pybacktrack_bundled_total_sediment_thickness_grid:
+
 The default total sediment thickness grid is:
 
 * Straume, E.O., Gaina, C., Medvedev, S., Hochmuth, K., Gohl, K., Whittaker, J. M., et al. (2019).

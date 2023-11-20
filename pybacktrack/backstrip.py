@@ -683,12 +683,20 @@ def main():
     import argparse
     from pybacktrack.lithology import ArgParseLithologyAction, DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME, BUNDLED_LITHOLOGY_SHORT_NAMES
     
+    # Basically an argparse.RawDescriptionHelpFormatter that will also preserve formatting of
+    # argument help messages if they start with "R|".
+    class PreserveHelpFormatter(argparse.RawDescriptionHelpFormatter):
+        def _split_lines(self, text, width):
+            if text.startswith('R|'):
+                return text[2:].splitlines()
+            return super(PreserveHelpFormatter, self)._split_lines(text, width)
+    
     #
     # Gather command-line options.
     #
         
     # The command-line parser.
-    parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__description__, formatter_class=PreserveHelpFormatter)
     
     parser.add_argument('--version', action='version', version=pybacktrack.version.__version__)
     
@@ -715,12 +723,15 @@ def main():
         '-l', '--lithology_filenames', nargs='+', action=ArgParseLithologyAction,
         metavar='lithology_filename',
         default=[pybacktrack.bundle_data.DEFAULT_BUNDLE_LITHOLOGY_FILENAME],
-        help='Optional lithology filenames used to lookup density, surface porosity and porosity decay. '
-                'If more than one file provided then conflicting lithologies in latter files override those in former files. '
-                'You can also choose built-in (bundled) lithologies (in any order) - choices include {0}. '
-                'Defaults to "{1}" if nothing specified.'.format(
-                ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
-                DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
+        help='R|Optional lithology filenames used to lookup density, surface porosity and porosity decay.\n'
+             'If more than one file provided then conflicting lithologies in latter files override those in former files.\n'
+             'You can also choose built-in (bundled) lithologies (in any order) - choices include {}\n'
+             '(see {}).\n'
+             'Defaults to "{}" if nothing specified.'
+             .format(
+                 ', '.join('"{0}"'.format(short_name) for short_name in BUNDLED_LITHOLOGY_SHORT_NAMES),
+                 pybacktrack.bundle_data.BUNDLE_LITHOLOGY_DOC_URL,
+                 DEFAULT_BUNDLED_LITHOLOGY_SHORT_NAME))
     
     # Action to parse a longitude/latitude location.
     class LocationAction(argparse.Action):
@@ -807,8 +818,12 @@ def main():
         '-s', '--total_sediment_thickness_filename', type=parse_unicode,
         default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
         metavar='total_sediment_thickness_filename',
-        help='Optional filename used to obtain total sediment thickness at well location. '
-                'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+        help='R|Optional filename used to obtain total sediment thickness at well location.\n'
+             'Defaults to the bundled data file "{}"\n'
+             '(see {}).'
+             .format(
+                    pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+                    pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_DOC_URL))
     total_sediment_thickness_argument_group.add_argument(
         '-ns', '--no_total_sediment_thickness', action='store_true',
         help='The well site was drilled to basement depth (and so represents total sediment thickness). '
@@ -819,21 +834,24 @@ def main():
     sea_level_argument_group.add_argument(
         '-slm', '--bundle_sea_level_model', type=str,
         metavar='bundle_sea_level_model',
-        help='Optional sea level model used to obtain sea level (relative to present-day) over time. '
-                'If no model (or filename) is specified then sea level is ignored. '
-                'Choices include {0}.'.format(', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES)))
+        help='R|Optional sea level model used to obtain sea level (relative to present-day) over time.\n'
+             'If no model (or filename) is specified then sea level is ignored.\n'
+             'Choices include {}\n'
+             '(see {}).'
+             .format(
+                    ', '.join(pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODEL_NAMES),
+                    pybacktrack.bundle_data.BUNDLE_SEA_LEVEL_MODELS_DOC_URL))
     sea_level_argument_group.add_argument(
         '-sl', '--sea_level_model', type=parse_unicode,
         metavar='sea_level_model',
         help='Optional file used to obtain sea level (relative to present-day) over time. '
-                'If no filename (or model) is specified then sea level is ignored. '
-                'If specified then each row should contain an age column followed by a column for sea level (in metres).')
+             'If no filename (or model) is specified then sea level is ignored. '
+             'If specified then each row should contain an age column followed by a column for sea level (in metres).')
     
     parser.add_argument(
         'output_filename', type=parse_unicode,
         metavar='output_filename',
-        help='The output filename used to store the decompacted total sediment thickness and '
-                'tectonic subsidence through time.')
+        help='The output filename used to store the decompacted total sediment thickness and tectonic subsidence through time.')
     
     # Parse command-line options.
     args = parser.parse_args()

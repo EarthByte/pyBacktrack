@@ -584,6 +584,14 @@ if __name__ == '__main__':
         
         return value
     
+    # Basically an argparse.RawDescriptionHelpFormatter that will also preserve formatting of
+    # argument help messages if they start with "R|".
+    class PreserveHelpFormatter(argparse.RawDescriptionHelpFormatter):
+        def _split_lines(self, text, width):
+            if text.startswith('R|'):
+                return text[2:].splitlines()
+            return super(PreserveHelpFormatter, self)._split_lines(text, width)
+    
     
     def main():
         
@@ -600,7 +608,7 @@ if __name__ == '__main__':
         #
         
         # The command-line parser.
-        parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(description=__description__, formatter_class=PreserveHelpFormatter)
             
         grid_spacing_argument_group = parser.add_mutually_exclusive_group()
         grid_spacing_argument_group.add_argument('-g', '--grid_spacing_degrees', type=float,
@@ -615,17 +623,22 @@ if __name__ == '__main__':
             '-s', '--total_sediment_thickness_filename', type=argparse_unicode,
             default=pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
             metavar='total_sediment_thickness_filename',
-            help='Optional filename used to determine submerged crust. '
-                    'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME))
+            help='R|Optional filename used to determine submerged crust.\n'
+                 'Defaults to the bundled data file "{}"\n'
+                 '(see {}).'
+                 .format(
+                        pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_FILENAME,
+                        pybacktrack.bundle_data.BUNDLE_TOTAL_SEDIMENT_THICKNESS_DOC_URL))
         
         # Allow user to override default age grid filename (if they don't want the one in the bundled data).
         parser.add_argument(
             '-a', '--age_grid_filename', type=argparse_unicode,
             default=pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME,
             metavar='age_grid_filename',
-            help='Optional age grid filename used to distinguish between continental and oceanic crust. '
-                'Crust is oceanic at locations inside masked age grid region, and continental outside. '
-                'Defaults to the bundled data file "{0}".'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME))
+            help='R|Optional age grid filename used to distinguish between continental and oceanic crust.\n'
+                 'Crust is oceanic at locations inside masked age grid region, and continental outside.\n'
+                 'Defaults to the bundled data file "{}"\n'
+                 '(see {}).'.format(pybacktrack.bundle_data.BUNDLE_AGE_GRID_FILENAME, pybacktrack.bundle_data.BUNDLE_AGE_GRID_DOC_URL))
         
         # Can optionally specify topology filenames.
         topology_argument_group = parser.add_mutually_exclusive_group()

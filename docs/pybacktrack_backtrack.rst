@@ -167,6 +167,8 @@ Sea level variation
 A model of the variation of sea level relative to present day can optionally be used when backtracking.
 This adjusts the isostatic correction of the decompacted sediment thickness to take into account sea-level variations.
 
+.. _pybacktrack_bundled_sea_level_models:
+
 There are two built-in sea level models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
 * ``Haq87_SealevelCurve`` - `The Phanerozoic Record of Global Sea-Level Change <https://doi.org/10.1126/science.1116412>`_
@@ -192,13 +194,14 @@ The subsidence model chosen by the ``backtrack`` module depends on whether the d
 This is determined by an oceanic age grid. Since the age grid captures only oceanic crust, a drill site inside this region
 will automatically use the oceanic subsidence model whereas a drill site outside this region uses the continental subsidence model.
 
+.. _pybacktrack_bundled_age_grid:
+
 The default present-day age grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a 6-minute resolution grid
 of the age of the world's ocean crust that uses the timescale of `Gee and Kent (2007) <https://doi.org/10.1016/B978-044452748-6.00097-3>`_:
 
 * Seton, M., Müller, R. D., Zahirovic, S., Williams, S., Wright, N., Cannon, J., Whittaker, J., Matthews, K., McGirr, R., (2020),
   `A global dataset of present-day oceanic crustal age and seafloor spreading parameters <https://doi.org/10.1029/2020GC009214>`_,
   Geochemistry, Geophysics, Geosystems, doi: 10.1029/2020GC009214
-
 
 .. note:: The default present-day age grid was updated in pyBacktrack version 1.4.
 
@@ -249,6 +252,8 @@ Tectonic subsidence is unloaded water depth, that is with sediment removed.
 So to obtain an accurate value, ``backtrack`` starts with a bathymetry grid to obtain the present-day water depth (the depth of the sediment surface).
 Then an isostatic correction of the present-day sediment thickness (at the drill site) takes into account the removal of sediment to reveal
 the present-day tectonic subsidence. The isostatic correction uses the average sediment density of the drill site stratigraphy.
+
+.. _pybacktrack_bundled_topography_grid:
 
 The default present-day bathymetry grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 6-minute resolution global grid of the land topography and ocean bathymetry (although only the ocean bathymetry is actually needed):
@@ -349,6 +354,8 @@ also thinning the crust to match the actual crustal thickness at present day.
              typical lithospheric thicknesses (125km). In this case the stretching factor is clamped to avoid this but,
              as a result, the modeled subsidence is not as deep as the actual subsidence.
 
+.. _pybacktrack_bundled_crustal_thickness_grid:
+
 The default present-day crustal thickness grid :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack`` is a
 1-degree resolution grid of the thickness of the crustal part of the lithosphere:
 
@@ -391,6 +398,8 @@ and subsequent thickening (thermal cooling). Once the optimal stretching factor 
 dynamic topography since the start of rifting.
 
 .. seealso:: :ref:`pybacktrack_continental_subsidence`
+
+.. _pybacktrack_bundled_dynamic_topography_models:
 
 These are the built-in dynamic topography models :ref:`bundled <pybacktrack_reference_bundle_data>` inside ``backtrack``:
 
