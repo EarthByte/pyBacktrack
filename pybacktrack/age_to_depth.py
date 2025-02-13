@@ -55,8 +55,7 @@ MODEL_RHCW18 = 2
 ALL_MODELS = [
     (MODEL_GDH1, 'GDH1', 'Stein and Stein (1992) "Model for the global variation in oceanic depth and heat flow with lithospheric age"'),
     (MODEL_CROSBY_2007, 'CROSBY_2007', 'Crosby, A.G., (2007) "Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis"'),
-    (MODEL_RHCW18, 'RHCW18', 'Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system"')]
-
+    (MODEL_RHCW18, 'RHCW18', 'Richards et al. (2020) "Structure and dynamics of the oceanic lithosphere-asthenosphere system" (mantle temperature 1333 °C, plate thickness 130 km, zero-age ridge depth 2500 m)')]
 
 # The model to use by default (if no 'model' parameter passed to function).
 #
