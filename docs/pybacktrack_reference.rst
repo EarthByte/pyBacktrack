@@ -514,13 +514,22 @@ Oceanic subsidence
 ^^^^^^^^^^^^^^^^^^
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_RHCW18``
-    Richards et al. (2020) ``Structure and dynamics of the oceanic lithosphere-asthenosphere system``.
+    Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_.
+
+    The parameters of the preferred RHCW18 Plate Model used in pyBacktrack include a potential mantle temperature of 1333 in °C,
+    a plate thickness of 130 km and a zero-age ridge depth of 2500 m, as described in Richards et al. (2020)
+    (updated from Richards et al. (2018) and on the `related github repository <https://github.com/freddrichards/RHCW18_Plate_Model>`_).
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_CROSBY_2007``
     Crosby, A.G., (2007) ``Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis``.
+  
+    The Python source code that implements this age-depth relationship can be found
+    `here <https://github.com/EarthByte/pyBacktrack/blob/8e21ec2b49be101e88d80e8ccb18fe736d68a277/pybacktrack/age_to_depth.py#L195-L264>`_.
+    And note that additional background information on this model can be found in:
+    Crosby, A.G. and McKenzie, D., 2009. `An analysis of young ocean depth, gravity and global residual topography <https://doi.org/10.1111/j.1365-246X.2009.04224.x>`_.
 
 ``pybacktrack.AGE_TO_DEPTH_MODEL_GDH1``
-    Stein and Stein (1992) ``Model for the global variation in oceanic depth and heat flow with lithospheric age``.
+    Stein and Stein (1992) `Model for the global variation in oceanic depth and heat flow with lithospheric age <https://doi.org/10.1038/359123a0>`_.
 
 ``pybacktrack.AGE_TO_DEPTH_DEFAULT_MODEL``
     The age-to-depth model to use by default.

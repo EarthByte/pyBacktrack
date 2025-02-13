@@ -278,6 +278,10 @@ The age of oceanic crust at the drill site (sampled from the oceanic age grid) c
 by using an age-to-depth model. There are three models built into ``backtrack``:
 
 * ``RHCW18`` - Richards et al. (2020) `Structure and dynamics of the oceanic lithosphere-asthenosphere system <https://doi.org/10.1016/j.pepi.2020.106559>`_
+  
+  The parameters of the preferred RHCW18 Plate Model used in pyBacktrack include a potential mantle temperature of 1333 in °C,
+  a plate thickness of 130 km and a zero-age ridge depth of 2500 m, as described in Richards et al. (2020)
+  (updated from Richards et al. (2018) and on the `related github repository <https://github.com/freddrichards/RHCW18_Plate_Model>`_).
 
 * ``CROSBY_2007`` - Crosby, A.G., (2007). *Aspects of the relationship between topography and gravity on the Earth and Moon, PhD thesis, University of Cambridge*
   
