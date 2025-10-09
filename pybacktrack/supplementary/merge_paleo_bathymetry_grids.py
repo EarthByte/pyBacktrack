@@ -5,12 +5,6 @@ import os
 import os.path
 import pybacktrack
 import sys
-try:
-    import xarray
-except ImportError:
-    have_xarray = False
-else:
-    have_xarray = True
 
 
 def merge_paleo_bathymetry_grids(
@@ -148,87 +142,33 @@ def _load_bathymetry(
         paleo_bathymetry_pybacktrack_filename,
         paleo_bathymetry_wright_filename):
 
-    # Use the Python xarray module (if installed) to load the bathymetry grids.
-    #
-    # This enables faster loading of the grids (compared to GMT grdtrack) but any
-    # interpolated location that has any NaN neighbours (in 4x4 linear region) will itself be NaN
-    # (whereas GMT grdtrack will interpolate halfway from a non-NaN value, using option "-n+t0.5").
-    #
-    # UPDATE: No longer using xarray since:
-    #         - xarray seems to require the longitude range of the sampling points to match the input grid (whereas GMT grdtrack does not).
-    #           For example, if sampling points are [-180, 180] and grid is [0, 360] then an entire hemisphere goes missing.
-    #         - xarray appears to shift away from NaN regions slightly (likely due to the NaN interpolation method covered above).
-    #
-    use_xarray_if_available = False
+    # Create a multiline string (one line per lon/lat/value1/etc row).
+    location_data = ''.join(
+            ' '.join(str(item) for item in row) + '\n' for row in input_points)
+
+    # The command-line strings to execute GMT 'grdtrack'.
+    grdtrack_command_line = ["gmt", "grdtrack",
+        # Geographic input/output coordinates...
+        "-fg",
+        # Avoid anti-aliasing...
+        "-n+a+bg+t0.5"]
+    # One or more grid filenames to sample.
+    for grid_filename in (paleo_bathymetry_pybacktrack_filename, paleo_bathymetry_wright_filename):
+        grdtrack_command_line.append("-G{0}".format(grid_filename))
     
-    if use_xarray_if_available and have_xarray:
+    # Call the system command.
+    stdout_data = pybacktrack.util.call_system_command.call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
 
-        # The input point longitudes and latitudes.
-        lons = xarray.DataArray([lon for lon, lat in input_points])
-        lats = xarray.DataArray([lat for lon, lat in input_points])
+    output_values = []
 
-        with xarray.open_dataset(paleo_bathymetry_pybacktrack_filename) as bathymetry_pybacktrack_grid:
-            # Get the lon, lat coordinates names (typically 'lon' and 'lat', and in that order).
-            coord_names = list(bathymetry_pybacktrack_grid.coords.keys())
-            lon_name = coord_names[0]
-            lat_name = coord_names[1]
-            # Get the z value name (typically 'z').
-            z_name = list(bathymetry_pybacktrack_grid.data_vars.keys())[0]
-            # Interpolate the bathymetry grid at the input point locations.
-            bathymetry_pybacktrack_values = bathymetry_pybacktrack_grid[z_name].interp(dict({lon_name : lons, lat_name : lats}))
-            # print(bathymetry_pybacktrack_grid.keys())
-            # print(bathymetry_pybacktrack_values.shape)
+    # Extract the sampled values.
+    for line in stdout_data.splitlines():
+        # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
+        # Note that if GMT returns "NaN" then we'll return float('nan').
+        output_value = tuple(float(value) for value in line.split())
+        output_values.append(output_value)
 
-        with xarray.open_dataset(paleo_bathymetry_wright_filename) as bathymetry_wright_grid:
-            # Get the lon, lat coordinates names (typically 'lon' and 'lat', and in that order).
-            coord_names = list(bathymetry_wright_grid.coords.keys())
-            lon_name = coord_names[0]
-            lat_name = coord_names[1]
-            # Get the z value name (typically 'z').
-            z_name = list(bathymetry_wright_grid.data_vars.keys())[0]
-            # Interpolate the bathymetry grid at the input point locations.
-            bathymetry_wright_values = bathymetry_wright_grid[z_name].interp(dict({lon_name : lons, lat_name : lats}))
-            # print(bathymetry_wright_grid.keys())
-            # print(bathymetry_wright_values.shape)
-
-        output_values = []
-
-        for point_index in range(len(lons)):
-            lon, lat = input_points[point_index]
-            output_value = (lon, lat, float(bathymetry_pybacktrack_values.item(point_index)), float(bathymetry_wright_values.item(point_index)))
-            output_values.append(output_value)
-    
-        return output_values
-
-    else:  # Use GMT grdtrack ...
-
-        # Create a multiline string (one line per lon/lat/value1/etc row).
-        location_data = ''.join(
-                ' '.join(str(item) for item in row) + '\n' for row in input_points)
-
-        # The command-line strings to execute GMT 'grdtrack'.
-        grdtrack_command_line = ["gmt", "grdtrack",
-            # Geographic input/output coordinates...
-            "-fg",
-            # Avoid anti-aliasing...
-            "-n+a+bg+t0.5"]
-        # One or more grid filenames to sample.
-        for grid_filename in (paleo_bathymetry_pybacktrack_filename, paleo_bathymetry_wright_filename):
-            grdtrack_command_line.append("-G{0}".format(grid_filename))
-        
-        # Call the system command.
-        stdout_data = pybacktrack.util.call_system_command.call_system_command(grdtrack_command_line, stdin=location_data, return_stdout=True)
-
-        output_values = []
-
-        # Extract the sampled values.
-        for line in stdout_data.splitlines():
-            # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
-            # Note that if GMT returns "NaN" then we'll return float('nan').
-            output_value = tuple(float(value) for value in line.split())
-            output_values.append(output_value)
-    
-        return output_values
+    return output_values
 
 
 def _gmt_nearneighbor(
@@ -282,9 +222,7 @@ def _generate_input_points_grid(grid_spacing_degrees):
         lat = -90 + lat_index * grid_spacing_degrees
         
         for lon_index in range(num_longitudes):
-            # NOTE: For some reason xarray does not always like the range [-180, 180] (excludes half the globe).
-            #       So use the range [0, 360] instead.
-            lon = 0 + lon_index * grid_spacing_degrees
+            lon = -180 + lon_index * grid_spacing_degrees
             
             input_points.append((lon, lat))
     
