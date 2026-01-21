@@ -62,6 +62,7 @@ Generate paleo bathymetry grids through time.
    pybacktrack.reconstruct_paleo_bathymetry
    pybacktrack.write_paleo_bathymetry_grids
    pybacktrack.reconstruct_paleo_bathymetry_grids
+   pybacktrack.merge_paleo_bathymetry_grid
 
 .. _pybacktrack_reference_creating_lithologies:
 
@@ -158,6 +159,8 @@ Rifting is assumed instantaneous in that thermal contraction only happens after 
 
 Dynamic topography
 ------------------
+
+Sample time-dependent dynamic topography in the mantle reference frame.
 
 .. autosummary::
    :nosignatures:

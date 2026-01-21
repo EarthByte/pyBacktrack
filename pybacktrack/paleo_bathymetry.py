@@ -37,7 +37,7 @@ import os
 import os.path
 import pybacktrack.age_to_depth as age_to_depth
 import pybacktrack.bundle_data
-from pybacktrack.dynamic_topography import DynamicTopography
+from pybacktrack.dynamic_topography import DynamicTopography, InterpolateDynamicTopography
 from pybacktrack.lithology import read_lithologies_files
 import pybacktrack.rifting as rifting
 from pybacktrack.sea_level import SeaLevel
@@ -1163,18 +1163,22 @@ def _write_present_day_grid(
     call_system_command(gmt_command_line, stdin=input_data)
 
 
-def _write_paleo_bathymetry_grid(
+def _write_backtracked_paleo_bathymetry_grid(
         input,
         grid_spacing_degrees,
         grid_filename,
-        xyz_filename=None):
+        output_xyz=False):
     """
-    Grid the input reconstructed paleobathymetry data and write to an output grid file.
+    Grid the input reconstructed, backtracked paleobathymetry data and write to an output grid file.
     
     'input' is a list of (longitude, latitude, bathymetry) sequences where latitude and longitude are in degrees.
     'grid_spacing_degrees' is spacing of output grid points in degrees.
-    If 'xyz_filename' is specified then an xyz file is also created (from 'input').
+    If 'output_xyz' is specified then an xyz file is also created (from 'input') with same name as 'grid_filename' but with 'xyz' extension.
     """
+    
+    # Make sure directory containing the output grid file exists.
+    if os.path.dirname(grid_filename) and not os.path.exists(os.path.dirname(grid_filename)):
+        os.makedirs(os.path.dirname(grid_filename))
     
     # Create a multiline string (one line per lon/lat/value row).
     input_data = ''.join(
@@ -1269,26 +1273,227 @@ def _write_paleo_bathymetry_grid(
         os.remove(anti_aliasing_filename)
     
     # Also create an xyz file (from 'input') if requested.
-    if xyz_filename is not None:
+    if output_xyz:
+        xyz_filename, _ = os.path.splitext(grid_filename)
+        xyz_filename += '.xyz'
         with open(xyz_filename, 'w') as xyz_file:
             xyz_file.write(input_data)
 
 
-def _write_paleo_bathymetry_grid_multiprocessing(
-        paleo_bathymetry_and_reconstruction_time,
-        grid_spacing,
-        grid_filename_format,
-        output_xyz):
+def merge_paleo_bathymetry_grid(
+        time,
+        grid_spacing_degrees,
+        output_filename,
+        backtracked_paleo_bathymetry_filename,
+        external_paleo_bathymetry_filename,
+        *,
+        interpolate_dynamic_topography_model=None,
+        external_bathymetry_is_positive_below_sea_level=False,
+        output_positive_bathymetry_below_sea_level=False,
+        output_xyz=False):
+    """merge_paleo_bathymetry_grid(\
+        time,\
+        grid_spacing_degrees,\
+        output_filename,\
+        backtracked_paleo_bathymetry_filename,\
+        external_paleo_bathymetry_filename,\
+        *,\
+        interpolate_dynamic_topography_model=None,\
+        external_bathymetry_is_positive_below_sea_level=False,\
+        output_positive_bathymetry_below_sea_level=False,\
+        output_xyz=False)
+    Merge a backtracked paleobathymetry grid with an external paleobathymetry grid and write to a merged output grid file.
     
-    paleo_bathymetry, reconstruction_time = paleo_bathymetry_and_reconstruction_time
-    # Generate paleo bathymetry grid from list of reconstructed points.
-    paleo_bathymetry_grid_filename = grid_filename_format.format(time=reconstruction_time)
-    # Also create xyz file if requested.
-    paleo_bathymetry_xyz_filename = None
+    Parameters
+    ----------
+    time : float
+        The reconstruction time associated with the paleobathymetry.
+        This is only used to sample dynamic topography (when it's specified).
+    grid_spacing_degrees : float
+        Lat/lon grid spacing of the merged output grid (in degrees).
+    output_filename : string
+        The filename of the merged output paleo bathymetry grid.
+    backtracked_paleo_bathymetry_filename : string
+        The reconstructed, backtracked paleobathymetry grid (that will be merged with the external grid).
+    external_paleo_bathymetry_filename : string
+        External paleobathymetry grid to merge into the reconstructed, backtracked paleobathymetry in ``backtracked_paleo_bathymetry_filename``.
+        This is useful for filling in regions of sediment-covered crust that have subducted before present day.
+        Regions not covered by backtracked paleobathymetry are filled with external paleobathymetry after adding dynamic topography (if specified) to them.
+    interpolate_dynamic_topography_model : string, optional
+        Optional dynamic topography model to add to external paleobathymetry grids.
+        If specified then it should match the dynamic topography used to generate ``backtracked_paleo_bathymetry_filename``.
+        Represents a time-dependent dynamic topography raster grid (in *mantle* frame).
+        This is either the name of a bundled dynamic topography model (see :meth:`pybacktrack.InterpolateDynamicTopography.create_from_bundled_model`), or
+        a user-provided model specified as the filename of the grid list file (see parameter of :meth:`pybacktrack.InterpolateDynamicTopography.__init__`).
+    external_bathymetry_is_positive_below_sea_level : bool, optional
+        Whether the external bathymetry values below sea level are positive.
+        However topography/bathymetry grids typically have negative values below sea level (and positive above).
+        So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
+    output_positive_bathymetry_below_sea_level : bool, optional
+        Whether to output positive bathymetry values below sea level (the same as backtracked water depths at a drill site).
+        However topography/bathymetry grids typically have negative values below sea level (and positive above).
+        So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
+    output_xyz : bool, optional
+        Whether to also create a GMT xyz file (with ".xyz" extension) from the merged output paleobathymetry.
+        Each row of each xyz file contains "longitude latitude bathymetry".
+        Default is to only create a grid file (no xyz).
+        
+    Notes
+    -----
+    .. versionadded:: 1.5
+    """
+    
+    # Make sure directory containing the output grid file exists.
+    if os.path.dirname(output_filename) and not os.path.exists(os.path.dirname(output_filename)):
+        os.makedirs(os.path.dirname(output_filename))
+
+    #
+    # Sample the paleo bathymetry grids that we're going to merge.
+    #
+
+    # Generate a global latitude/longitude grid of points (with the requested grid spacing).
+    input_points = generate_lon_lat_points(grid_spacing_degrees)
+
+    # Create a multiline string (one line per lon/lat/value1/etc row).
+    input_data = ''.join(
+            ' '.join(str(item) for item in row) + '\n' for row in input_points)
+    # The command-line strings to execute GMT 'grdtrack'.
+    input_command_line = ["gmt", "grdtrack",
+        # Geographic input/output coordinates...
+        "-fg",
+        # Avoid anti-aliasing...
+        "-n+a+bg+t0.5"]
+    # The two grid filenames to sample.
+    for _grid_filename in (backtracked_paleo_bathymetry_filename, external_paleo_bathymetry_filename):
+        input_command_line.append("-G{0}".format(_grid_filename))
+    # Call the system command.
+    stdout_data = call_system_command(input_command_line, stdin=input_data, return_stdout=True)
+
+    all_paleo_bathymetry_points = []
+
+    # Extract the sampled values.
+    for line in stdout_data.splitlines():
+        # Each line returned by GMT grdtrack contains "longitude latitude grid1_value [grid2_value ...]".
+        # Note that if GMT returns "NaN" then we'll return float('nan').
+        paleo_bathymetry_point = tuple(float(value) for value in line.split())
+        all_paleo_bathymetry_points.append(paleo_bathymetry_point)
+
+    # Create the dynamic topography model if requested.
+    if interpolate_dynamic_topography_model:
+        interpolate_dynamic_topography_model = pybacktrack.InterpolateDynamicTopography.create_from_model_or_bundled_model_name(interpolate_dynamic_topography_model)
+        # Sample the dynamic topography at present day.
+        dynamic_topography_at_present_day = interpolate_dynamic_topography_model.sample(0, input_points)
+        # Sample the dynamic topography at 'time'.
+        # print('Sample dynamic topography at {}...'.format(time)); sys.stdout.flush()
+        dynamic_topography = interpolate_dynamic_topography_model.sample(time, input_points)
+    
+    merged_points = []
+    for point_index, paleo_bathymetry_point in enumerate(all_paleo_bathymetry_points):
+        lon, lat, backtracked_paleo_bathymetry, external_paleo_bathymetry = paleo_bathymetry_point
+        if math.isnan(backtracked_paleo_bathymetry) and math.isnan(external_paleo_bathymetry):
+            # Skip point if no paleo bathymetry in either backtracked or external paleobathymetry.
+            continue
+        
+        # Prefer backtracked paleobathymetry.
+        if not math.isnan(backtracked_paleo_bathymetry):
+            # Note: We've already taken care of 'output_positive_bathymetry_below_sea_level' for backtracked paleobathymetry.
+            paleo_bathymetry = backtracked_paleo_bathymetry
+        else:
+            paleo_bathymetry = external_paleo_bathymetry
+
+            # Note that pybacktrack generates paleobathymetry grids with negative values below sea level by default
+            # (the opposite of backtracking which outputs positive depths below sea level).
+            #
+            # So if the external grids have positive values below sea level then negate them before we add dynamic topography.
+            if external_bathymetry_is_positive_below_sea_level:
+                paleo_bathymetry = -paleo_bathymetry
+            
+            # Also apply dynamic topography to the external grids if requested (pybacktrack already has it applied).
+            if interpolate_dynamic_topography_model:
+                # Dynamic topography, like bathymetry, is positive going up and negative going down so we can just add it to bathymetry.
+                paleo_bathymetry += dynamic_topography[point_index] - dynamic_topography_at_present_day[point_index]
+
+            # If we're outputting positive bathymetry values below sea level then we should negate them.
+            if output_positive_bathymetry_below_sea_level:
+                paleo_bathymetry = -paleo_bathymetry
+
+        merged_points.append((lon, lat, paleo_bathymetry))
+    
+    # Create a multiline string (one line per lon/lat/value row).
+    output_data = ''.join(
+            ' '.join(str(item) for item in row) + '\n' for row in merged_points)
+    
+    # The command-line strings to execute GMT 'nearneighbor' to write the merged points to the output grid file.
+    output_command_line = [
+        "gmt",
+        "nearneighbor",
+        "-N1/1", # Divide search radius into 1 sector and only require a value in 1 sector.
+        "-S{0}d".format(0.1 * grid_spacing_degrees),
+        "-I{0}".format(grid_spacing_degrees),
+        # Use GMT gridline registration since our input point grid has data points on the grid lines.
+        # Gridline registration is the default so we don't need to force pixel registration...
+        # "-r", # Force pixel registration since data points are at centre of cells.
+        "-Rg",
+        "-fg",
+        "-G{0}".format(output_filename)]
+    
+    # Call the system command.
+    call_system_command(output_command_line, stdin=output_data)
+    
+    # Also create an xyz file (from the merged paleobathymetry) if requested.
     if output_xyz:
-        paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
-        paleo_bathymetry_xyz_filename += '.xyz'
-    _write_paleo_bathymetry_grid(paleo_bathymetry, grid_spacing, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+        output_xyz_filename, _ = os.path.splitext(output_filename)
+        output_xyz_filename += '.xyz'
+        with open(output_xyz_filename, 'w') as output_xyz_file:
+            output_xyz_file.write(output_data)
+
+
+def _write_paleo_bathymetry_grid(
+        reconstruction_time_and_backtracked_paleo_bathymetry,
+        grid_spacing_degrees,
+        output_filename_format,
+        output_xyz=False,
+        output_positive_bathymetry_below_sea_level=False,
+        merge_paleo_bathymetry_filename_format=None,
+        merge_paleo_bathymetry_is_positive_below_sea_level=False,
+        interpolate_dynamic_topography_model=None):
+    """ Generate an output paleobathymetry grid from backtracked paleobathymetry, and optionally merge with an externally provided paleobathymetry grid. """
+    
+    reconstruction_time, backtracked_paleo_bathymetry_at_reconstruction_time = reconstruction_time_and_backtracked_paleo_bathymetry
+    output_filename = output_filename_format.format(time=reconstruction_time)
+
+    if merge_paleo_bathymetry_filename_format:
+        unmerged_paleo_bathymetry_filename, _ = os.path.splitext(output_filename)
+        unmerged_paleo_bathymetry_filename += '_unmerged.nc'
+        _write_backtracked_paleo_bathymetry_grid(
+            backtracked_paleo_bathymetry_at_reconstruction_time,
+            grid_spacing_degrees,
+            unmerged_paleo_bathymetry_filename,
+            output_xyz=False)
+
+        merge_paleo_bathymetry_filename = merge_paleo_bathymetry_filename_format.format(time=reconstruction_time)
+        merge_paleo_bathymetry_grid(
+            reconstruction_time,
+            grid_spacing_degrees,
+            output_filename,
+            unmerged_paleo_bathymetry_filename,
+            merge_paleo_bathymetry_filename,
+            interpolate_dynamic_topography_model=interpolate_dynamic_topography_model,
+            external_bathymetry_is_positive_below_sea_level=merge_paleo_bathymetry_is_positive_below_sea_level,
+            output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level,
+            output_xyz=output_xyz)
+
+        # Remove the temporary unmerged grid file.
+        if os.access(unmerged_paleo_bathymetry_filename, os.R_OK):
+            os.remove(unmerged_paleo_bathymetry_filename)
+        
+    else:
+        # Also create xyz file (if requested).
+        _write_backtracked_paleo_bathymetry_grid(
+            backtracked_paleo_bathymetry_at_reconstruction_time,
+            grid_spacing_degrees,
+            output_filename,
+            output_xyz=output_xyz)
 
 
 def write_bathymetry_grids(
@@ -1298,6 +1503,11 @@ def write_bathymetry_grids(
         *,
         output_xyz=False,
         output_file_decimal_places_in_time=1,
+        output_positive_bathymetry_below_sea_level=False,
+        merge_paleo_bathymetry_filename_format=None,
+        merge_paleo_bathymetry_file_decimal_places_in_time=0,
+        merge_paleo_bathymetry_is_positive_below_sea_level=False,
+        interpolate_dynamic_topography_model=None,
         use_all_cpus=False):
     """write_paleo_bathymetry_grids(\
         paleo_bathymetry,\
@@ -1306,6 +1516,11 @@ def write_bathymetry_grids(
         *,\
         output_xyz=False,\
         output_file_decimal_places_in_time=1,\
+        output_positive_bathymetry_below_sea_level=False,\
+        merge_paleo_bathymetry_filename_format=None,\
+        merge_paleo_bathymetry_file_decimal_places_in_time=0,\
+        merge_paleo_bathymetry_is_positive_below_sea_level=False,\
+        interpolate_dynamic_topography_model=None,\
         use_all_cpus=False)
     Grid paleo bathymetry into a NetCDF grid for each time step.
     
@@ -1332,6 +1547,36 @@ def write_bathymetry_grids(
     output_file_decimal_places_in_time : int, default=1
         Number of decimal places to format each time into its paleobathymetry filename.
         Defaults to 1 decimal place.
+    output_positive_bathymetry_below_sea_level : bool, optional
+        Whether to output positive bathymetry values below sea level (the same as backtracked water depths at a drill site).
+        However topography/bathymetry grids typically have negative values below sea level (and positive above).
+        So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
+    merge_paleo_bathymetry_filename_format : str, optional
+        Optional external paleobathymetry grids to merge into the reconstructed, backtracked paleobathymetry in ``paleo_bathymetry``.
+        This is useful for filling in regions of sediment-covered crust that have subducted before present day.
+        Backtracked paleobathymetry is only generated for crust that exists at present day (and it is given preference when merging).
+        Regions not covered by backtracked paleobathymetry are then filled with external paleobathymetry after adding dynamic topography (if specified) to them.
+        If specified then must contain the ``${time}`` identifier that will be used to generate a filename for each *time*
+        (see `Template strings <https://docs.python.org/3/library/string.html#template-strings>`_).
+        For example, ``external_paleobathymetry/bathymetry_${time}Ma.nc`` will result in ``${time}`` being replaced by each time accurate to the
+        number of decimal places specified with ``merge_paleo_bathymetry_file_decimal_places_in_time`` (which defaults to zero).
+        If not specified then no merging will occur.
+    merge_paleo_bathymetry_file_decimal_places_in_time : int, default=0
+        Number of decimal places to format each time into its *merged* paleobathymetry input filename.
+        This argument is only used if ``merge_paleo_bathymetry_filename_format`` is specified.
+        Defaults to 0 decimal places.
+    merge_paleo_bathymetry_is_positive_below_sea_level : bool, optional
+        Whether the external bathymetry values below sea level are positive.
+        However topography/bathymetry grids typically have negative values below sea level (and positive above).
+        So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
+        This argument is only used if ``merge_paleo_bathymetry_filename_format`` is specified.
+    interpolate_dynamic_topography_model : string, optional
+        Optional dynamic topography model to add to external paleobathymetry grids.
+        This is only used if ``merge_paleo_bathymetry_filename_format`` is specified.
+        If specified then it should match the dynamic topography used to generate ``paleo_bathymetry``.
+        Represents a time-dependent dynamic topography raster grid (in *mantle* frame).
+        This is either the name of a bundled dynamic topography model (see :meth:`pybacktrack.InterpolateDynamicTopography.create_from_bundled_model`), or
+        a user-provided model specified as the filename of the grid list file (see parameter of :meth:`pybacktrack.InterpolateDynamicTopography.__init__`).
     use_all_cpus : bool or int, optional
         If ``False`` (or zero) then use a single CPU.
         If ``True`` then distribute CPU processing across all CPUs (cores).
@@ -1347,12 +1592,14 @@ def write_bathymetry_grids(
 
         - ``output_file_prefix`` can alternatively be a template string.
         - Added optional ``output_file_decimal_places_in_time`` argument.
+        - Added optional ``merge_paleo_bathymetry_filename_format``, ``merge_paleo_bathymetry_file_decimal_places_in_time`` and
+          ``merge_paleo_bathymetry_is_positive_below_sea_level`` arguments.
         - Some arguments (after ``*``) are now keyword-**only** (ie, can no longer be specified as positional arguments).
     """
 
-    # String that formats 'time' to the requested number of decimal places.
+    # String that formats 'time' to the requested number of decimal places (for the output file).
     # For example, 1 decimal place would result in "{time:.1f}".
-    time_format = f'{{time:.{output_file_decimal_places_in_time}f}}'
+    output_file_time_format = f'{{time:.{output_file_decimal_places_in_time}f}}'
     # If the output file prefix is a template string containing the 'time' identifier then
     # substitute all occurrences of the 'time' identifier with the time format.
     #
@@ -1363,22 +1610,37 @@ def write_bathymetry_grids(
     if re.search(r'(\$\{time\}|\$time[^A-Za-z0-9_])', output_file_prefix):
         # Note: We use a template string instead of more a general format string because the former is more security conscious.
         from string import Template
-        paleo_bathymetry_grid_filename_format = Template(output_file_prefix).safe_substitute(time=time_format)
+        output_filename_format = Template(output_file_prefix).safe_substitute(time=output_file_time_format)
     else:
-        paleo_bathymetry_grid_filename_format = f'{output_file_prefix}_{time_format}.nc'
+        output_filename_format = f'{output_file_prefix}_{output_file_time_format}.nc'
+
+    if merge_paleo_bathymetry_filename_format:
+        # String that formats 'time' to the requested number of decimal places (for the merged paleobathymetry input file).
+        # For example, 1 decimal place would result in "{time:.1f}".
+        merge_paleo_bathymetry_file_time_format = f'{{time:.{merge_paleo_bathymetry_file_decimal_places_in_time}f}}'
+        # The merged paleobathymetry input file format is a template string containing the 'time' identifier, so
+        # substitute all occurrences of the 'time' identifier with the time format.
+        #
+        # The 'time' identifier can be "${time}", or "$time" NOT followed by an alphanumeric character (including underscore).
+        # See string.Template for more details.
+        if not re.search(r'(\$\{time\}|\$time[^A-Za-z0-9_])', merge_paleo_bathymetry_filename_format):
+            raise ValueError('"merge_paleo_bathymetry_filename_format" does not look like a Python Template string with a "${time}" identifier')
+        # Note: We use a template string instead of more a general format string because the former is more security conscious.
+        from string import Template
+        merge_paleo_bathymetry_filename_format = Template(merge_paleo_bathymetry_filename_format).safe_substitute(time=merge_paleo_bathymetry_file_time_format)
     
     # Generate a paleo bathymetry grid file for each reconstruction time in the requested time period.
     if not use_all_cpus:
-        for reconstruction_time, paleo_bathymetry_at_reconstruction_time in paleo_bathymetry.items():
-            # Get the list of (reconstructed_longitude, reconstructed_latitude, reconstructed_bathymetry) at current reconstruction time.
-            # Generate paleo bathymetry grid from list of reconstructed points.
-            paleo_bathymetry_grid_filename = paleo_bathymetry_grid_filename_format.format(time=reconstruction_time)
-            # Also create xyz file if requested.
-            paleo_bathymetry_xyz_filename = None
-            if output_xyz:
-                paleo_bathymetry_xyz_filename, _ = os.path.splitext(paleo_bathymetry_grid_filename)
-                paleo_bathymetry_xyz_filename += '.xyz'
-            _write_paleo_bathymetry_grid(paleo_bathymetry_at_reconstruction_time, grid_spacing_degrees, paleo_bathymetry_grid_filename, paleo_bathymetry_xyz_filename)
+        for reconstruction_time_and_paleo_bathymetry in paleo_bathymetry.items():
+            _write_paleo_bathymetry_grid(
+                reconstruction_time_and_paleo_bathymetry,
+                grid_spacing_degrees=grid_spacing_degrees,
+                output_filename_format=output_filename_format,
+                output_xyz=output_xyz,
+                output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level,
+                merge_paleo_bathymetry_filename_format=merge_paleo_bathymetry_filename_format,
+                merge_paleo_bathymetry_is_positive_below_sea_level=merge_paleo_bathymetry_is_positive_below_sea_level,
+                interpolate_dynamic_topography_model=interpolate_dynamic_topography_model)
 
     else:  # Use 'multiprocessing' pools to distribute across CPUs...
 
@@ -1398,13 +1660,16 @@ def write_bathymetry_grids(
         with multiprocessing.Pool(num_cpus) as pool:
             pool.map(
                     partial(
-                        _write_paleo_bathymetry_grid_multiprocessing,
-                        grid_spacing=grid_spacing_degrees,
-                        grid_filename_format=paleo_bathymetry_grid_filename_format,
-                        output_xyz=output_xyz),
+                        _write_paleo_bathymetry_grid,
+                        grid_spacing_degrees=grid_spacing_degrees,
+                        output_filename_format=output_filename_format,
+                        output_xyz=output_xyz,
+                        output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level,
+                        merge_paleo_bathymetry_filename_format=merge_paleo_bathymetry_filename_format,
+                        merge_paleo_bathymetry_is_positive_below_sea_level=merge_paleo_bathymetry_is_positive_below_sea_level,
+                        interpolate_dynamic_topography_model=interpolate_dynamic_topography_model),
                     (
-                        (paleo_bathymetry_at_reconstruction_time, reconstruction_time)
-                            for reconstruction_time, paleo_bathymetry_at_reconstruction_time in paleo_bathymetry.items()
+                        paleo_bathymetry.items()
                     ),
                     1) # chunksize
 
@@ -1435,6 +1700,9 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         output_xyz=False,
         output_file_decimal_places_in_time=1,
         output_rift_stretching_factor_grid_filename=None,
+        merge_paleo_bathymetry_filename_format=None,
+        merge_paleo_bathymetry_file_decimal_places_in_time=0,
+        merge_paleo_bathymetry_is_positive_below_sea_level=False,
         use_all_cpus=False):
     # Adding function signature on first line of docstring otherwise Sphinx autodoc will print out
     # the expanded values of the bundle filenames.
@@ -1464,6 +1732,9 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         output_xyz=False,\
         output_file_decimal_places_in_time=1, \
         output_rift_stretching_factor_grid_filename=None,\
+        merge_paleo_bathymetry_filename_format=None,\
+        merge_paleo_bathymetry_file_decimal_places_in_time=0,\
+        merge_paleo_bathymetry_is_positive_below_sea_level=False,\
         use_all_cpus=False)
     Same as :func:`pybacktrack.reconstruct_paleo_bathymetry` but also generates present day input points on a lat/lon grid and
     outputs paleobathymetry as a NetCDF grid for each time step.
@@ -1573,6 +1844,25 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
     output_rift_stretching_factor_grid_filename: string, optional
         Optional output filename for the rift stretching (beta) factor grid.
         This will contain the optimal stretching factor at each present day grid point where there is submerged continental crust (not just the areas that are rifting).
+    merge_paleo_bathymetry_filename_format : str, optional
+        Optional external paleobathymetry grids to merge into the reconstructed, backtracked paleobathymetry generated in this function.
+        This is useful for filling in regions of sediment-covered crust that have subducted before present day.
+        Backtracked paleobathymetry is only generated for crust that exists at present day (and it is given preference when merging).
+        Regions not covered by backtracked paleobathymetry are then filled with external paleobathymetry after adding dynamic topography (if specified) to them.
+        If specified then must contain the ``${time}`` identifier that will be used to generate a filename for each *time*
+        (see `Template strings <https://docs.python.org/3/library/string.html#template-strings>`_).
+        For example, ``external_paleobathymetry/bathymetry_${time}Ma.nc`` will result in ``${time}`` being replaced by each time accurate to the
+        number of decimal places specified with ``merge_paleo_bathymetry_file_decimal_places_in_time`` (which defaults to zero).
+        If not specified then no merging will occur.
+    merge_paleo_bathymetry_file_decimal_places_in_time : int, default=0
+        Number of decimal places to format each time into its *merged* paleobathymetry input filename.
+        This argument is only used if ``merge_paleo_bathymetry_filename_format`` is specified.
+        Defaults to 0 decimal places.
+    merge_paleo_bathymetry_is_positive_below_sea_level : bool, optional
+        Whether the external bathymetry values below sea level are positive.
+        However topography/bathymetry grids typically have negative values below sea level (and positive above).
+        So the default (``False``) matches typical topography/bathymetry grids (ie, outputs negative bathymetry values below sea level).
+        This argument is only used if ``merge_paleo_bathymetry_filename_format`` is specified.
     use_all_cpus : bool or int, optional
         If ``False`` (or zero) then use a single CPU.
         If ``True`` then distribute CPU processing across all CPUs (cores).
@@ -1602,6 +1892,8 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         - ``output_file_prefix`` can alternatively be a template string.
         - Added optional ``output_file_decimal_places_in_time`` argument.
         - Added optional ``output_rift_stretching_factor_grid_filename`` argument.
+        - Added optional ``merge_paleo_bathymetry_filename_format``, ``merge_paleo_bathymetry_file_decimal_places_in_time`` and
+          ``merge_paleo_bathymetry_is_positive_below_sea_level`` arguments.
         - Some arguments (after ``*``) are now keyword-**only** (ie, can no longer be specified as positional arguments).
     """
 
@@ -1642,6 +1934,12 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         # Generate a NetCDF grid for the rift stretching (beta) factors.
         _write_present_day_grid(rift_stretching_factors, grid_spacing_degrees, output_rift_stretching_factor_grid_filename)
     
+    # If we have a dynamic topography model then extract the non-reconstructing part from it
+    # (the part that samples mantle-reference-frame dynamic topography grids).
+    interpolate_dynamic_topography_model = None
+    if dynamic_topography_model:
+        interpolate_dynamic_topography_model = dynamic_topography_model.interpolate_dynamic_topography
+    
     # Generate a NetCDF grid for each reconstructed time of the paleobathmetry.
     write_bathymetry_grids(
         paleo_bathymetry,
@@ -1649,6 +1947,11 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         output_file_prefix,
         output_xyz=output_xyz,
         output_file_decimal_places_in_time=output_file_decimal_places_in_time,
+        output_positive_bathymetry_below_sea_level=output_positive_bathymetry_below_sea_level,
+        merge_paleo_bathymetry_filename_format=merge_paleo_bathymetry_filename_format,
+        merge_paleo_bathymetry_file_decimal_places_in_time=merge_paleo_bathymetry_file_decimal_places_in_time,
+        merge_paleo_bathymetry_is_positive_below_sea_level=merge_paleo_bathymetry_is_positive_below_sea_level,
+        interpolate_dynamic_topography_model=interpolate_dynamic_topography_model,
         use_all_cpus=use_all_cpus)
 
 
@@ -1961,7 +2264,7 @@ def main():
     
     parser.add_argument(
         '-ofdp', '--output_file_decimal_places_in_time', type=parse_non_negative_integer, default=1,
-        help='Number of decimal places to format each time into its paleobathymetry filename. Defaults to 1 decimal place.')
+        help='Number of decimal places to format each time into its output paleobathymetry filename. Defaults to 1 decimal place.')
     
     parser.add_argument(
         '-ors', '--output_rift_stretching_factor_grid_filename', type=str,
@@ -1970,6 +2273,28 @@ def main():
              'This will contain the optimal stretching factor at each present day grid point where there is submerged continental crust '
              '(not just the areas that are rifting).')
     
+    parser.add_argument(
+        '-mpbff', '--merge_paleo_bathymetry_filename_format', type=str,
+        metavar='merge_paleo_bathymetry_filename_format',
+        help='Optional external paleobathymetry grids to merge into the reconstructed, backtracked paleobathymetry. '
+             'This is useful for filling in regions of sediment-covered crust that have subducted before present day. '
+             'Backtracked paleobathymetry is only generated for crust that exists at present day (and it is given preference when merging). '
+             'If specified then must contain the "${time}" identifier that will be used to generate a filename for each time (see Template strings). '
+             'For example, "external_paleobathymetry/bathymetry_${time}Ma.nc" will result in "${time}" being replaced by each time accurate to the '
+             'number of decimal places specified with "--merge_paleo_bathymetry_file_decimal_places_in_time" (which defaults to zero). '
+             'If not specified then no merging will occur.')
+    
+    parser.add_argument(
+        '-mpbdp', '--merge_paleo_bathymetry_file_decimal_places_in_time', type=parse_non_negative_integer, default=0,
+        help='Number of decimal places to format each time into its merged input paleobathymetry filename. '
+             'Only used if "--merge_paleo_bathymetry_filename_format" is specified. Defaults to 0 decimal places.')
+    
+    parser.add_argument(
+        '-mpbp', '--merge_paleo_bathymetry_is_positive_below_sea_level', action='store_true',
+        help='Whether the external bathymetry values below sea level are positive. '
+             'This is the opposite of typical topography/bathymetry grids that have negative values below sea level (and positive above). '
+             'So the default matches typical topography/bathymetry grids (outputs negative bathymetry values below sea level).')
+
     parser.add_argument(
         '--use_all_cpus', nargs='?', type=parse_positive_integer,
         const=True, default=False,
@@ -2060,6 +2385,9 @@ def main():
         output_xyz=args.output_xyz,
         output_file_decimal_places_in_time=args.output_file_decimal_places_in_time,
         output_rift_stretching_factor_grid_filename=args.output_rift_stretching_factor_grid_filename,
+        merge_paleo_bathymetry_filename_format=args.merge_paleo_bathymetry_filename_format,
+        merge_paleo_bathymetry_file_decimal_places_in_time=args.merge_paleo_bathymetry_file_decimal_places_in_time,
+        merge_paleo_bathymetry_is_positive_below_sea_level=args.merge_paleo_bathymetry_is_positive_below_sea_level,
         use_all_cpus=args.use_all_cpus)
 
 
