@@ -238,8 +238,8 @@ A sea-level model is optional. If one is not specified then sea-level variation 
 Geohistory analysis
 -------------------
 
-The `Decompacting Stratigraphic Layers <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/decompacting_stratigraphy.ipynb>`__
-notebook shows how to visualize the decompaction of stratigraphic layers at a drill site.
+The `Geohistory Analysis <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/geohistory_analysis.ipynb>`__
+notebook shows how to visualize the decompaction of the stratigraphic layers of a drill site over time.
 
 .. note:: The example notebooks are installed as part of the example data which can be installed by following :ref:`these instructions <pybacktrack_install_examples>`.
 

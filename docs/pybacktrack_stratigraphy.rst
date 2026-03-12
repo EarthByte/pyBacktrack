@@ -156,8 +156,8 @@ from the bottom layer of the drill site to the new base layer.
 Geohistory analysis
 ^^^^^^^^^^^^^^^^^^^
 
-The `Decompacting Stratigraphic Layers <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/decompacting_stratigraphy.ipynb>`__
-notebook shows how to visualize the decompaction of stratigraphic layers at a drill site.
+The `Geohistory Analysis <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/geohistory_analysis.ipynb>`__
+notebook shows how to visualize the decompaction of stratigraphic layers of a drill site over time.
 
 .. note:: The example notebooks are installed as part of the example data which can be installed by following :ref:`these instructions <pybacktrack_install_examples>`.
 
