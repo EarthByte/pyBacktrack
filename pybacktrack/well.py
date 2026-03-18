@@ -770,6 +770,12 @@ class Well(object):
         """
         Finds decompacted total sediment thickness at ``age`` (if specified), otherwise at each (top) age in all stratigraphic units.
         
+        Parameters
+        ----------
+        age : optional
+            If specified, then it's the age (in Ma) to decompact at.
+            Otherwise decompact at the top age of each stratigraphic unit. This is the default.
+        
         Returns
         -------
         :class:`pybacktrack.DecompactedWell`, or list of :class:`pybacktrack.DecompactedWell`
@@ -779,7 +785,7 @@ class Well(object):
         Notes
         -----
         .. versionchanged:: 1.4
-           Added the ``age`` parameter.
+           Added the ``age`` argument.
         .. versionchanged:: 1.5
            No longer returns ``None`` when ``age`` is specified but is older than bottom age of the well.
         """
@@ -816,6 +822,10 @@ class Well(object):
         #
         # An age was specified, so return a single decompacted well representing the state of decompaction at the specified age.
         #
+
+        # Keep all ages as floats (not really needed but keeps things a little more consistent).
+        # 'age' might be passed as an numpy.int, for example.
+        age = float(age)
     
         # Find the stratigraphic unit containing the specified age.
         # This is the surface unit at the specified age.
