@@ -48,7 +48,7 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
 
     python -m pybacktrack.backtrack_cli \
         -w pybacktrack_examples/example_data/ODP-114-699-Lithology.txt \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence paleo_longitude paleo_latitude lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth dynamic_topography water_depth tectonic_subsidence paleo_longitude paleo_latitude compacted_density composite_porosity composite_decay lithology \
         -ym M2 \
         -slm Haq87_SealevelCurve_Longterm \
         -o ODP-114-699_backtrack_amended.txt \
@@ -86,6 +86,9 @@ For example, revisiting our :ref:`backtracking example <pybacktrack_a_backtracki
                              pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL,
                              pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE,
                              pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE,
+                             pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY,
+                             pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY,
+                             pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY,
                              pybacktrack.BACKTRACK_COLUMN_LITHOLOGY],
         # Might be an extra stratigraphic well layer added from well bottom to basement...
         ammended_well_output_filename=amended_well_output_filename)
@@ -158,7 +161,12 @@ The *dynamic_topography* column is the dynamic topography elevation relative to 
 The *tectonic_subsidence* column is the output of the underlying :ref:`tectonic subsidence model <pybacktrack_backtrack_oceanic_and_continental_subsidence>`,
 and *water_depth* is obtained from tectonic subsidence by subtracting an isostatic correction of the decompacted sediment thickness.
 
-Finally, the *paleo_longitude* and *paleo_latitude* columns contain the :ref:`paleo location of the drill site <pybacktrack_backtrack_paleo_locations>` at each *age*.
+The *paleo_longitude* and *paleo_latitude* columns contain the :ref:`paleo location of the drill site <pybacktrack_backtrack_paleo_locations>` at each *age*.
+
+Finally, the *compacted_density*, *composite_porosity* and *composite_decay* columns contain the density, porosity and porosity decay of the stratigraphic layer
+(whose deposition ends at the specified time). And since a single stratigraphic layer can have a :ref:`mixture of weighted lithologies <pybacktrack_stratigraphy_drill_site_file_format>`,
+these three values represent the density, porosity and porosity decay of the *final* lithology (weighted combination of mixture lithologies).
+Also note that *compacted_density* is just for a single stratigraphic layer, unlike *decompacted_density* which is an average density over *multiple* decompacted layers.
 
 .. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backtrack_cli --help`` to see all options), or
           using the *decompacted_columns* argument of the :func:`pybacktrack.backtrack_and_write_well` function.

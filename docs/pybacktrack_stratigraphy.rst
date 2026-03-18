@@ -52,6 +52,8 @@ of rift stretching at the site location.
           This would involve ignoring the recorded paleo-water depth columns (using the ``-c`` option of :ref:`backtrack <pybacktrack_backtrack>`)
           and supplying the start and end times of rifting (using the ``-rs`` and ``-re`` options of :ref:`backtrack <pybacktrack_backtrack>`).
 
+.. _pybacktrack_stratigraphy_drill_site_file_format:
+
 Drill site file format
 ^^^^^^^^^^^^^^^^^^^^^^
 

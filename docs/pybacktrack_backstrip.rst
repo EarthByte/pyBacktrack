@@ -48,7 +48,7 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
     python -m pybacktrack.backstrip_cli \
         -w pybacktrack_examples/example_data/sunrise_lithology.txt \
         -l primary extended \
-        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude lithology \
+        -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude compacted_density composite_porosity composite_decay lithology \
         -slm Haq87_SealevelCurve_Longterm \
         -o sunrise_backstrip_amended.txt \
         -- \
@@ -88,6 +88,9 @@ To backstrip the sunrise drill site (located on shallower *continental* crust), 
                              pybacktrack.BACKSTRIP_COLUMN_SEA_LEVEL,
                              pybacktrack.BACKSTRIP_COLUMN_PALEO_LONGITUDE,
                              pybacktrack.BACKSTRIP_COLUMN_PALEO_LATITUDE,
+                             pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DENSITY,
+                             pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_POROSITY,
+                             pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_DECAY,
                              pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
         # Might be an extra stratigraphic well layer added from well bottom to basement...
         ammended_well_output_filename=amended_well_output_filename)
@@ -158,7 +161,12 @@ The *average_water_depth* column is just the average *min_water_depth* and *max_
 *average_tectonic_subsidence* are obtained from *min_water_depth* and *max_water_depth* and *average_water_depth* by adding an isostatic correction of the
 decompacted sediment thickness (to obtain the deeper isostatically compensated, sediment-free water depth also known as tectonic subsidence).
 
-Finally, the *paleo_longitude* and *paleo_latitude* columns contain the :ref:`paleo location of the drill site <pybacktrack_backstrip_paleo_locations>` at each *age*.
+The *paleo_longitude* and *paleo_latitude* columns contain the :ref:`paleo location of the drill site <pybacktrack_backstrip_paleo_locations>` at each *age*.
+
+Finally, the *compacted_density*, *composite_porosity* and *composite_decay* columns contain the density, porosity and porosity decay of the stratigraphic layer
+(whose deposition ends at the specified time). And since a single stratigraphic layer can have a :ref:`mixture of weighted lithologies <pybacktrack_stratigraphy_drill_site_file_format>`,
+these three values represent the density, porosity and porosity decay of the *final* lithology (weighted combination of mixture lithologies).
+Also note that *compacted_density* is just for a single stratigraphic layer, unlike *decompacted_density* which is an average density over *multiple* decompacted layers.
 
 .. note:: The output columns are specified using the ``-d`` command-line option (run ``python -m pybacktrack.backstrip_cli --help`` to see all options), or
           using the *decompacted_columns* argument of the :func:`pybacktrack.backstrip_and_write_well` function.

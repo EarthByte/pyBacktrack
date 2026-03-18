@@ -310,8 +310,9 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKTRACK_COLUMN_AGE``
 - ``pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE``
 - ``pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE``
-- ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH``
 - ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS``
+- ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH``
+- ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY``
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS``
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY``
 - ``pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE``
@@ -320,6 +321,8 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE``
 - ``pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH``
 - ``pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL``
+- ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY``
+- ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY``
 - ``pybacktrack.BACKTRACK_COLUMN_LITHOLOGY``
 
 Backstripping
@@ -335,6 +338,9 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKSTRIP_COLUMN_AGE``
 - ``pybacktrack.BACKSTRIP_COLUMN_PALEO_LONGITUDE``
 - ``pybacktrack.BACKSTRIP_COLUMN_PALEO_LATITUDE``
+- ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS``
+- ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH``
+- ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DENSITY``
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_THICKNESS``
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY``
 - ``pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE``
@@ -346,9 +352,9 @@ List of column types available for the ``decompacted_columns`` argument of
 - ``pybacktrack.BACKSTRIP_COLUMN_MIN_WATER_DEPTH``
 - ``pybacktrack.BACKSTRIP_COLUMN_MAX_WATER_DEPTH``
 - ``pybacktrack.BACKSTRIP_COLUMN_SEA_LEVEL``
-- ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_THICKNESS``
+- ``pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_POROSITY``
+- ``pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_DECAY``
 - ``pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY``
-- ``pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DEPTH``
 
 Paleobathymetry
 ^^^^^^^^^^^^^^^

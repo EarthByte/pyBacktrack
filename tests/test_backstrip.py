@@ -34,7 +34,7 @@ def test_backstrip_script(tmpdir):
     #     python -m pybacktrack.backstrip_cli
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude compacted_density composite_porosity composite_decay lithology
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o test_data/sunrise_backstrip_amended.txt
     #         --
@@ -47,7 +47,8 @@ def test_backstrip_script(tmpdir):
                                      'decompacted_density', 'decompacted_sediment_rate', 'decompacted_depth',
                                      'min_tectonic_subsidence', 'max_tectonic_subsidence', 'average_tectonic_subsidence',
                                      'min_water_depth', 'max_water_depth', 'average_water_depth', 'sea_level',
-                                     'paleo_longitude', 'paleo_latitude', 'lithology',
+                                     'paleo_longitude', 'paleo_latitude', 'compacted_density', 'composite_porosity', 'composite_decay',
+                                     'lithology',
                                      '-slm', 'Haq87_SealevelCurve_Longterm',
                                      '-o', str(test_ammended_well_output_filename),
                                      '--',
@@ -81,7 +82,7 @@ def test_backstrip(tmpdir):
     #     python -m pybacktrack.backstrip_cli
     #         -w test_data/sunrise_lithology.txt
     #         -l primary extended
-    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude lithology
+    #         -d age compacted_depth compacted_thickness decompacted_thickness decompacted_density decompacted_sediment_rate decompacted_depth min_tectonic_subsidence max_tectonic_subsidence average_tectonic_subsidence min_water_depth max_water_depth average_water_depth sea_level paleo_longitude paleo_latitude compacted_density composite_porosity composite_decay lithology
     #         -slm Haq87_SealevelCurve_Longterm
     #         -o test_data/sunrise_backstrip_amended.txt
     #         --
@@ -101,7 +102,8 @@ def test_backstrip(tmpdir):
                                  pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_SEDIMENT_RATE, pybacktrack.BACKSTRIP_COLUMN_DECOMPACTED_DEPTH,
                                  pybacktrack.BACKSTRIP_COLUMN_MIN_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_MAX_TECTONIC_SUBSIDENCE, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_TECTONIC_SUBSIDENCE,
                                  pybacktrack.BACKSTRIP_COLUMN_MIN_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_MAX_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_AVERAGE_WATER_DEPTH, pybacktrack.BACKSTRIP_COLUMN_SEA_LEVEL,
-                                 pybacktrack.BACKSTRIP_COLUMN_PALEO_LONGITUDE, pybacktrack.BACKSTRIP_COLUMN_PALEO_LATITUDE, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
+                                 pybacktrack.BACKSTRIP_COLUMN_PALEO_LONGITUDE, pybacktrack.BACKSTRIP_COLUMN_PALEO_LATITUDE, pybacktrack.BACKSTRIP_COLUMN_COMPACTED_DENSITY, pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_POROSITY,
+                                 pybacktrack.BACKSTRIP_COLUMN_COMPOSITE_DECAY, pybacktrack.BACKSTRIP_COLUMN_LITHOLOGY],
             ammended_well_output_filename=str(test_ammended_well_output_filename))
     
     # Compare original output files and temporary output files just written.

@@ -826,6 +826,9 @@ COLUMN_DYNAMIC_TOPOGRAPHY = 10
 COLUMN_PALEO_LONGITUDE = 11
 COLUMN_PALEO_LATITUDE = 12
 COLUMN_SEA_LEVEL = 13
+COLUMN_COMPACTED_DENSITY = 14
+COLUMN_COMPOSITE_POROSITY = 15
+COLUMN_COMPOSITE_DECAY = 16
 
 _DECOMPACTED_COLUMNS_DICT = {
     'age': COLUMN_AGE,
@@ -841,7 +844,10 @@ _DECOMPACTED_COLUMNS_DICT = {
     'dynamic_topography': COLUMN_DYNAMIC_TOPOGRAPHY,
     'paleo_longitude': COLUMN_PALEO_LONGITUDE,
     'paleo_latitude': COLUMN_PALEO_LATITUDE,
-    'sea_level': COLUMN_SEA_LEVEL}
+    'sea_level': COLUMN_SEA_LEVEL,
+    'compacted_density': COLUMN_COMPACTED_DENSITY,
+    'composite_porosity': COLUMN_COMPOSITE_POROSITY,
+    'composite_decay': COLUMN_COMPOSITE_DECAY}
 _DECOMPACTED_COLUMN_NAMES_DICT = dict([(v, k) for k, v in _DECOMPACTED_COLUMNS_DICT.items()])
 _DECOMPACTED_COLUMN_NAMES = sorted(_DECOMPACTED_COLUMNS_DICT.keys())
 
@@ -889,6 +895,7 @@ def write_well(
         * pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE
@@ -897,6 +904,8 @@ def write_well(
         * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
         * pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL
+        * pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY
+        * pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY
         * pybacktrack.BACKTRACK_COLUMN_LITHOLOGY
     
     Raises
@@ -911,7 +920,9 @@ def write_well(
     .. versionchanged:: 1.5
         The following changes were made:
 
-        - Added ``pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE``, ``pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE`` and ``pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL`` to available columns for ``decompacted_columns``.
+        - Added ``pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE``, ``pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE``, ``pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL``,
+          ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY``, ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY`` and ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY``
+          to available columns for ``decompacted_columns``.
         - Some arguments (after ``*``) are now keyword-**only** (ie, can no longer be specified as positional arguments).
     """
     
@@ -980,6 +991,12 @@ def write_well(
                     column_str = column_float_format_string.format(decompacted_well.get_sea_level(), width=column_width)
                 elif decompacted_column == COLUMN_COMPACTED_THICKNESS:
                     column_str = column_float_format_string.format(decompacted_well.total_compacted_thickness, width=column_width)
+                elif decompacted_column == COLUMN_COMPACTED_DENSITY:
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.lithology.density, width=column_width)
+                elif decompacted_column == COLUMN_COMPOSITE_POROSITY:
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.lithology.surface_porosity, width=column_width)
+                elif decompacted_column == COLUMN_COMPOSITE_DECAY:
+                    column_str = column_float_format_string.format(decompacted_well.surface_unit.lithology.porosity_decay, width=column_width)
                 elif decompacted_column == COLUMN_LITHOLOGY:
                     # Write the original lithology components of the surface stratigraphic unit.
                     lithology_string = ''.join('{0:<15} {1:<10.2f} '.format(lithology_name, fraction)
@@ -1161,6 +1178,7 @@ def backtrack_and_write_well(
         * pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_THICKNESS
         * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DEPTH
+        * pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_THICKNESS
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_DENSITY
         * pybacktrack.BACKTRACK_COLUMN_DECOMPACTED_SEDIMENT_RATE
@@ -1169,6 +1187,8 @@ def backtrack_and_write_well(
         * pybacktrack.BACKTRACK_COLUMN_TECTONIC_SUBSIDENCE
         * pybacktrack.BACKTRACK_COLUMN_WATER_DEPTH
         * pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL
+        * pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY
+        * pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY
         * pybacktrack.BACKTRACK_COLUMN_LITHOLOGY
     
     well_location : tuple, optional
@@ -1219,7 +1239,9 @@ def backtrack_and_write_well(
         - Added optional ``rotation_filenames``, ``static_polygon_filename`` and ``anchor_plate_id`` arguments for reconstructing the
           present day well location through time (as new :attr:`DecompactedWell.paleo_longitude` and :attr:`DecompactedWell.paleo_latitude` attributes).
         - Added optional ``output_rift_stretching_factor`` argument (and corresponding optional ``rift_stretching_factor`` return value).
-        - Added ``pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE``, ``pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE`` and ``pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL`` to available columns for ``decompacted_columns``.
+        - Added ``pybacktrack.BACKTRACK_COLUMN_PALEO_LONGITUDE``, ``pybacktrack.BACKTRACK_COLUMN_PALEO_LATITUDE``, ``pybacktrack.BACKTRACK_COLUMN_SEA_LEVEL``,
+          ``pybacktrack.BACKTRACK_COLUMN_COMPACTED_DENSITY``, ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_POROSITY`` and ``pybacktrack.BACKTRACK_COLUMN_COMPOSITE_DECAY``
+          to available columns for ``decompacted_columns``.
         - Some arguments (after ``*``) are now keyword-**only** (ie, can no longer be specified as positional arguments).
         - Now returns tuple (``well``, ``decompacted_wells``, and optionally ``rift_stretching_factor``). Previously returned nothing.
     """
