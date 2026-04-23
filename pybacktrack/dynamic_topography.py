@@ -23,7 +23,6 @@
 
 
 import argparse
-import codecs
 import math
 import numpy as np
 import os.path
@@ -732,7 +731,7 @@ class TimeDependentGrid(object):
         #
         # Assume file is encoded as UTF8 (which includes basic 7-bit ascii).
         detect_duplicate_ages = set()
-        with codecs.open(grid_list_filename, 'r', 'utf-8') as grid_list_file:
+        with open(grid_list_filename, 'r', encoding='utf-8') as grid_list_file:
             for line_number, line in enumerate(grid_list_file):
                 line_number = line_number + 1  # Make line number 1-based instead of 0-based.
                 if line.strip().startswith('#'):  # Skip comments.
