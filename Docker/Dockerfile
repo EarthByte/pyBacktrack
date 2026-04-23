@@ -18,8 +18,8 @@ RUN pip3 install --upgrade pip
 # Install Cartopy.
 RUN pip3 install cartopy
 
-# Install matplotlib, jupyter, numpy and netCDF4 for the example notebooks.
-RUN pip3 install matplotlib jupyter numpy netCDF4
+# Install extra modules for the example notebooks.
+RUN pip3 install matplotlib jupyter numpy netCDF4 gplately joblib plate-model-manager moviepy
 
 WORKDIR /usr/src/pybacktrack
 
