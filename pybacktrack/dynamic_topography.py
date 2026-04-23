@@ -49,6 +49,9 @@ class DynamicTopography(object):
         
         .. note:: If no age(s) was supplied then the age(s) of the static polygon(s)
                   containing location(s) is used (or zero when no polygon contains a location).
+    
+    interpolate_dynamic_topography : :class:`pybacktrack.InterpolateDynamicTopography`
+        Used to sample and interpolate time-dependent dynamic topography *mantle* frame grid files.
         
     Notes
     -----
@@ -320,6 +323,12 @@ class DynamicTopography(object):
         :class:`pybacktrack.DynamicTopography`
             The dynamic topography model loaded from a user-provided model or from a bundled model.
         
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_or_bundled_model_name`` is not the name of a bundled dynamic topography model or
+            is not a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames).
+        
         Notes
         -----
         .. versionadded:: 1.4
@@ -541,16 +550,16 @@ class InterpolateDynamicTopography(object):
             Either the name of a bundled dynamic topography model (see :meth:`pybacktrack.InterpolateDynamicTopography.create_from_bundled_model`), or
             a user-provided model specified as the filename of the grid list file (see parameter of :meth:`pybacktrack.InterpolateDynamicTopography.__init__`).
         
+        Returns
+        -------
+        :class:`pybacktrack.InterpolateDynamicTopography`
+            The dynamic topography model loaded from a user-provided model or from a bundled model.
+        
         Raises
         ------
         ValueError
             If ``dynamic_topography_model_or_bundled_model_name`` is not the name of a bundled dynamic topography model or
             the filename of an existing grid list file.
-        
-        Returns
-        -------
-        :class:`pybacktrack.InterpolateDynamicTopography`
-            The dynamic topography model loaded from a user-provided model or from a bundled model.
         
         Notes
         -----
@@ -569,6 +578,54 @@ class InterpolateDynamicTopography(object):
         
         raise ValueError('"{}" is not an internal dynamic topography model name or an existing file (user-provided grid list).'.format(
                 dynamic_topography_model_or_bundled_model_name))
+    
+    @staticmethod
+    def convert_from_dynamic_topography_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name):
+        """convert_from_dynamic_topography_model_or_bundled_model_name(dynamic_topography_model_or_bundled_model_name)
+        Convert an argument that would normally be supplied to :meth:`pybacktrack.DynamicTopography.create_from_model_or_bundled_model_name`
+        to an argument suitable for :meth:`pybacktrack.InterpolateDynamicTopography.create_from_model_or_bundled_model_name`.
+        
+        Parameters
+        ----------
+        dynamic_topography_model_or_bundled_model_name : str
+            An argument that would normally be supplied to :meth:`pybacktrack.DynamicTopography.create_from_model_or_bundled_model_name`.
+        
+        Returns
+        -------
+        An argument suitable for :meth:`pybacktrack.InterpolateDynamicTopography.create_from_model_or_bundled_model_name`.
+        
+        Raises
+        ------
+        ValueError
+            If ``dynamic_topography_model_or_bundled_model_name`` is not a `str` (name of a bundled dynamic topography model) or
+            not a 3-tuple with first entry being the name of a (grid list) file that exists in the file system.
+        
+        Notes
+        -----
+        .. versionadded:: 1.5
+        """
+        
+        # If a dynamic topography *bundled model name* was specified then it can be used directly to create an instance of us (ie, InterpolateDynamicTopography).
+        if isinstance(dynamic_topography_model_or_bundled_model_name, str):
+            return dynamic_topography_model_or_bundled_model_name
+        else:
+            # Otherwise we're expecting a user-provided dynamic topography model.
+            def is_dynamic_topography_model(dynamic_topography_model):
+                try:
+                    return len(dynamic_topography_model) == 3
+                except TypeError:
+                    return False
+            
+            if not is_dynamic_topography_model(dynamic_topography_model_or_bundled_model_name):
+                raise ValueError("'dynamic_topography_model_or_bundled_model_name' should be one of {0}, "
+                                 "or a user-provided model as a 3-tuple (filename of the grid list file, filename of the static polygons file, list of rotation filenames).".format(
+                    ', '.join(pybacktrack.bundle_data.BUNDLE_DYNAMIC_TOPOGRAPHY_MODEL_NAMES)))
+
+            dynamic_topography_list_filename, _, _ = dynamic_topography_model_or_bundled_model_name
+            if not os.path.isfile(dynamic_topography_list_filename):
+                raise ValueError('"{}" is not an existing file (user-provided grid list).'.format(dynamic_topography_list_filename))
+            
+            return dynamic_topography_list_filename
     
     def sample(self, time, locations, fallback_to_oldest=True):
         """

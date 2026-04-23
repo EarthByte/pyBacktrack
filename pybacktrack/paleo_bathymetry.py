@@ -1934,12 +1934,11 @@ def reconstruct_backtrack_bathymetry_and_write_grids(
         # Generate a NetCDF grid for the rift stretching (beta) factors.
         _write_present_day_grid(rift_stretching_factors, grid_spacing_degrees, output_rift_stretching_factor_grid_filename)
     
-    # If we have a dynamic topography model then extract the non-reconstructing part from it
-    # (the part that samples mantle-reference-frame dynamic topography grids).
+    # If we have a dynamic topography model then convert it to an interpolate dynamic topography model.
     interpolate_dynamic_topography_model = None
     if dynamic_topography_model:
-        interpolate_dynamic_topography_model = dynamic_topography_model.interpolate_dynamic_topography
-    
+        interpolate_dynamic_topography_model = InterpolateDynamicTopography.convert_from_dynamic_topography_model_or_bundled_model_name(dynamic_topography_model)
+
     # Generate a NetCDF grid for each reconstructed time of the paleobathmetry.
     write_bathymetry_grids(
         paleo_bathymetry,
