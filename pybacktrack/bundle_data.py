@@ -118,7 +118,7 @@ BUNDLE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundle_d
 
 # Documentation is on ReadTheDocs.
 BUNDLE_DOC_URL_PREFIX = 'https://pybacktrack.rtfd.io/'
-if pybacktrack.version.VERSION_PRERELEASE_SUFFIX:
+if pybacktrack.version._version.is_prerelease:
     # A pre-release version (ie, not a public release) uses 'latest' documentation.
     BUNDLE_DOC_URL_PREFIX += 'en/latest/'
 else:

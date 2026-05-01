@@ -1,9 +1,12 @@
-VERSION_MAJOR = 1
-VERSION_MINOR = 5
-VERSION_PATCH = 0
-# Pre-release suffix should follow the PEP440 versioning scheme (https://www.python.org/dev/peps/pep-0440/).
-# Note: It should be empty for public releases.
-VERSION_PRERELEASE_SUFFIX = 'rc3'
+from importlib.metadata import version, PackageNotFoundError
+from packaging.version import Version
 
-__version__ = '{}.{}.{}{}'.format(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_PRERELEASE_SUFFIX)
-VERSION = __version__
+try:
+    # Version string satifying PEP 440 (e.g., "1.5.0").
+    __version__ = version("pybacktrack")
+    VERSION = __version__
+    # Version object for querying the version, such as checking if it's a pre-release (with '_version.is_prerelease').
+    _version = Version(__version__)
+except PackageNotFoundError:
+    # Package is not installed (e.g., running from a source checkout).
+    pass

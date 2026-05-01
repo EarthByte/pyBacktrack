@@ -40,7 +40,8 @@ dependencies = [
     "pygplates",
     # Support for accessing *namespace* packages only added in Python 3.10 (to 'importlib.resources').
     # For Python <3.10 must instead use backport PyPI package 'importlib_resources'.
-    "importlib_resources;python_version<'3.10'"
+    "importlib_resources;python_version<'3.10'",
+    "packaging>=20.0",  # For version parsing and comparison (used by 'pybacktrack.version' module).
 ]
 urls.Homepage = "https://github.com/EarthByte/pyBacktrack"
 urls.Documentation = "http://pybacktrack.readthedocs.io"
@@ -67,8 +68,6 @@ packages.find.namespaces = true
 # Note: "setuptools-scm" restricts to git-tracked files.
 #       'MANIFEST.in' excludes some git-tracked files included by "setuptools-scm".
 include-package-data = true
-# Load the 'pybacktrack.version' module and get its '__version__' attribute.
-dynamic.version = {attr = "pybacktrack.version.__version__"}
 
 [tool.setuptools_scm]
 # This section must be present (even if empty) for setuptools-scm <8.1.
