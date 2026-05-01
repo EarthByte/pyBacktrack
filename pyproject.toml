@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools>=61.0.0",  # setuptools 61.0 fully embraces 'pyproject.toml' configuration
-    "setuptools-scm"  # when installed it automatically includes all git-tracked files into our source distribution
+    "setuptools-scm>=8"  # when installed it automatically includes all git-tracked files into our source distribution
 ]
 build-backend = "setuptools.build_meta"
 
@@ -71,6 +71,11 @@ include-package-data = true
 
 [tool.setuptools_scm]
 # This section must be present (even if empty) for setuptools-scm <8.1.
+
+[tool.setuptools_scm.scm.git]
+# Attempt to fetch enough history to find a git version tag.
+# This is needed for Readthedocs builds, which use a shallow clone of the repository (ie, no tags).
+pre_parse = "fetch_on_shallow"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
