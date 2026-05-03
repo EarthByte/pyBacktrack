@@ -71,6 +71,11 @@ include-package-data = true
 
 [tool.setuptools_scm]
 # This section must be present (even if empty) for setuptools-scm <8.1.
+#
+# Disable local version scheme (eg, remove "+g1234567" suffix in the version string).
+# Local version segments cannot be uploaded to PyPI.
+# For actual local builds we still have the ".devN" suffix to indicate it's a development version.
+local_scheme = "no-local-version"
 
 [tool.setuptools_scm.scm.git]
 # Attempt to fetch enough history to find a git version tag.
