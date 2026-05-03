@@ -26,13 +26,11 @@ formats:
    - pdf
    - epub
 
-# Optional but recommended, declare the Python requirements required
-# to build your documentation
-# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
 python:
    install:
    # Make sure to install pyBacktrack itself from the current source code.
    - method: pip
      path: .
-   # Install required dependencies for building the documentation.
+   # Optional but recommended, declare the Python requirements required to build your documentation
+   # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
    - requirements: docs/requirements.txt
