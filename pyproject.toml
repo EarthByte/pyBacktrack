@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 name = "pybacktrack"
 dynamic = ["version"]
 description = "A tool for reconstructing paleobathymetry on oceanic and continental crust."
-readme = "README.rst"
+readme = "README.md"
 authors = [{ name = "John Cannon", email = "john.cannon@sydney.edu.au" }]
 # TODO: Uncomment these two license lines when Python 3.8 is no longer our min. requirement.
 #       And also remove "License ::" from 'classifiers' (replaced by updated 'license' field).
