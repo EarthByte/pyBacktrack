@@ -3,26 +3,36 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _pybacktrack_index:
+.. image:: images/pybacktrack_logo_text_on_right.png
 
-PyBacktrack documentation
-=========================
+|
 
 A tool for reconstructing paleobathymetry on oceanic and continental crust.
+
+.. _pybacktrack_index:
+
+Introduction
+============
 
 PyBacktrack is a Python package that backtracks the paleo-water depth of ocean drill sites through time
 by combining a model of tectonic subsidence with decompaction of the site stratigraphic lithologies.
 PyBacktrack can also include the effects of mantle-convection driven dynamic topography on paleo-water depth,
-as well as sea-level variations. PyBacktrack provides a model of tectonic subsidence on both oceanic and continental crust.
+as well as sea-level variations.
+
+PyBacktrack provides a model of tectonic subsidence on both oceanic and continental crust.
 Ocean crust subsidence is based on a user-selected lithospheric age-depth model and the present-day unloaded basement depth.
 Continental crust subsidence is based on syn-rift and post-rift subsidence that is modelled using the total sediment thickness at the site
-and the timing of the transition from rifting to thermal subsidence. At drill sites that did not penetrate to basement,
+and the timing of the transition from rifting to thermal subsidence.
+
+At drill sites that did not penetrate to basement,
 the age-coded stratigraphy is supplemented with a synthetic stratigraphic section that represents the undrilled section,
 whose thickness is estimated using a global sediment thickness map. This is essential for estimating the decompacted thickness
 of the total sedimentary section, and thus bathymetry, through time.
+
 At drill sites on stretched continental crust where the paleo-water depth is known from benthic fossil assemblages,
 tectonic subsidence can be computed via backstripping. The workflow is similar to backtracking, but paleo-water depths and
 their uncertainties need to be supplied as part of the input.
+
 In addition to individual 1D drill sites, all submerged present-day crust (assigned a single lithology) can be backtracked and reconstructed to
 generate 2D paleobathymetry grids through time.
 

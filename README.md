@@ -4,7 +4,7 @@
     <img width="400"  src="docs/images/pybacktrack_logo_text_on_right.png" alt="PyBacktrack Logo">
   </p>
   <p>
-    <strong>A tool for reconstructing paleobathymetry on oceanic and continental crust.
+    <strong>A tool for reconstructing paleobathymetry on oceanic and continental crust.</strong>
   </p>
 
   [![PyBacktrack Version](https://img.shields.io/pypi/v/pybacktrack?label=pyBacktrack)](
