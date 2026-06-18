@@ -106,20 +106,25 @@ This means the traditional grids will fill in paleobathymetry in regions where c
           (or the ``merge_paleo_bathymetry_filename_format`` function argument of ``pybacktrack.reconstruct_paleo_bathymetry_grids``).
 
 Traditional paleobathymetry grids must still be produced by an external workflow.
-The `Paleobathymetry <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/paleobathymetry.ipynb>`__ notebook merges traditional paleobathymetry created using Nicky Wright's paleobathymetry workflow
-(currently in a `private repository <https://github.com/EarthByte/paleobathymetry-workflow>`__ that might be incorporated into `GPlately <https://github.com/GPlates/gplately/>`__ in the future).
+The notebooks `Paleobathymetry <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/paleobathymetry.ipynb>`__ and
+`Reconstructing drill sites on paleobathymetry <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/reconstruct_drill_sites_on_paleobathymetry.ipynb>`__
+both merge traditional paleobathymetry created using Nicky Wright's paleobathymetry workflow (currently in a `private repository <https://github.com/EarthByte/paleobathymetry-workflow>`__
+that might be incorporated into `GPlately <https://github.com/GPlates/gplately/>`__ in the future).
 
-There are traditional (and merged) paleobathymetry grids available for the default plate model in pyBacktrack (Zahirovic 2022) for both of its reference frames:
+There are traditional (and merged) paleobathymetry grids available for the default plate model in pyBacktrack (Zahirovic 2022) for both of its reference frames.
 
-Traditional paleobathymetry for the Zahirovic 2022 plate model (for ages 0 to 410 Ma):
+*Traditional* paleobathymetry for the Zahirovic 2022 plate model (for ages 0 to 410 Ma):
 
 * In the `paleomagnetic reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/PaleomagneticFrame/PaleobathymetryGrids/traditional/GDH1/>`__ (anchor plate `701701`).
 * In the `mantle reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/OptimisedMantleFrame/PaleobathymetryGrids/traditional/GDH1/>`__ (anchor plate `0`).
 
-And merged paleobathymetry for the Zahirovic 2022 plate model for ages 0 to 170 Ma (where 170 Ma is roughly when backtracked present-day crust no longer exists back in time):
+And *merged* paleobathymetry for the Zahirovic 2022 plate model for ages 0 to 170 Ma (where 170 Ma is roughly when backtracked present-day crust no longer exists back in time):
 
 * In the `paleomagnetic reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/PaleomagneticFrame/PaleobathymetryGrids/pybacktrack/GDH1/>`__ (anchor plate `701701`).
 * In the `mantle reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/OptimisedMantleFrame/PaleobathymetryGrids/pybacktrack/GDH1/>`__ (anchor plate `0`).
+
+.. note:: The Alfonso 2024 plate model (ages 0 to 170 Ma) also has `traditional <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Alfonso_etal_2024_modClennettMuller/Paleobathymetry/traditional/GDH1/>`__ and
+          `merged <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Alfonso_etal_2024_modClennettMuller/Paleobathymetry/pybacktrack/GDH1/>`__ paleobathymetry grids available.
 
 The following shows merged paleobathymetry in the *paleomagnetic* reference frame, at present day (0 Ma) and 60 Ma.
 
