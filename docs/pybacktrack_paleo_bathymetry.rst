@@ -116,7 +116,7 @@ Traditional paleobathymetry for the Zahirovic 2022 plate model (for ages 0 to 41
 * In the `paleomagnetic reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/PaleomagneticFrame/PaleobathymetryGrids/traditional/GDH1/>`__ (anchor plate `701701`).
 * In the `mantle reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/OptimisedMantleFrame/PaleobathymetryGrids/traditional/GDH1/>`__ (anchor plate `0`).
 
-And merged paleobathymetry for the Zahirovic 2022 plate model (for ages 0 to 410 Ma):
+And merged paleobathymetry for the Zahirovic 2022 plate model for ages 0 to 170 Ma (where 170 Ma is roughly when backtracked present-day crust no longer exists back in time):
 
 * In the `paleomagnetic reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/PaleomagneticFrame/PaleobathymetryGrids/pybacktrack/GDH1/>`__ (anchor plate `701701`).
 * In the `mantle reference frame <https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/OptimisedMantleFrame/PaleobathymetryGrids/pybacktrack/GDH1/>`__ (anchor plate `0`).
