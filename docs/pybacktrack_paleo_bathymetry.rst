@@ -106,12 +106,16 @@ This means the traditional grids will fill in paleobathymetry in regions where c
           (or the ``merge_paleo_bathymetry_filename_format`` function argument of ``pybacktrack.reconstruct_paleo_bathymetry_grids``).
 
 Traditional paleobathymetry grids must still be produced by an external workflow.
+To generate your own, we recommend the `simple paleobathymetry workflow <https://github.com/EarthByte/simple_paleobathymetry>`__
+(archived at `Zenodo <https://doi.org/10.5281/zenodo.23382567>`__), which is currently being incorporated into `GPlately <https://github.com/GPlates/gplately/>`__
+(likely arriving in GPlately 2.1).
+
 The notebooks `Paleobathymetry <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/paleobathymetry.ipynb>`__ and
 `Reconstructing drill sites on paleobathymetry <https://github.com/EarthByte/pyBacktrack/blob/master/pybacktrack/notebooks/reconstruct_drill_sites_on_paleobathymetry.ipynb>`__
-both merge traditional paleobathymetry created using Nicky Wright's paleobathymetry workflow (currently in a `private repository <https://github.com/EarthByte/paleobathymetry-workflow>`__
-that might be incorporated into `GPlately <https://github.com/GPlates/gplately/>`__ in the future).
+both merge traditional paleobathymetry created using Nicky Wright's paleobathymetry workflow (currently in a `private repository <https://github.com/EarthByte/paleobathymetry-workflow>`__).
 
-There are traditional (and merged) paleobathymetry grids available for the default plate model in pyBacktrack (Zahirovic 2022) for both of its reference frames.
+There are traditional (and merged) paleobathymetry grids available for the default plate model in pyBacktrack (Zahirovic 2022) for both of its reference frames
+(the traditional grids were also created using Nicky Wright's paleobathymetry workflow).
 
 *Traditional* paleobathymetry for the Zahirovic 2022 plate model (for ages 0 to 410 Ma):
 
